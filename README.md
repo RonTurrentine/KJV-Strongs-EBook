@@ -64,6 +64,7 @@ Then open `http://localhost:8000/index.html`.
 ## CI workflow
 This repository includes a GitHub Actions workflow at `.github/workflows/ci.yml`.
 It runs on `push` and `pull_request` to `main`, executes the Genesis 1 generator, and verifies the expected sample output files.
+The workflow also checks generated sample markup for key UI class names like `chapter-nav`, `btn`, `icon-btn`, and `superscript-link` to catch broken generator output early.
 
 ## Next steps
 1. Generate actual Bible HTML from `kjv.osis.xml`
