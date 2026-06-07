@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Genesis 1 generator
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -Command "& { .\generate_genesis1.ps1 }"
+
+      - name: Verify generated sample pages
+        shell: pwsh
+        run: |
+          if (-not (Test-Path .\sample-chapter-gen1.html)) { throw 'Missing sample-chapter-gen1.html' }
+          if (-not (Test-Path .\sample-verse-gen1.html)) { throw 'Missing sample-verse-gen1.html' }
+          Write-Host 'Generated sample pages are present.'
