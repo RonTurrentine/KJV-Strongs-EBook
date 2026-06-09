@@ -172,7 +172,7 @@ foreach ($book in $booksToTest) {
         $missingFolders++
         continue
     }
-    $found    = (Get-ChildItem $bookDir -Filter '*.html').Count
+    $found = @(Get-ChildItem $bookDir -Filter '*.html').Count
     $expected = $book.Chapters
     $totalExpected += $expected
     $totalFound    += $found
@@ -282,10 +282,21 @@ if (Test-Path $rev22) {
     } else {
         Fail "Revelation 22: Next button found but should not exist"
     }
-    if ($content -match '../65-Jude/1\.html|books/65-Jude') {
-        Pass "Revelation 22: prev link points to Jude 1"
+    if ($content -match '21\.html') {
+        Pass "Revelation 22: prev link points to Revelation 21 (correct)"
     } else {
-        Fail "Revelation 22: prev link to Jude 1 NOT found"
+        Fail "Revelation 22: prev link to Revelation 21 NOT found"
+    }
+}
+
+# Revelation 1 should link back to Jude 1
+$rev1 = Join-Path $OutputRoot 'books/66-Rev/1.html'
+if (Test-Path $rev1) {
+    $content = Get-Content -Raw $rev1
+    if ($content -match '../65-Jude/1\.html') {
+        Pass "Revelation 1: prev link points to Jude 1 (correct)"
+    } else {
+        Fail "Revelation 1: prev link to Jude 1 NOT found"
     }
 } else {
     Warn "Revelation 22 not generated yet -- skipping last chapter test"
@@ -346,7 +357,7 @@ Section "TEST 7: Cross-Reference Page Validation"
 
 $xrefDir = Join-Path $OutputRoot 'xrefs'
 if (Test-Path $xrefDir) {
-    $xrefFiles = Get-ChildItem $xrefDir -Filter '*.html'
+    $xrefFiles = @(Get-ChildItem $xrefDir -Filter '*.html')
     Pass "xrefs/ folder exists with $($xrefFiles.Count) pages"
 
     # Check a sample of xref pages for broken back-links
@@ -420,16 +431,27 @@ if (Test-Path $bibleDataFile) {
     } else {
         Fail "bible-data.js: BIBLE_DATA variable not found"
     }
-    if ($content -match '"Genesis"') {
-        Pass "bible-data.js: Genesis entry present"
+    
+if (-not $BookFilter) {
+        if ($content -match '"Genesis"') {
+            Pass "bible-data.js: Genesis entry present"
+        } else {
+            Fail "bible-data.js: Genesis entry not found"
+        }
+        if ($content -match '"Revelation"') {
+            Pass "bible-data.js: Revelation entry present"
+        } else {
+            Fail "bible-data.js: Revelation entry not found"
+        }
     } else {
-        Fail "bible-data.js: Genesis entry not found"
-    }
-    if ($content -match '"Revelation"') {
-        Pass "bible-data.js: Revelation entry present"
-    } else {
-        Fail "bible-data.js: Revelation entry not found"
-    }
+        $filterBook = $BookTable | Where-Object { $_.OsisId -eq $BookFilter }
+        if ($content -match "`"$($filterBook.FullName)`"") {
+            Pass "bible-data.js: $($filterBook.FullName) entry present"
+        } else {
+            Fail "bible-data.js: $($filterBook.FullName) entry not found"
+        }
+    }	
+
     # Check verse counts are not all zeros
     if ($content -match 'chapters: \[0, 0, 0') {
         Fail "bible-data.js: verse counts appear to be all zeros -- generator may not have extracted verses"

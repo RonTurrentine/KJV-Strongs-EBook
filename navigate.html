@@ -15,34 +15,24 @@
   </nav>
   <main class="chapter-content">
     <div class="navigator-form">
-
       <label for="book-select">Book:</label>
       <select id="book-select" onchange="onBookChange()" style="width:100%;padding:10px;font-size:18px;margin-bottom:12px;">
         <option value="">-- Select a Book --</option>
       </select>
-
       <label for="chapter-select">Chapter:</label>
-      <select id="chapter-select" onchange="onChapterChange()" disabled="disabled"
-              style="width:100%;padding:10px;font-size:18px;margin-bottom:12px;">
+      <select id="chapter-select" onchange="onChapterChange()" disabled="disabled" style="width:100%;padding:10px;font-size:18px;margin-bottom:12px;">
         <option value="">-- Select a Chapter --</option>
       </select>
-
       <label for="verse-select">Verse:</label>
-      <select id="verse-select" disabled="disabled"
-              style="width:100%;padding:10px;font-size:18px;margin-bottom:16px;">
+      <select id="verse-select" disabled="disabled" style="width:100%;padding:10px;font-size:18px;margin-bottom:16px;">
         <option value="any">-- any (top of chapter) --</option>
       </select>
-
       <button onclick="onGo()" style="width:100%;padding:12px;font-size:20px;">Go</button>
-
     </div>
   </main>
-
   <script src="js/bible-data.js"></script>
   <script>
-  // ES3-compatible navigator logic
   var selectedBookIdx = -1;
-
   function populateBooks() {
     var sel = document.getElementById('book-select');
     var i, book, opt;
@@ -54,80 +44,59 @@
       sel.appendChild(opt);
     }
   }
-
   function onBookChange() {
     var bookSel = document.getElementById('book-select');
     var chSel   = document.getElementById('chapter-select');
     var vsSel   = document.getElementById('verse-select');
     var idx     = parseInt(bookSel.value, 10);
-
-    // Reset chapter and verse
-    chSel.options.length = 1;  // keep the placeholder
-    vsSel.options.length = 1;  // keep the placeholder
+    chSel.options.length = 1;
+    vsSel.options.length = 1;
     chSel.disabled = true;
     vsSel.disabled = true;
-
     if (isNaN(idx)) { selectedBookIdx = -1; return; }
     selectedBookIdx = idx;
-
     var book = BIBLE_DATA[idx];
     var i, opt;
     for (i = 0; i < book.chapters.length; i++) {
-      opt       = document.createElement('option');
+      opt = document.createElement('option');
       opt.value = i + 1;
       opt.text  = 'Chapter ' + (i + 1);
       chSel.appendChild(opt);
     }
     chSel.disabled = false;
   }
-
   function onChapterChange() {
     var chSel  = document.getElementById('chapter-select');
     var vsSel  = document.getElementById('verse-select');
     var chNum  = parseInt(chSel.value, 10);
-
-    vsSel.options.length = 1;  // keep the "any" placeholder
+    vsSel.options.length = 1;
     vsSel.disabled = true;
-
     if (isNaN(chNum) || selectedBookIdx < 0) { return; }
-
     var book       = BIBLE_DATA[selectedBookIdx];
     var verseCount = book.chapters[chNum - 1];
     var i, opt;
     for (i = 1; i <= verseCount; i++) {
-      opt       = document.createElement('option');
+      opt = document.createElement('option');
       opt.value = i;
       opt.text  = 'Verse ' + i;
       vsSel.appendChild(opt);
     }
     vsSel.disabled = false;
   }
-
   function onGo() {
     var bookSel = document.getElementById('book-select');
     var chSel   = document.getElementById('chapter-select');
     var vsSel   = document.getElementById('verse-select');
-
-    var idx   = parseInt(bookSel.value, 10);
-    var chNum = parseInt(chSel.value, 10);
-
-    if (isNaN(idx) || isNaN(chNum)) {
-      alert('Please select a book and chapter.');
-      return;
-    }
-
-    var book   = BIBLE_DATA[idx];
-    var url    = 'books/' + book.folder + '/' + chNum + '.html';
-    var vsVal  = vsSel.value;
-    if (vsVal && vsVal !== 'any') {
-      url += '#verse-' + vsVal;
-    }
+    var idx     = parseInt(bookSel.value, 10);
+    var chNum   = parseInt(chSel.value, 10);
+    if (isNaN(idx) || isNaN(chNum)) { alert('Please select a book and chapter.'); return; }
+    var book  = BIBLE_DATA[idx];
+    var url   = 'books/' + book.folder + '/' + chNum + '.html';
+    var vsVal = vsSel.value;
+    if (vsVal && vsVal !== 'any') { url += '#verse-' + vsVal; }
     window.location.href = url;
   }
-
-  // Initialise on load
   populateBooks();
   </script>
-
 </body>
 </html>

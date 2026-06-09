@@ -3,22 +3,24 @@
 # Produces one HTML file per chapter under books/{NN}-{Abbr}/{ch}.html,
 # static xref pages under xrefs/, js/bible-data.js, navigate.html, and index.html.
 #
+# Includes Opus fix for NT verse parsing: <q>, <div>, <lg>, <l> container
+# elements are recursively flattened so nested verse milestones are found.
+#
 # Usage:
 #   pwsh -NoProfile -File .\generate_bible.ps1
 #   pwsh -NoProfile -File .\generate_bible.ps1 -BookFilter Ruth
-#   pwsh -NoProfile -File .\generate_bible.ps1 -BookFilter Ruth -Verbose
+#   pwsh -NoProfile -File .\generate_bible.ps1 -BookFilter Matt
 
 param(
     [string]$OsisPath   = 'kjv.osis.xml',
     [string]$OutputRoot = '.',
-    [string]$BookFilter = ''        # Set to an OSIS book ID (e.g. 'Ruth') to generate one book only
+    [string]$BookFilter = ''
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# ── Master Book Table ─────────────────────────────────────────────────────────
-# Each entry: OsisId, Folder, FullName, Chapters, Testament
+# Master Book Table
 $BookTable = @(
     [pscustomobject]@{ Num=1;  OsisId='Gen';    Folder='01-Gen';    FullName='Genesis';          Chapters=50;  Testament='OT' }
     [pscustomobject]@{ Num=2;  OsisId='Exod';   Folder='02-Exod';   FullName='Exodus';           Chapters=40;  Testament='OT' }
@@ -88,41 +90,14 @@ $BookTable = @(
     [pscustomobject]@{ Num=66; OsisId='Rev';    Folder='66-Rev';    FullName='Revelation';       Chapters=22;  Testament='NT' }
 )
 
-# Build a lookup hashtable: OsisId -> book entry (used for xref link generation)
 $BookLookup = @{}
 foreach ($b in $BookTable) { $BookLookup[$b.OsisId] = $b }
 
-# ── Helper: HTML escape ───────────────────────────────────────────────────────
-function HtmlEscape([string]$t) {
-    return $t -replace '&','&amp;' -replace '<','&lt;' -replace '>','&gt;' -replace '"','&quot;'
+function Ensure-Dir([string]$path) {
+    if (-not (Test-Path $path)) { New-Item -ItemType Directory -Path $path -Force | Out-Null }
 }
 
-# ── Helper: normalize verse text (collapse whitespace, fix punctuation gaps) ──
-function NormalizeVerseText([string]$text) {
-    $text = $text -replace '\s+', ' '
-    $text = $text -replace '\s+([,.;:!?])', '$1'
-    return $text.Trim()
-}
-
-# ── Helper: build Strong's link HTML (relative from books/{folder}/{ch}.html) ─
-function Get-StrongLinkHtml([string]$lemmaAttr) {
-    $links = @()
-    foreach ($lemma in ($lemmaAttr -split '\s+')) {
-        if ($lemma -match '^strong:H(\d+)') {
-            $num = ([int]$matches[1]).ToString().PadLeft(4,'0')
-            $links += '<a href="../../dict/hebrew/h' + $num + '.html" class="strongs-link" title="Strong''s Hebrew H' + $num + '">[H' + $num + ']</a>'
-        } elseif ($lemma -match '^strong:G(\d+)') {
-            $num = ([int]$matches[1]).ToString().PadLeft(4,'0')
-            $links += '<a href="../../dict/greek/g' + $num + '.html" class="strongs-link" title="Strong''s Greek G' + $num + '">[G' + $num + ']</a>'
-        }
-    }
-    return $links -join ' '
-}
-
-# ── Helper: parse osisRef "Book.Ch.Vs" or "Book.Ch.Vs-Book.Ch.Vs" ────────────
-# Returns hashtable with Book, Chapter, Verse (start of range only)
 function Parse-OsisRef([string]$osisRef) {
-    # Handle ranges — take only the start reference
     $start = ($osisRef -split '-')[0].Trim()
     $parts = $start -split '\.'
     if ($parts.Count -lt 2) { return $null }
@@ -133,20 +108,16 @@ function Parse-OsisRef([string]$osisRef) {
     }
 }
 
-# ── Helper: build chapter-relative URL from an osisRef ───────────────────────
-# fromFolder is the current book folder (e.g. '01-Gen') for same-book detection
-function Get-ChapterUrl([string]$osisRef, [string]$fromFolder) {
+function Get-ChapterUrl([string]$osisRef) {
     $ref = Parse-OsisRef $osisRef
     if (-not $ref) { return $null }
     $targetBook = $BookLookup[$ref.Book]
     if (-not $targetBook) { return $null }
-    $chNum  = [int]$ref.Chapter
-    $vsNum  = [int]$ref.Verse
-    # Path from xrefs/ to books/ is ../books/
+    $chNum = [int]$ref.Chapter
+    $vsNum = [int]$ref.Verse
     return "../books/$($targetBook.Folder)/$chNum.html#verse-$vsNum"
 }
 
-# ── Helper: build display label for a reference ───────────────────────────────
 function Get-RefLabel([string]$osisRef, [string]$displayText) {
     if ($displayText -and $displayText.Trim()) { return $displayText.Trim() }
     $ref = Parse-OsisRef $osisRef
@@ -156,14 +127,240 @@ function Get-RefLabel([string]$osisRef, [string]$displayText) {
     return "$bookName $($ref.Chapter):$($ref.Verse)"
 }
 
-# ── Phase 1: Load OSIS XML ────────────────────────────────────────────────────
+# OPUS FIX: Recursive node flattener
+# Fixes NT verse gaps caused by verse milestones nested inside <q> elements
+function Get-FlattenedNodes {
+    param(
+        [Parameter(Mandatory)]
+        [System.Xml.XmlNode]$Parent
+    )
+
+    $leafElements = @{
+        'verse'       = $true
+        'w'           = $true
+        'note'        = $true
+        'transChange' = $true
+        'divineName'  = $true
+        'hi'          = $true
+        'milestone'   = $true
+        'catchWord'   = $true
+        'rdg'         = $true
+        'seg'         = $true
+        'title'       = $true
+    }
+
+    $result = [System.Collections.Generic.List[System.Xml.XmlNode]]::new()
+
+    foreach ($child in $Parent.ChildNodes) {
+        $nodeType = $child.NodeType
+
+        if ($nodeType -eq [System.Xml.XmlNodeType]::Text -or
+            $nodeType -eq [System.Xml.XmlNodeType]::Whitespace -or
+            $nodeType -eq [System.Xml.XmlNodeType]::SignificantWhitespace) {
+            [void]$result.Add($child)
+            continue
+        }
+
+        if ($nodeType -eq [System.Xml.XmlNodeType]::Element) {
+            if ($leafElements.ContainsKey($child.LocalName)) {
+                [void]$result.Add($child)
+	    } else {
+                $nested = [System.Collections.Generic.List[System.Xml.XmlNode]](Get-FlattenedNodes -Parent $child)
+                $result.AddRange($nested)
+            }
+        }
+    }
+
+    return $result
+}
+
+# OPUS FIX: Updated Strong's link builder
+# Word text is wrapped IN the link; handles Hebrew, Greek, and multiple refs
+
+function Get-StrongLinkHtml {
+    param(
+        [Parameter(Mandatory)]
+        [AllowEmptyString()]
+        [string]$Word,
+
+        [Parameter(Mandatory)]
+        [AllowEmptyString()]
+        [string]$Lemma,
+
+        [string]$DictRelPath = '../../dict'
+    )
+
+    # Skip empty word nodes entirely — no word, no badge
+    if (-not $Word) { return '' }
+
+    $wordHtml = [System.Net.WebUtility]::HtmlEncode($Word)
+
+    if (-not $Lemma) { return $wordHtml }
+
+    $matchesFound = [regex]::Matches($Lemma, 'strong:([HG])(\d+)')
+    if ($matchesFound.Count -eq 0) { return $wordHtml }
+
+    # Build bracketed badge links after the word text
+    $badges = [System.Text.StringBuilder]::new()
+    foreach ($m in $matchesFound) {
+        $letter   = $m.Groups[1].Value
+        $number   = ([int]$m.Groups[2].Value).ToString().PadLeft(4, '0')
+        $strongId = "$letter$number"
+        $subdir   = if ($letter -eq 'H') { 'hebrew' } else { 'greek' }
+        $href     = "$DictRelPath/$subdir/$($strongId.ToLower()).html"
+        [void]$badges.Append("<a href=`"$href`" class=`"strongs-link`" title=`"$strongId`">[$strongId]</a>")
+    }
+
+    return $wordHtml + ' ' + $badges.ToString()
+}
+
+# OPUS FIX: Verse parser using flattened node list
+function ConvertTo-VerseHtml {
+    param(
+        [Parameter(Mandatory)]
+        [System.Xml.XmlNode]$ChapterNode,
+
+        [Parameter(Mandatory)]
+        [string]$BookFolder,
+
+        [Parameter(Mandatory)]
+        [string]$BookName,
+
+        [Parameter(Mandatory)]
+        [int]$ChapterNum,
+
+        [string]$DictRelPath = '../../dict'
+    )
+
+    $flatNodes       = Get-FlattenedNodes -Parent $ChapterNode
+    $verses          = [System.Collections.Generic.List[hashtable]]::new()
+    $inVerse         = $false
+    $currentVerseNum = 0
+    $verseHtml       = [System.Text.StringBuilder]::new()
+    $verseXrefs      = [System.Collections.Generic.List[string]]::new()
+
+    foreach ($node in $flatNodes) {
+
+        if ($node.NodeType -eq [System.Xml.XmlNodeType]::Text) {
+            if ($inVerse) {
+                $text = $node.Value -replace '[\r\n\t]+', ' ' -replace '  +', ' '
+                [void]$verseHtml.Append([System.Net.WebUtility]::HtmlEncode($text))
+            }
+            continue
+        }
+
+        if ($node.NodeType -eq [System.Xml.XmlNodeType]::Whitespace -or
+            $node.NodeType -eq [System.Xml.XmlNodeType]::SignificantWhitespace) {
+            if ($inVerse) { [void]$verseHtml.Append(' ') }
+            continue
+        }
+
+        if ($node.NodeType -ne [System.Xml.XmlNodeType]::Element) { continue }
+
+        $localName = $node.LocalName
+
+        if ($localName -eq 'verse') {
+            $sID = $node.GetAttribute('sID')
+            $eID = $node.GetAttribute('eID')
+
+            if ($sID) {
+                $parts    = $sID.Split('.')
+                $verseStr = $parts[$parts.Length - 1]
+                if ($verseStr -match '^(\d+)') {
+                    $currentVerseNum = [int]$Matches[1]
+                    $inVerse         = $true
+                    [void]$verseHtml.Clear()
+                    $verseXrefs.Clear()
+                } else {
+                    $inVerse = $false
+                }
+            } elseif ($eID) {
+                if ($inVerse -and $currentVerseNum -gt 0) {
+                    $finalHtml = $verseHtml.ToString().Trim()
+                    $finalHtml = [regex]::Replace($finalHtml, '\s+([,;:.!?])', '$1')
+                    [void]$verses.Add(@{
+                        Num   = $currentVerseNum
+                        Html  = $finalHtml
+                        Xrefs = @($verseXrefs)
+                    })
+                }
+                $inVerse = $false
+            }
+            continue
+        }
+
+        if (-not $inVerse) { continue }
+
+        switch ($localName) {
+			'w' {
+				$word     = $node.InnerText
+				$lemma    = $node.GetAttribute('lemma')
+				if ($word -or $lemma) {
+					$linkHtml = Get-StrongLinkHtml -Word $word -Lemma $lemma -DictRelPath $DictRelPath
+					if ($linkHtml) { [void]$verseHtml.Append($linkHtml + ' ') }
+				}
+			}
+			'transChange' {
+				$text = [System.Net.WebUtility]::HtmlEncode($node.InnerText)
+				[void]$verseHtml.Append("<em class=`"added`">$text</em> ")
+			}
+            'divineName' {
+                $text = [System.Net.WebUtility]::HtmlEncode($node.InnerText)
+                [void]$verseHtml.Append("<span class=`"divine-name`">$text</span>")
+            }
+            'hi' {
+                $hiType = $node.GetAttribute('type')
+                $text   = [System.Net.WebUtility]::HtmlEncode($node.InnerText)
+                switch ($hiType) {
+                    'italic' { [void]$verseHtml.Append("<em>$text</em>") }
+                    'bold'   { [void]$verseHtml.Append("<strong>$text</strong>") }
+                    'super'  { [void]$verseHtml.Append("<sup>$text</sup>") }
+                    'sub'    { [void]$verseHtml.Append("<sub>$text</sub>") }
+                    default  { [void]$verseHtml.Append($text) }
+                }
+            }
+            'title' {
+                $text = [System.Net.WebUtility]::HtmlEncode($node.InnerText)
+                [void]$verseHtml.Append("<span class=`"section-title`">$text</span> ")
+            }
+            'note' {
+                $noteType = $node.GetAttribute('type')
+                if ($noteType -eq 'crossReference') {
+                    foreach ($childNode in $node.ChildNodes) {
+                        if ($childNode.NodeType -eq [System.Xml.XmlNodeType]::Element -and
+                            $childNode.LocalName -eq 'reference') {
+                            $osisRef = $childNode.GetAttribute('osisRef')
+                            if ($osisRef) { [void]$verseXrefs.Add($osisRef) }
+                        }
+                    }
+                }
+            }
+            default {
+                $text = $node.InnerText
+                if ($text) { [void]$verseHtml.Append([System.Net.WebUtility]::HtmlEncode($text)) }
+            }
+        }
+    }
+
+    if ($inVerse -and $currentVerseNum -gt 0) {
+        [void]$verses.Add(@{
+            Num   = $currentVerseNum
+            Html  = $verseHtml.ToString().Trim()
+            Xrefs = @($verseXrefs)
+        })
+    }
+
+    return $verses
+}
+
+# Phase 1: Load OSIS XML
 Write-Host "Loading OSIS XML from $OsisPath..." -ForegroundColor Cyan
 $osis = [xml](Get-Content -Raw -Path $OsisPath)
 $ns   = New-Object System.Xml.XmlNamespaceManager($osis.NameTable)
 $ns.AddNamespace('o', 'http://www.bibletechnologies.net/2003/OSIS/namespace')
 Write-Host "OSIS XML loaded." -ForegroundColor Green
 
-# ── Phase 2: Build flat chapter list ─────────────────────────────────────────
+# Phase 2: Build flat chapter list
 Write-Host "Building flat chapter list..." -ForegroundColor Cyan
 $FlatChapters = [System.Collections.ArrayList]@()
 
@@ -171,34 +368,24 @@ $booksToProcess = $BookTable
 if ($BookFilter) {
     $booksToProcess = $BookTable | Where-Object { $_.OsisId -eq $BookFilter }
     if (-not $booksToProcess) { throw "BookFilter '$BookFilter' not found in book table." }
-    Write-Host "BookFilter active — processing $BookFilter only." -ForegroundColor Yellow
+    Write-Host "BookFilter active: processing $BookFilter only." -ForegroundColor Yellow
 }
 
 foreach ($book in $booksToProcess) {
     for ($ch = 1; $ch -le $book.Chapters; $ch++) {
         [void]$FlatChapters.Add([pscustomobject]@{
-            Book      = $book
-            Chapter   = $ch
-            OsisChId  = "$($book.OsisId).$ch"
+            Book       = $book
+            Chapter    = $ch
+            OsisChId   = "$($book.OsisId).$ch"
             FolderPath = "books/$($book.Folder)"
         })
     }
 }
-
 Write-Host "Flat chapter list built: $($FlatChapters.Count) chapters." -ForegroundColor Green
 
-# ── Collected data for bible-data.js ─────────────────────────────────────────
-# $VerseCountData: hashtable OsisId -> array of verse counts (index 0 = ch1)
 $VerseCountData = @{}
 foreach ($book in $booksToProcess) {
     $VerseCountData[$book.OsisId] = @(0) * $book.Chapters
-}
-
-# ── Ensure output directories exist ──────────────────────────────────────────
-function Ensure-Dir([string]$path) {
-    if (-not (Test-Path $path)) {
-        New-Item -ItemType Directory -Path $path -Force | Out-Null
-    }
 }
 
 Ensure-Dir (Join-Path $OutputRoot 'books')
@@ -206,148 +393,68 @@ Ensure-Dir (Join-Path $OutputRoot 'xrefs')
 Ensure-Dir (Join-Path $OutputRoot 'js')
 Ensure-Dir (Join-Path $OutputRoot 'indexes')
 
-# ── Phase 3: Generate chapter HTML files + xref pages ────────────────────────
+# Phase 3: Generate chapter HTML files and xref pages
 Write-Host "Generating chapter pages..." -ForegroundColor Cyan
 
 $totalChapters = $FlatChapters.Count
 $doneChapters  = 0
 
 foreach ($entry in $FlatChapters) {
-    $book    = $entry.Book
-    $chNum   = $entry.Chapter
-    $osisChId = $entry.OsisChId    # e.g. "Gen.1"
-    $folder  = $entry.FolderPath   # e.g. "books/01-Gen"
+    $book     = $entry.Book
+    $chNum    = $entry.Chapter
+    $osisChId = $entry.OsisChId
 
-    # ── Find chapter node in OSIS ─────────────────────────────────────────────
     $chapterNode = $osis.SelectSingleNode("//o:chapter[@osisID='$osisChId']", $ns)
     if (-not $chapterNode) {
-        Write-Warning "Chapter node not found: $osisChId — skipping."
+        Write-Warning "Chapter node not found: $osisChId -- skipping."
         continue
     }
 
-    # ── Parse verses + collect xrefs ─────────────────────────────────────────
-    $verses      = [System.Collections.Specialized.OrderedDictionary]@{}
-    $verseXrefs  = @{}   # verseNum -> array of {OsisRef, DisplayText}
-    $currentVerse = $null
-    $currentText  = ''
-
-    foreach ($node in $chapterNode.ChildNodes) {
-
-        # Verse milestone start/end
-        if ($node.LocalName -eq 'verse') {
-            if ($node.Attributes['osisID']) {
-                $currentVerse = [regex]::Match($node.Attributes['osisID'].Value, '\d+$').Value
-                $currentText  = ''
-            } elseif ($node.Attributes['eID']) {
-                if ($currentVerse) {
-                    $verses[$currentVerse] = NormalizeVerseText $currentText
-                    $currentVerse = $null
-                }
-            }
-            continue
-        }
-
-        if (-not $currentVerse) { continue }
-
-        # Word node with optional Strong's lemma
-        if ($node.LocalName -eq 'w') {
-            $currentText += $node.InnerText
-            if ($node.Attributes['lemma']) {
-                $links = Get-StrongLinkHtml $node.Attributes['lemma'].Value
-                if ($links) { $currentText += ' ' + $links }
-            }
-            $currentText += ' '
-            continue
-        }
-
-        # Italic / supplied words (transChange) and divine name spans
-        if ($node.LocalName -eq 'transChange' -or $node.LocalName -eq 'divineName') {
-            $currentText += $node.InnerText + ' '
-            continue
-        }
-
-        # OSIS cross-reference note
-        if ($node.LocalName -eq 'note' -and $node.Attributes['type'] -and
-            $node.Attributes['type'].Value -eq 'crossReference') {
-            $refs = @()
-            foreach ($refNode in $node.SelectNodes('o:reference', $ns)) {
-                $refOsisRef = $refNode.GetAttribute('osisRef')
-                $refText    = $refNode.InnerText.Trim()
-                if ($refOsisRef) {
-                    $refs += [pscustomobject]@{ OsisRef = $refOsisRef; DisplayText = $refText }
-                }
-            }
-            if ($refs.Count -gt 0) {
-                $verseXrefs[$currentVerse] = $refs
-            }
-            continue
-        }
-
-        # Plain text nodes
-        if ($node.NodeType -eq [System.Xml.XmlNodeType]::Text -or
-            $node.NodeType -eq [System.Xml.XmlNodeType]::CDATA) {
-            $currentText += $node.Value
-        }
-    }
-
-    # Flush last verse if milestone eID was missing
-    if ($currentVerse -and -not $verses.Contains($currentVerse)) {
-        $verses[$currentVerse] = NormalizeVerseText $currentText
-    }
+    $verses = ConvertTo-VerseHtml `
+        -ChapterNode $chapterNode `
+        -BookFolder  $book.Folder `
+        -BookName    $book.FullName `
+        -ChapterNum  $chNum
 
     if ($verses.Count -eq 0) {
-        Write-Warning "No verses found in $osisChId — skipping."
+        Write-Warning "No verses found in $osisChId -- skipping."
         continue
     }
 
-    # Record verse count for bible-data.js
     $VerseCountData[$book.OsisId][$chNum - 1] = $verses.Count
 
-    # ── Build verse HTML blocks ───────────────────────────────────────────────
-    $verseBlocks = ''
-    foreach ($vNum in $verses.Keys) {
-        $vText     = $verses[$vNum]
-        $xrefHtml  = ''
-        if ($verseXrefs.ContainsKey($vNum)) {
-            $xrefFile = "$($book.OsisId).$chNum.$vNum.html"
-            $xrefHtml = "  <a href=`"../../xrefs/$xrefFile`" class=`"superscript-link`" title=`"Cross-references for $($book.FullName) $chNum`:$vNum`">&#x271D;</a>"
+    $verseBlocks = [System.Text.StringBuilder]::new()
+    foreach ($v in $verses) {
+        $xrefHtml = ''
+        if ($v.Xrefs.Count -gt 0) {
+            $xrefFile = "$($book.OsisId).$chNum.$($v.Num).html"
+            $xrefHtml = "  <a href=`"../../xrefs/$xrefFile`" class=`"superscript-link`" title=`"Cross-references for $($book.FullName) $chNum`:$($v.Num)`">&#x271D;</a>"
         }
-        $verseBlocks += @"
-    <p class="verse" id="verse-$vNum">
-      <span class="verse-num">$vNum</span>
-      $vText$xrefHtml
-    </p>
-"@
+        [void]$verseBlocks.Append("
+    <p class=`"verse`" id=`"verse-$($v.Num)`">
+      <span class=`"verse-num`">$($v.Num)</span>
+      $($v.Html)$xrefHtml
+    </p>")
     }
 
-    # ── Compute prev/next navigation ──────────────────────────────────────────
     $flatIdx  = $FlatChapters.IndexOf($entry)
     $prevHtml = ''
     $nextHtml = ''
 
     if ($flatIdx -gt 0) {
-        $prev = $FlatChapters[$flatIdx - 1]
-        if ($prev.Book.OsisId -eq $book.OsisId) {
-            $prevHref = "$($prev.Chapter).html"
-        } else {
-            $prevHref = "../$($prev.Book.Folder)/$($prev.Chapter).html"
-        }
+        $prev      = $FlatChapters[$flatIdx - 1]
+        $prevHref  = if ($prev.Book.OsisId -eq $book.OsisId) { "$($prev.Chapter).html" } else { "../$($prev.Book.Folder)/$($prev.Chapter).html" }
         $prevLabel = "$($prev.Book.FullName) $($prev.Chapter)"
         $prevHtml  = "<a href=`"$prevHref`" class=`"btn`" title=`"$prevLabel`">&#9664; Prev</a>"
     }
 
     if ($flatIdx -lt ($FlatChapters.Count - 1)) {
-        $next = $FlatChapters[$flatIdx + 1]
-        if ($next.Book.OsisId -eq $book.OsisId) {
-            $nextHref = "$($next.Chapter).html"
-        } else {
-            $nextHref = "../$($next.Book.Folder)/$($next.Chapter).html"
-        }
+        $next      = $FlatChapters[$flatIdx + 1]
+        $nextHref  = if ($next.Book.OsisId -eq $book.OsisId) { "$($next.Chapter).html" } else { "../$($next.Book.Folder)/$($next.Chapter).html" }
         $nextLabel = "$($next.Book.FullName) $($next.Chapter)"
         $nextHtml  = "<a href=`"$nextHref`" class=`"btn`" title=`"$nextLabel`">Next &#9654;</a>"
     }
 
-    # ── Write chapter HTML ────────────────────────────────────────────────────
     $bookFolder = Join-Path $OutputRoot "books/$($book.Folder)"
     Ensure-Dir $bookFolder
 
@@ -375,7 +482,7 @@ foreach ($entry in $FlatChapters) {
   </nav>
 
   <main class="chapter-content">
-$verseBlocks
+$($verseBlocks.ToString())
   </main>
 
   <footer class="chapter-footer">
@@ -386,36 +493,33 @@ $verseBlocks
     </div>
   </footer>
 
-  <!-- Phase 1: Core functionality (works on Kindle + PC) -->
   <script src="../../js/fontsize.js"></script>
   <script src="../../js/bookmarks.js"></script>
-  <!-- Phase 2: PC-only enhancements (stripped during EPUB packaging) -->
   <script src="../../js/notes.js"></script>
 
 </body>
 </html>
 "@
 
-    $chapterFile = Join-Path $bookFolder "$chNum.html"
-    $chapterHtml | Set-Content -Path $chapterFile -Encoding UTF8
+    $chapterHtml | Set-Content -Path (Join-Path $bookFolder "$chNum.html") -Encoding UTF8
 
-    # ── Write xref pages ──────────────────────────────────────────────────────
-    foreach ($vNum in $verseXrefs.Keys) {
-        $refs     = $verseXrefs[$vNum]
-        $xrefFile = "$($book.OsisId).$chNum.$vNum.html"
+    foreach ($v in $verses) {
+        if ($v.Xrefs.Count -eq 0) { continue }
+
+        $xrefFile = "$($book.OsisId).$chNum.$($v.Num).html"
         $xrefPath = Join-Path $OutputRoot "xrefs/$xrefFile"
+        $refItems = [System.Text.StringBuilder]::new()
 
-        $refItems = ''
-        foreach ($ref in $refs) {
-            $url   = Get-ChapterUrl $ref.OsisRef $book.Folder
-            $label = Get-RefLabel  $ref.OsisRef  $ref.DisplayText
+        foreach ($osisRef in $v.Xrefs) {
+            $url   = Get-ChapterUrl $osisRef
+            $label = Get-RefLabel $osisRef ''
             if ($url) {
-                $refItems += "    <li><a href=`"$url`" class=`"xref-link`">$(HtmlEscape $label)</a></li>`n"
+                [void]$refItems.Append("    <li><a href=`"$url`" class=`"xref-link`">$([System.Net.WebUtility]::HtmlEncode($label))</a></li>`n")
             }
         }
 
-        $backUrl  = "../books/$($book.Folder)/$chNum.html#verse-$vNum"
-        $pageTitle = "$($book.FullName) $chNum`:$vNum"
+        $backUrl   = "../books/$($book.Folder)/$chNum.html#verse-$($v.Num)"
+        $pageTitle = "$($book.FullName) $chNum`:$($v.Num)"
 
         $xrefHtml = @"
 <!DOCTYPE html>
@@ -436,8 +540,7 @@ $verseBlocks
   </nav>
   <main class="chapter-content">
     <ul class="xref-list">
-$refItems
-    </ul>
+$($refItems.ToString())    </ul>
   </main>
   <footer class="chapter-footer">
     <div class="nav-buttons">
@@ -458,46 +561,30 @@ $refItems
 
 Write-Host "Chapter generation complete." -ForegroundColor Green
 
-# ── Phase 4: Generate js/bible-data.js ───────────────────────────────────────
+# Phase 4: Generate js/bible-data.js
 Write-Host "Generating js/bible-data.js..." -ForegroundColor Cyan
 
-$jsEntries = ''
+$jsEntries = [System.Text.StringBuilder]::new()
 foreach ($book in $booksToProcess) {
-    $counts     = $VerseCountData[$book.OsisId]
-    $countsStr  = $counts -join ', '
-    $jsEntries += @"
-  {
-    num: $($book.Num),
-    abbr: "$($book.OsisId)",
-    name: "$(HtmlEscape $book.FullName)",
-    folder: "$($book.Folder)",
-    chapters: [$countsStr]
-  },
-"@
+    $counts    = $VerseCountData[$book.OsisId]
+    $countsStr = $counts -join ', '
+    [void]$jsEntries.Append("  {`n    num: $($book.Num),`n    abbr: `"$($book.OsisId)`",`n    name: `"$($book.FullName)`",`n    folder: `"$($book.Folder)`",`n    chapters: [$countsStr]`n  },`n")
 }
 
-$bibleDataJs = @"
-// bible-data.js -- generated by generate_bible.ps1
-// ES3-compatible: var declaration, plain object literals, no const/let
-var BIBLE_DATA = [
-$jsEntries];
-"@
-
-$bibleDataJs | Set-Content -Path (Join-Path $OutputRoot 'js/bible-data.js') -Encoding UTF8
+"// bible-data.js -- generated by generate_bible.ps1`n// ES3-compatible: var declaration, plain object literals`nvar BIBLE_DATA = [`n$($jsEntries.ToString())];" | Set-Content -Path (Join-Path $OutputRoot 'js/bible-data.js') -Encoding UTF8
 Write-Host "js/bible-data.js written." -ForegroundColor Green
 
-# ── Phase 5: Generate index.html ─────────────────────────────────────────────
+# Phase 5: Generate index.html
 Write-Host "Generating index.html..." -ForegroundColor Cyan
 
-$otLinks = ''
-$ntLinks = ''
+$otLinks = [System.Text.StringBuilder]::new()
+$ntLinks = [System.Text.StringBuilder]::new()
 foreach ($book in $BookTable) {
     $link = "  <li><a href=`"books/$($book.Folder)/1.html`">$($book.FullName)</a> <span class=`"chapter-count`">($($book.Chapters) ch)</span></li>`n"
-    if ($book.Testament -eq 'OT') { $otLinks += $link }
-    else                           { $ntLinks += $link }
+    if ($book.Testament -eq 'OT') { [void]$otLinks.Append($link) } else { [void]$ntLinks.Append($link) }
 }
 
-$indexHtml = @"
+@"
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -517,23 +604,21 @@ $indexHtml = @"
     <div id="bookmark-resume"></div>
     <h2 class="testament-heading">Old Testament</h2>
     <ul class="book-list">
-$otLinks    </ul>
+$($otLinks.ToString())    </ul>
     <h2 class="testament-heading">New Testament</h2>
     <ul class="book-list">
-$ntLinks    </ul>
+$($ntLinks.ToString())    </ul>
   </main>
   <script src="js/bookmarks.js"></script>
 </body>
 </html>
-"@
-
-$indexHtml | Set-Content -Path (Join-Path $OutputRoot 'index.html') -Encoding UTF8
+"@ | Set-Content -Path (Join-Path $OutputRoot 'index.html') -Encoding UTF8
 Write-Host "index.html written." -ForegroundColor Green
 
-# ── Phase 6: Generate navigate.html ──────────────────────────────────────────
+# Phase 6: Generate navigate.html
 Write-Host "Generating navigate.html..." -ForegroundColor Cyan
 
-$navigateHtml = @'
+@'
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -551,34 +636,24 @@ $navigateHtml = @'
   </nav>
   <main class="chapter-content">
     <div class="navigator-form">
-
       <label for="book-select">Book:</label>
       <select id="book-select" onchange="onBookChange()" style="width:100%;padding:10px;font-size:18px;margin-bottom:12px;">
         <option value="">-- Select a Book --</option>
       </select>
-
       <label for="chapter-select">Chapter:</label>
-      <select id="chapter-select" onchange="onChapterChange()" disabled="disabled"
-              style="width:100%;padding:10px;font-size:18px;margin-bottom:12px;">
+      <select id="chapter-select" onchange="onChapterChange()" disabled="disabled" style="width:100%;padding:10px;font-size:18px;margin-bottom:12px;">
         <option value="">-- Select a Chapter --</option>
       </select>
-
       <label for="verse-select">Verse:</label>
-      <select id="verse-select" disabled="disabled"
-              style="width:100%;padding:10px;font-size:18px;margin-bottom:16px;">
+      <select id="verse-select" disabled="disabled" style="width:100%;padding:10px;font-size:18px;margin-bottom:16px;">
         <option value="any">-- any (top of chapter) --</option>
       </select>
-
       <button onclick="onGo()" style="width:100%;padding:12px;font-size:20px;">Go</button>
-
     </div>
   </main>
-
   <script src="js/bible-data.js"></script>
   <script>
-  // ES3-compatible navigator logic
   var selectedBookIdx = -1;
-
   function populateBooks() {
     var sel = document.getElementById('book-select');
     var i, book, opt;
@@ -590,98 +665,71 @@ $navigateHtml = @'
       sel.appendChild(opt);
     }
   }
-
   function onBookChange() {
     var bookSel = document.getElementById('book-select');
     var chSel   = document.getElementById('chapter-select');
     var vsSel   = document.getElementById('verse-select');
     var idx     = parseInt(bookSel.value, 10);
-
-    // Reset chapter and verse
-    chSel.options.length = 1;  // keep the placeholder
-    vsSel.options.length = 1;  // keep the placeholder
+    chSel.options.length = 1;
+    vsSel.options.length = 1;
     chSel.disabled = true;
     vsSel.disabled = true;
-
     if (isNaN(idx)) { selectedBookIdx = -1; return; }
     selectedBookIdx = idx;
-
     var book = BIBLE_DATA[idx];
     var i, opt;
     for (i = 0; i < book.chapters.length; i++) {
-      opt       = document.createElement('option');
+      opt = document.createElement('option');
       opt.value = i + 1;
       opt.text  = 'Chapter ' + (i + 1);
       chSel.appendChild(opt);
     }
     chSel.disabled = false;
   }
-
   function onChapterChange() {
     var chSel  = document.getElementById('chapter-select');
     var vsSel  = document.getElementById('verse-select');
     var chNum  = parseInt(chSel.value, 10);
-
-    vsSel.options.length = 1;  // keep the "any" placeholder
+    vsSel.options.length = 1;
     vsSel.disabled = true;
-
     if (isNaN(chNum) || selectedBookIdx < 0) { return; }
-
     var book       = BIBLE_DATA[selectedBookIdx];
     var verseCount = book.chapters[chNum - 1];
     var i, opt;
     for (i = 1; i <= verseCount; i++) {
-      opt       = document.createElement('option');
+      opt = document.createElement('option');
       opt.value = i;
       opt.text  = 'Verse ' + i;
       vsSel.appendChild(opt);
     }
     vsSel.disabled = false;
   }
-
   function onGo() {
     var bookSel = document.getElementById('book-select');
     var chSel   = document.getElementById('chapter-select');
     var vsSel   = document.getElementById('verse-select');
-
-    var idx   = parseInt(bookSel.value, 10);
-    var chNum = parseInt(chSel.value, 10);
-
-    if (isNaN(idx) || isNaN(chNum)) {
-      alert('Please select a book and chapter.');
-      return;
-    }
-
-    var book   = BIBLE_DATA[idx];
-    var url    = 'books/' + book.folder + '/' + chNum + '.html';
-    var vsVal  = vsSel.value;
-    if (vsVal && vsVal !== 'any') {
-      url += '#verse-' + vsVal;
-    }
+    var idx     = parseInt(bookSel.value, 10);
+    var chNum   = parseInt(chSel.value, 10);
+    if (isNaN(idx) || isNaN(chNum)) { alert('Please select a book and chapter.'); return; }
+    var book  = BIBLE_DATA[idx];
+    var url   = 'books/' + book.folder + '/' + chNum + '.html';
+    var vsVal = vsSel.value;
+    if (vsVal && vsVal !== 'any') { url += '#verse-' + vsVal; }
     window.location.href = url;
   }
-
-  // Initialise on load
   populateBooks();
   </script>
-
 </body>
 </html>
-'@
-
-$navigateHtml | Set-Content -Path (Join-Path $OutputRoot 'navigate.html') -Encoding UTF8
+'@ | Set-Content -Path (Join-Path $OutputRoot 'navigate.html') -Encoding UTF8
 Write-Host "navigate.html written." -ForegroundColor Green
 
-# ── Phase 7: Generate js/fontsize.js ─────────────────────────────────────────
+# Phase 7: Generate js/fontsize.js
 Write-Host "Generating js/fontsize.js..." -ForegroundColor Cyan
-
-$fontsizeJs = @'
-// fontsize.js -- ES3-compatible font size toggle
-// Cycles body class through font-normal -> font-large -> font-xlarge -> font-small
+@'
 (function () {
   var SIZES = ['font-normal', 'font-large', 'font-xlarge', 'font-small'];
   var KEY   = 'kjv-fontsize';
-
   function applySize(size) {
     var i;
     for (i = 0; i < SIZES.length; i++) {
@@ -691,21 +739,14 @@ $fontsizeJs = @'
     }
     document.body.className = (document.body.className + ' ' + size).replace(/\s+/g, ' ').replace(/^\s|\s$/, '');
   }
-
-  // Apply saved preference immediately on load (before render)
   var saved = '';
   try { saved = localStorage.getItem(KEY) || ''; } catch(e) {}
   if (saved) { applySize(saved); }
-
-  // Expose toggle function for the Aa button
   window.cycleFontSize = function () {
     var current = '';
     var i;
     for (i = 0; i < SIZES.length; i++) {
-      if (document.body.className.indexOf(SIZES[i]) !== -1) {
-        current = SIZES[i];
-        break;
-      }
+      if (document.body.className.indexOf(SIZES[i]) !== -1) { current = SIZES[i]; break; }
     }
     var nextIdx  = (SIZES.indexOf(current) + 1) % SIZES.length;
     var nextSize = SIZES[nextIdx];
@@ -713,37 +754,22 @@ $fontsizeJs = @'
     try { localStorage.setItem(KEY, nextSize); } catch(e) {}
   };
 }());
-'@
-
-$fontsizeJs | Set-Content -Path (Join-Path $OutputRoot 'js/fontsize.js') -Encoding UTF8
+'@ | Set-Content -Path (Join-Path $OutputRoot 'js/fontsize.js') -Encoding UTF8
 Write-Host "js/fontsize.js written." -ForegroundColor Green
 
-# ── Phase 8: Generate js/bookmarks.js ────────────────────────────────────────
+# Phase 8: Generate js/bookmarks.js
 Write-Host "Generating js/bookmarks.js..." -ForegroundColor Cyan
-
-$bookmarksJs = @'
-// bookmarks.js -- ES3-compatible reading position bookmark
-// Auto-saves position on chapter pages; shows resume link on index.html
+@'
 (function () {
   var KEY = 'kjv-bookmark';
-
-  // Save position when leaving a chapter page
   if (document.body.className.indexOf('bible-text') !== -1) {
     var h1 = document.getElementsByTagName('h1')[0];
     var pageTitle = h1 ? h1.innerText || h1.textContent : document.title;
-
     window.onbeforeunload = function () {
-      var bookmark = {
-        url:   window.location.href,
-        scroll: window.pageYOffset || document.documentElement.scrollTop || 0,
-        title:  pageTitle,
-        saved:  new Date().toISOString()
-      };
+      var bookmark = { url: window.location.href, scroll: window.pageYOffset || document.documentElement.scrollTop || 0, title: pageTitle, saved: new Date().toISOString() };
       try { localStorage.setItem(KEY, JSON.stringify(bookmark)); } catch(e) {}
     };
   }
-
-  // Show resume link on index.html
   var resumeDiv = document.getElementById('bookmark-resume');
   if (resumeDiv) {
     var saved = '';
@@ -752,18 +778,15 @@ $bookmarksJs = @'
       var bm = null;
       try { bm = JSON.parse(saved); } catch(e) {}
       if (bm && bm.url && bm.title) {
-        resumeDiv.innerHTML = '<p class="bookmark-resume"><a href="' + bm.url +
-          '" class="btn">Resume: ' + bm.title + '</a></p>';
+        resumeDiv.innerHTML = '<p class="bookmark-resume"><a href="' + bm.url + '" class="btn">Resume: ' + bm.title + '</a></p>';
       }
     }
   }
 }());
-'@
-
-$bookmarksJs | Set-Content -Path (Join-Path $OutputRoot 'js/bookmarks.js') -Encoding UTF8
+'@ | Set-Content -Path (Join-Path $OutputRoot 'js/bookmarks.js') -Encoding UTF8
 Write-Host "js/bookmarks.js written." -ForegroundColor Green
 
-# ── Done ──────────────────────────────────────────────────────────────────────
+# Done
 Write-Host ""
 Write-Host "=====================================" -ForegroundColor Green
 Write-Host " generate_bible.ps1 complete!" -ForegroundColor Green
@@ -772,8 +795,8 @@ Write-Host " Chapters generated : $doneChapters" -ForegroundColor Green
 Write-Host " Output root        : $OutputRoot" -ForegroundColor Green
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Yellow
-Write-Host "  1. Open index.html in your browser and verify layout"
-Write-Host "  2. Test Strong's links and xref superscripts"
-Write-Host "  3. Test navigate.html cascading dropdowns"
-Write-Host "  4. Verify Genesis 50 -> Exodus 1 cross-book navigation"
-Write-Host "  5. Run full 66-book generation (remove -BookFilter)"
+Write-Host "  1. Run qa-test.ps1 to verify output"
+Write-Host "  2. Check John 3 -- should now have all 36 verses"
+Write-Host "  3. Check Matthew 5 (Sermon on the Mount) -- previously had large gaps"
+Write-Host "  4. Run verse_gaps.ps1 -- should show zero gaps"
+Write-Host "  5. If clean, commit to GitHub"

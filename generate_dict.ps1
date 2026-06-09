@@ -191,7 +191,7 @@ $kjvBlock
 "@
     $dir = Split-Path $FilePath
     if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
-    $html | Set-Content -Path $FilePath -Encoding UTF8
+    [System.IO.File]::WriteAllText($FilePath, $html, [System.Text.Encoding]::UTF8)
 }
 
 # Hebrew
