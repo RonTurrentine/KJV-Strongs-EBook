@@ -3,44 +3,91 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KJV Strong's Demo — Home</title>
+  <title>KJV Bible with Strong's Concordance</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="bible-text">
-  <header class="page-header">
-    <h1>KJV Strong's Demo</h1>
-    <p class="chapter-nav">
-      <a href="sample-index.html" class="btn" title="Open sample navigation hub">Sample Hub</a>
-      <a href="sample-chapter-gen1.html" class="btn" title="Open sample Genesis chapter">Genesis 1 Sample</a>
-      <a href="sample-verse.html" class="btn" title="Open sample verse page">Sample Verse</a>
-      <a href="sample-verse-2.html" class="btn" title="Open alternate sample verse page">Sample Verse 2</a>
-    </p>
-  </header>
-
+  <nav class="chapter-nav">
+    <h1>KJV Bible</h1>
+    <div class="nav-buttons">
+      <a href="navigate.html" class="btn">Go To Passage</a>
+    </div>
+  </nav>
   <main class="chapter-content">
-    <article class="section note-section">
-      <p class="note-title"><strong>Project Entry Point</strong></p>
-      <p>This is the main project entry page for the KJV Strong's demo. Use it to access the current sample preview hub and working example pages.</p>
-    </article>
-
-    <article class="section note-section">
-      <p class="note-title"><strong>Current demo pages</strong></p>
-      <ul>
-        <li><a href="sample-index.html">Sample Navigation Hub</a></li>
-        <li><a href="sample-chapter-gen1.html">Sample Genesis 1 chapter page</a></li>
-        <li><a href="sample-verse.html">Sample verse page with inline links</a></li>
-        <li><a href="sample-verse-2.html">Alternate sample verse page</a></li>
-      </ul>
-    </article>
-
-    <article class="section note-section">
-      <p class="note-title"><strong>Next work</strong></p>
-      <p>Future generated outputs will be linked from this page, including Bible chapters, books, and Strong's dictionary entries.</p>
-    </article>
+    <div id="bookmark-resume"></div>
+    <h2 class="testament-heading">Old Testament</h2>
+    <ul class="book-list">
+  <li><a href="books/01-Gen/1.html">Genesis</a> <span class="chapter-count">(50 ch)</span></li>
+  <li><a href="books/02-Exod/1.html">Exodus</a> <span class="chapter-count">(40 ch)</span></li>
+  <li><a href="books/03-Lev/1.html">Leviticus</a> <span class="chapter-count">(27 ch)</span></li>
+  <li><a href="books/04-Num/1.html">Numbers</a> <span class="chapter-count">(36 ch)</span></li>
+  <li><a href="books/05-Deut/1.html">Deuteronomy</a> <span class="chapter-count">(34 ch)</span></li>
+  <li><a href="books/06-Josh/1.html">Joshua</a> <span class="chapter-count">(24 ch)</span></li>
+  <li><a href="books/07-Judg/1.html">Judges</a> <span class="chapter-count">(21 ch)</span></li>
+  <li><a href="books/08-Ruth/1.html">Ruth</a> <span class="chapter-count">(4 ch)</span></li>
+  <li><a href="books/09-1Sam/1.html">1 Samuel</a> <span class="chapter-count">(31 ch)</span></li>
+  <li><a href="books/10-2Sam/1.html">2 Samuel</a> <span class="chapter-count">(24 ch)</span></li>
+  <li><a href="books/11-1Kgs/1.html">1 Kings</a> <span class="chapter-count">(22 ch)</span></li>
+  <li><a href="books/12-2Kgs/1.html">2 Kings</a> <span class="chapter-count">(25 ch)</span></li>
+  <li><a href="books/13-1Chr/1.html">1 Chronicles</a> <span class="chapter-count">(29 ch)</span></li>
+  <li><a href="books/14-2Chr/1.html">2 Chronicles</a> <span class="chapter-count">(36 ch)</span></li>
+  <li><a href="books/15-Ezra/1.html">Ezra</a> <span class="chapter-count">(10 ch)</span></li>
+  <li><a href="books/16-Neh/1.html">Nehemiah</a> <span class="chapter-count">(13 ch)</span></li>
+  <li><a href="books/17-Esth/1.html">Esther</a> <span class="chapter-count">(10 ch)</span></li>
+  <li><a href="books/18-Job/1.html">Job</a> <span class="chapter-count">(42 ch)</span></li>
+  <li><a href="books/19-Ps/1.html">Psalms</a> <span class="chapter-count">(150 ch)</span></li>
+  <li><a href="books/20-Prov/1.html">Proverbs</a> <span class="chapter-count">(31 ch)</span></li>
+  <li><a href="books/21-Eccl/1.html">Ecclesiastes</a> <span class="chapter-count">(12 ch)</span></li>
+  <li><a href="books/22-Song/1.html">Song of Solomon</a> <span class="chapter-count">(8 ch)</span></li>
+  <li><a href="books/23-Isa/1.html">Isaiah</a> <span class="chapter-count">(66 ch)</span></li>
+  <li><a href="books/24-Jer/1.html">Jeremiah</a> <span class="chapter-count">(52 ch)</span></li>
+  <li><a href="books/25-Lam/1.html">Lamentations</a> <span class="chapter-count">(5 ch)</span></li>
+  <li><a href="books/26-Ezek/1.html">Ezekiel</a> <span class="chapter-count">(48 ch)</span></li>
+  <li><a href="books/27-Dan/1.html">Daniel</a> <span class="chapter-count">(12 ch)</span></li>
+  <li><a href="books/28-Hos/1.html">Hosea</a> <span class="chapter-count">(14 ch)</span></li>
+  <li><a href="books/29-Joel/1.html">Joel</a> <span class="chapter-count">(3 ch)</span></li>
+  <li><a href="books/30-Amos/1.html">Amos</a> <span class="chapter-count">(9 ch)</span></li>
+  <li><a href="books/31-Obad/1.html">Obadiah</a> <span class="chapter-count">(1 ch)</span></li>
+  <li><a href="books/32-Jonah/1.html">Jonah</a> <span class="chapter-count">(4 ch)</span></li>
+  <li><a href="books/33-Mic/1.html">Micah</a> <span class="chapter-count">(7 ch)</span></li>
+  <li><a href="books/34-Nah/1.html">Nahum</a> <span class="chapter-count">(3 ch)</span></li>
+  <li><a href="books/35-Hab/1.html">Habakkuk</a> <span class="chapter-count">(3 ch)</span></li>
+  <li><a href="books/36-Zeph/1.html">Zephaniah</a> <span class="chapter-count">(3 ch)</span></li>
+  <li><a href="books/37-Hag/1.html">Haggai</a> <span class="chapter-count">(2 ch)</span></li>
+  <li><a href="books/38-Zech/1.html">Zechariah</a> <span class="chapter-count">(14 ch)</span></li>
+  <li><a href="books/39-Mal/1.html">Malachi</a> <span class="chapter-count">(4 ch)</span></li>
+    </ul>
+    <h2 class="testament-heading">New Testament</h2>
+    <ul class="book-list">
+  <li><a href="books/40-Matt/1.html">Matthew</a> <span class="chapter-count">(28 ch)</span></li>
+  <li><a href="books/41-Mark/1.html">Mark</a> <span class="chapter-count">(16 ch)</span></li>
+  <li><a href="books/42-Luke/1.html">Luke</a> <span class="chapter-count">(24 ch)</span></li>
+  <li><a href="books/43-John/1.html">John</a> <span class="chapter-count">(21 ch)</span></li>
+  <li><a href="books/44-Acts/1.html">Acts</a> <span class="chapter-count">(28 ch)</span></li>
+  <li><a href="books/45-Rom/1.html">Romans</a> <span class="chapter-count">(16 ch)</span></li>
+  <li><a href="books/46-1Cor/1.html">1 Corinthians</a> <span class="chapter-count">(16 ch)</span></li>
+  <li><a href="books/47-2Cor/1.html">2 Corinthians</a> <span class="chapter-count">(13 ch)</span></li>
+  <li><a href="books/48-Gal/1.html">Galatians</a> <span class="chapter-count">(6 ch)</span></li>
+  <li><a href="books/49-Eph/1.html">Ephesians</a> <span class="chapter-count">(6 ch)</span></li>
+  <li><a href="books/50-Phil/1.html">Philippians</a> <span class="chapter-count">(4 ch)</span></li>
+  <li><a href="books/51-Col/1.html">Colossians</a> <span class="chapter-count">(4 ch)</span></li>
+  <li><a href="books/52-1Thess/1.html">1 Thessalonians</a> <span class="chapter-count">(5 ch)</span></li>
+  <li><a href="books/53-2Thess/1.html">2 Thessalonians</a> <span class="chapter-count">(3 ch)</span></li>
+  <li><a href="books/54-1Tim/1.html">1 Timothy</a> <span class="chapter-count">(6 ch)</span></li>
+  <li><a href="books/55-2Tim/1.html">2 Timothy</a> <span class="chapter-count">(4 ch)</span></li>
+  <li><a href="books/56-Titus/1.html">Titus</a> <span class="chapter-count">(3 ch)</span></li>
+  <li><a href="books/57-Phlm/1.html">Philemon</a> <span class="chapter-count">(1 ch)</span></li>
+  <li><a href="books/58-Heb/1.html">Hebrews</a> <span class="chapter-count">(13 ch)</span></li>
+  <li><a href="books/59-Jas/1.html">James</a> <span class="chapter-count">(5 ch)</span></li>
+  <li><a href="books/60-1Pet/1.html">1 Peter</a> <span class="chapter-count">(5 ch)</span></li>
+  <li><a href="books/61-2Pet/1.html">2 Peter</a> <span class="chapter-count">(3 ch)</span></li>
+  <li><a href="books/62-1John/1.html">1 John</a> <span class="chapter-count">(5 ch)</span></li>
+  <li><a href="books/63-2John/1.html">2 John</a> <span class="chapter-count">(1 ch)</span></li>
+  <li><a href="books/64-3John/1.html">3 John</a> <span class="chapter-count">(1 ch)</span></li>
+  <li><a href="books/65-Jude/1.html">Jude</a> <span class="chapter-count">(1 ch)</span></li>
+  <li><a href="books/66-Rev/1.html">Revelation</a> <span class="chapter-count">(22 ch)</span></li>
+    </ul>
   </main>
-
-  <footer class="chapter-footer">
-    <p>Last updated: <span class="note-meta">2026-06-06</span></p>
-  </footer>
+  <script src="js/bookmarks.js"></script>
 </body>
 </html>
