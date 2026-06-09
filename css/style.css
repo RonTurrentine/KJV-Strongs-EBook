@@ -169,18 +169,20 @@ a:hover {
 
 .strongs-link {
   display: inline-block;
-  color: var(--link-blue);
+  color: #0a0a0a;
   text-decoration: none;
-  background-color: rgba(0, 188, 212, 0.14);
-  border-radius: 12px;
-  padding: 2px 8px;
+  background-color: #008b8b ;
+  border-radius: 4px;
+  padding: 1px 5px;
   margin: 0 2px;
+  font-size: 0.82em;
+  font-weight: bold;
   transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 .strongs-link:hover,
 .strongs-link:focus-visible {
-  background-color: rgba(0, 188, 212, 0.24);
+  background-color: #00b7eb;
   transform: translateY(-1px);
 }
 
