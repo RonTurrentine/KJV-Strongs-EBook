@@ -1,3 +1,11 @@
+# generate_dict.ps1
+# Generates one HTML page per Strong's entry for Hebrew and Greek lexicons.
+# Uses Android 2.3 WebKit compatible CSS class names (dict-page, dict-header, etc.)
+# matching the Kindle-compatible stylesheet structure.
+#
+# Usage:
+#   pwsh -NoProfile -File .\generate_dict.ps1
+
 param(
     [string]$HebrewPath  = 'StrongHebrewG.xml',
     [string]$GreekPath   = 'strongsgreek.xml',
@@ -5,7 +13,6 @@ param(
 )
 
 # Part of Speech expansion table (Hebrew OSIS morph codes)
-
 $posMap = @{
     # Common nouns
     'n'         = 'Noun'
@@ -123,12 +130,10 @@ function Write-DictPage {
         [string]$Language
     )
 
-    $lang     = $Language.ToLower()
-    $cssPath  = '../../css/style.css'
-    $idxPath  = '../../indexes/strongs-' + $lang + '-index.html'
-    $idxLabel = $Language + ' Index'
-
-    # Build title safely without em dash to avoid parser issues
+    $lang      = $Language.ToLower()
+    $cssPath   = '../../css/style.css'
+    $idxPath   = '../../indexes/strongs-' + $lang + '-index.html'
+    $idxLabel  = $Language + ' Index'
     $titleText = HtmlEscape ($StrongsId + ' - ' + $OriginalWord)
     $origHtml  = HtmlEscape $OriginalWord
     $xlitHtml  = HtmlEscape (NormalizeText $Translit)
@@ -139,59 +144,72 @@ function Write-DictPage {
     $orgHtml   = HtmlEscape (NormalizeText $Origin)
 
     $posRow = if ($posHtml) {
-        '      <tr><th>Part of Speech</th><td>' + $posHtml + '</td></tr>'
+        '          <tr><th>Part of Speech</th><td>' + $posHtml + '</td></tr>'
     } else { '' }
 
     $originRow = if ($orgHtml) {
-        '      <tr><th>Origin</th><td>' + $orgHtml + '</td></tr>'
+        '          <tr><th>Origin</th><td>' + $orgHtml + '</td></tr>'
     } else { '' }
 
     $kjvBlock = if ($kjvHtml) {
-        '<div class="strongs-kjv"><p class="note-title"><strong>Strong''s Definition / KJV Usage</strong></p><p>' + $kjvHtml + '</p></div>'
+        '<div class="dict-kjv"><p class="dict-label">Strong''s Definition / KJV Usage</p><p>' + $kjvHtml + '</p></div>'
     } else { '' }
 
     $html = @"
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>$titleText</title>
-<link rel="stylesheet" href="$cssPath">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>$titleText</title>
+  <link rel="stylesheet" href="$cssPath">
 </head>
-<body class="bible-text">
-<header class="page-header">
-  <h1 class="strongs-entry-id">$StrongsId</h1>
-  <p class="chapter-nav">
-    <a href="javascript:history.back()" class="btn" title="Go back">Back</a>
-    <a href="$idxPath" class="btn" title="Browse $Language index">$idxLabel</a>
-  </p>
-</header>
-<main class="chapter-content">
-  <article class="verse-block strongs-entry">
-    <p class="strongs-original" lang="$lang">$origHtml</p>
-    <table class="strongs-table">
-      <tr><th>Transliteration</th><td>$xlitHtml</td></tr>
-      <tr><th>Phonetic</th><td>$phonHtml</td></tr>
+<body>
+  <div class="dict-page">
+
+    <div class="dict-header">
+      <h1 class="dict-strongs-id">$StrongsId</h1>
+      <div class="dict-nav">
+        <a href="javascript:history.back()" class="btn">Back</a>
+        <a href="$idxPath" class="btn">$idxLabel</a>
+      </div>
+    </div>
+
+    <div class="dict-body">
+
+      <p class="dict-original" lang="$lang">$origHtml</p>
+
+      <table class="dict-table">
+        <tbody>
+          <tr><th>Transliteration</th><td>$xlitHtml</td></tr>
+          <tr><th>Phonetic</th><td>$phonHtml</td></tr>
 $posRow
 $originRow
-    </table>
-    <div class="strongs-def">
-      <p class="note-title"><strong>Definition</strong></p>
-      <p>$defHtml</p>
-    </div>
+        </tbody>
+      </table>
+
+      <div class="dict-def">
+        <p class="dict-label">Definition</p>
+        <p>$defHtml</p>
+      </div>
+
 $kjvBlock
-  </article>
-</main>
-<footer class="chapter-footer">
-  <p>Strong's $Language Lexicon - $StrongsId</p>
-</footer>
+
+    </div>
+
+    <div class="dict-footer">
+      <a href="javascript:history.back()" class="btn">Back</a>
+    </div>
+
+  </div>
 </body>
 </html>
 "@
+
     $dir = Split-Path $FilePath
     if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
-    [System.IO.File]::WriteAllText($FilePath, $html, [System.Text.Encoding]::UTF8)
+    $absolutePath = [System.IO.Path]::GetFullPath($FilePath)
+    [System.IO.File]::WriteAllText($absolutePath, $html, [System.Text.Encoding]::UTF8)
 }
 
 # Hebrew

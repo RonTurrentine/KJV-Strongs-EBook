@@ -1,0 +1,949 @@
+/* ================================================================
+   KJV Strong's Bible — Android 2.3 WebKit Compatible Stylesheet
+   ================================================================
+   Target: Kindle Fire D01E / Fire OS 6.3.4 / Android 2.3 WebKit
+   
+   COMPATIBILITY RULES ENFORCED:
+   - No display: flex / inline-flex / grid
+   - No gap property (use margin)
+   - No position: sticky (JS handles this)
+   - No calc(), var(), rem units
+   - No transition / animation (removed)
+   - -webkit- prefix on border-radius, box-shadow, box-sizing
+   - Hex color fallbacks before rgba()
+   - px and em units only (no rem)
+   ================================================================ */
+
+
+/* ── Reset & Base ──────────────────────────────────────────────── */
+
+* {
+    margin: 0;
+    padding: 0;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 16px;
+    line-height: 1.6;
+    padding: 0;
+    margin: 0;
+    -webkit-tap-highlight-color: rgba(0, 188, 212, 0.3);
+}
+
+a {
+    color: #64b5f6;
+    text-decoration: none;
+}
+
+a:active {
+    color: #90caf9;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+
+/* ── Font Size Classes ─────────────────────────────────────────── */
+
+body.font-small {
+    font-size: 13px;
+}
+
+/* font-normal is the default 16px on body */
+body.font-normal {
+    font-size: 16px;
+}
+
+body.font-large {
+    font-size: 19px;
+}
+
+body.font-xlarge {
+    font-size: 22px;
+}
+
+
+/* ── Chapter Navigation Header ─────────────────────────────────── 
+   Replaced: display: flex → inline-block buttons in centered div
+   The .is-fixed class is toggled by sticky-header.js              */
+
+.chapter-nav {
+    background-color: #252525;
+    padding: 8px 10px;
+    border-bottom: 1px solid #333333;
+    position: relative;
+    z-index: 100;
+}
+
+.chapter-nav.is-fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    border-bottom: 2px solid #00bcd4;
+}
+
+/* Placeholder inserted by JS to prevent content jump */
+.header-placeholder {
+    display: none;
+}
+
+.book-chapter {
+    font-size: 1.15em;
+    font-weight: bold;
+    color: #ffffff;
+    text-align: center;
+    margin: 0 0 6px 0;
+    padding: 0;
+    line-height: 1.3;
+}
+
+.nav-buttons {
+    text-align: center;
+    /* clearfix for any floated children */
+    overflow: hidden;
+}
+
+.nav-buttons:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+
+/* ── Buttons (.btn) ────────────────────────────────────────────── 
+   Replaced: inline-flex → inline-block
+   Removed: gap → margin
+   Min 44px touch target enforced                                  */
+
+.btn {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 3px;
+    padding: 8px 14px;
+    min-height: 44px;
+    min-width: 44px;
+    line-height: 26px;
+    font-size: 14px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    color: #e0e0e0;
+    background-color: #333333;
+    border: 1px solid #555555;
+    -webkit-border-radius: 6px;
+    border-radius: 6px;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    /* Remove default button styling */
+    -webkit-appearance: none;
+}
+
+.btn:active {
+    background-color: #444444;
+    border-color: #00bcd4;
+    color: #ffffff;
+}
+
+button.btn {
+    /* Ensure <button> elements match <a> styling */
+    font-size: 14px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
+}
+
+.btn-primary {
+    background-color: #00695c;
+    border-color: #00897b;
+    color: #ffffff;
+}
+
+.btn-primary:active {
+    background-color: #00897b;
+}
+
+
+/* ── Font Size Toggle Button ───────────────────────────────────── */
+
+#font-toggle {
+    font-size: 16px;
+    font-weight: bold;
+    min-width: 48px;
+    padding: 8px 12px;
+    letter-spacing: 1px;
+}
+
+
+/* ── Unbaked Notes Indicator ───────────────────────────────────── */
+
+.unbaked-badge {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 3px;
+    padding: 6px 10px;
+    min-height: 36px;
+    line-height: 24px;
+    font-size: 12px;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #ffd54f;
+    background-color: #4a3800;
+    border: 1px solid #ffd54f;
+    -webkit-border-radius: 12px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+
+/* ── Chapter Content & Verses ──────────────────────────────────── */
+
+.chapter-content {
+    padding: 12px;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.verse {
+    margin: 0 0 8px 0;
+    padding: 4px 0;
+    line-height: 1.7;
+    text-indent: 0;
+}
+
+.verse-num {
+    display: inline;
+    font-size: 0.7em;
+    font-weight: bold;
+    color: #888888;
+    vertical-align: super;
+    margin-right: 3px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* ── Strong's Links ────────────────────────────────────────────── 
+   Cyan badges — primary interactive element for study              */
+
+.strongs-link {
+    color: #00bcd4;
+    text-decoration: none;
+    /* Subtle underline to indicate tappable */
+    border-bottom: 1px dotted #00838f;
+    padding-bottom: 1px;
+}
+
+.strongs-link:active {
+    color: #4dd0e1;
+    background-color: #003d42;
+}
+
+.strongs-extra {
+    font-size: 0.65em;
+    color: #00acc1;
+    margin-left: 1px;
+    border-bottom: none;
+}
+
+
+/* ── Cross-Reference Superscripts (OSIS) ───────────────────────── 
+   Replaced: display: inline-flex → display: inline                 */
+
+.superscript-link {
+    display: inline;
+    font-size: 0.7em;
+    vertical-align: super;
+    margin-left: 2px;
+    padding: 2px 3px;
+    color: #ff8a65;
+    text-decoration: none;
+    font-weight: bold;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.superscript-link:active {
+    color: #ffab91;
+    background-color: #3e2723;
+}
+
+
+/* ── Personal Note Indicators ──────────────────────────────────── 
+   Gold/green to distinguish from OSIS xrefs (orange)               */
+
+.superscript-link.personal-note {
+    color: #aed581;
+}
+
+.superscript-link.personal-note:active {
+    color: #c5e1a5;
+    background-color: #1b2e00;
+}
+
+
+/* ── Translator-Added Text (KJV Italics) ───────────────────────── */
+
+em.added,
+.added {
+    font-style: italic;
+    color: #bdbdbd;
+}
+
+
+/* ── Divine Name (LORD in Small Caps) ──────────────────────────── */
+
+.divine-name {
+    font-variant: small-caps;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+
+/* ── Section Titles (Psalm Titles, etc.) ───────────────────────── */
+
+.section-title {
+    display: block;
+    font-style: italic;
+    color: #b0b0b0;
+    margin: 8px 0 4px 0;
+    font-size: 0.95em;
+}
+
+
+/* ── Chapter Footer ────────────────────────────────────────────── */
+
+.chapter-footer {
+    padding: 16px 10px 24px;
+    border-top: 1px solid #333333;
+    margin-top: 16px;
+}
+
+.chapter-footer .nav-buttons {
+    text-align: center;
+}
+
+
+/* ── Note "+" Button (injected by notes.js) ────────────────────── */
+
+.note-add-btn {
+    display: inline;
+    font-size: 0.75em;
+    vertical-align: super;
+    margin-left: 4px;
+    padding: 2px 5px;
+    color: #777777;
+    text-decoration: none;
+    cursor: pointer;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.note-add-btn:active {
+    color: #aed581;
+}
+
+/* Verse has an existing note — show filled indicator */
+.note-add-btn.has-note {
+    color: #aed581;
+}
+
+
+/* ── Inline Note Editor (injected by notes.js) ─────────────────── */
+
+.note-editor {
+    display: block;
+    margin: 6px 0 10px 20px;
+    padding: 8px;
+    background-color: #2a2a2a;
+    border: 1px solid #444444;
+    -webkit-border-radius: 6px;
+    border-radius: 6px;
+}
+
+.note-editor textarea {
+    display: block;
+    width: 100%;
+    min-height: 80px;
+    padding: 8px;
+    margin: 0 0 6px 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 0.9em;
+    line-height: 1.5;
+    color: #e0e0e0;
+    background-color: #1a1a1a;
+    border: 1px solid #555555;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    resize: vertical;
+}
+
+.note-editor .btn {
+    font-size: 13px;
+    min-height: 38px;
+    padding: 6px 16px;
+}
+
+
+/* ================================================================
+   DICTIONARY PAGES
+   ================================================================ 
+   Replaced all flex layouts with block/inline-block.
+   These styles fix the "black box" rendering issue.               */
+
+.dict-page {
+    padding: 0;
+}
+
+.dict-header {
+    background-color: #252525;
+    padding: 12px;
+    border-bottom: 1px solid #333333;
+    text-align: center;
+}
+
+.dict-header h1 {
+    font-size: 1.3em;
+    color: #00bcd4;
+    margin: 0 0 4px 0;
+}
+
+.dict-header .pronunciation {
+    font-size: 1.1em;
+    color: #b0b0b0;
+    font-style: italic;
+}
+
+.dict-entry {
+    padding: 12px;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.dict-entry h2 {
+    font-size: 1.05em;
+    color: #90caf9;
+    margin: 16px 0 6px 0;
+    border-bottom: 1px solid #333333;
+    padding-bottom: 4px;
+}
+
+.dict-definition {
+    margin: 8px 0;
+    line-height: 1.7;
+}
+
+.dict-strongs-num {
+    display: inline-block;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    color: #00bcd4;
+    background-color: #003d42;
+    padding: 2px 8px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    margin-right: 6px;
+}
+
+.dict-original-word {
+    font-size: 1.4em;
+    color: #ffffff;
+    margin: 6px 0;
+}
+
+.dict-transliteration {
+    font-style: italic;
+    color: #b0b0b0;
+    margin: 4px 0;
+}
+
+.dict-related {
+    margin: 12px 0;
+    padding: 8px;
+    background-color: #222222;
+    -webkit-border-radius: 6px;
+    border-radius: 6px;
+}
+
+.dict-related a {
+    display: inline-block;
+    margin: 2px 6px 2px 0;
+    color: #00bcd4;
+}
+
+.dict-nav {
+    text-align: center;
+    padding: 12px;
+    border-top: 1px solid #333333;
+    margin-top: 12px;
+}
+
+.dict-nav .btn {
+    margin: 4px;
+}
+
+/* Icon buttons used in dictionary pages */
+/* Replaced: display: inline-flex → display: inline-block */
+.icon-btn {
+    display: inline-block;
+    vertical-align: middle;
+    text-align: center;
+    min-width: 44px;
+    min-height: 44px;
+    line-height: 44px;
+    padding: 0 8px;
+    margin: 2px;
+    color: #e0e0e0;
+    background-color: #333333;
+    border: 1px solid #555555;
+    -webkit-border-radius: 6px;
+    border-radius: 6px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.icon-btn:active {
+    background-color: #444444;
+    border-color: #00bcd4;
+}
+
+
+/* ================================================================
+   INDEX PAGE (Table of Contents)
+   ================================================================ */
+
+.index-page {
+    padding: 12px;
+}
+
+.index-page h1 {
+    text-align: center;
+    color: #ffffff;
+    font-size: 1.4em;
+    margin: 0 0 16px 0;
+}
+
+.testament-heading {
+    font-size: 1.1em;
+    color: #00bcd4;
+    margin: 20px 0 8px 0;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #333333;
+}
+
+.book-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.book-list li {
+    margin: 0;
+    padding: 0;
+}
+
+.book-list a {
+    display: block;
+    padding: 10px 12px;
+    min-height: 44px;
+    line-height: 24px;
+    color: #e0e0e0;
+    text-decoration: none;
+    border-bottom: 1px solid #222222;
+    font-size: 1em;
+}
+
+.book-list a:active {
+    background-color: #2a2a2a;
+    color: #ffffff;
+}
+
+.book-list .chapter-count {
+    color: #888888;
+    font-size: 0.85em;
+    margin-left: 6px;
+}
+
+/* Resume reading prompt */
+.resume-prompt {
+    margin: 12px;
+    padding: 12px;
+    background-color: #1b3a2a;
+    border: 1px solid #2e7d32;
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.resume-prompt a {
+    color: #81c784;
+    font-weight: bold;
+    font-size: 1.05em;
+}
+
+.resume-prompt .resume-meta {
+    color: #888888;
+    font-size: 0.85em;
+    margin-top: 4px;
+}
+
+
+/* ================================================================
+   NAVIGATE PAGE (Cascading Dropdowns)
+   ================================================================ */
+
+.navigate-page {
+    padding: 16px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.navigate-page h1 {
+    text-align: center;
+    font-size: 1.3em;
+    color: #ffffff;
+    margin: 0 0 20px 0;
+}
+
+.form-group {
+    margin: 0 0 12px 0;
+}
+
+.form-group label {
+    display: block;
+    margin: 0 0 4px 0;
+    font-size: 0.9em;
+    color: #b0b0b0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.form-group select {
+    display: block;
+    width: 100%;
+    padding: 10px 8px;
+    min-height: 44px;
+    font-size: 16px;
+    font-family: Georgia, "Times New Roman", serif;
+    color: #e0e0e0;
+    background-color: #2a2a2a;
+    border: 1px solid #555555;
+    -webkit-border-radius: 6px;
+    border-radius: 6px;
+    -webkit-appearance: menulist;
+}
+
+.form-group select:disabled {
+    color: #666666;
+    background-color: #222222;
+}
+
+#go-button {
+    display: block;
+    width: 100%;
+    margin-top: 16px;
+    padding: 14px;
+    min-height: 52px;
+    font-size: 18px;
+    font-weight: bold;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #ffffff;
+    background-color: #00695c;
+    border: 2px solid #00897b;
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    -webkit-appearance: none;
+}
+
+#go-button:active {
+    background-color: #00897b;
+}
+
+#go-button:disabled {
+    background-color: #333333;
+    border-color: #555555;
+    color: #666666;
+    cursor: default;
+}
+
+
+/* ================================================================
+   CROSS-REFERENCE PAGES (xrefs/)
+   ================================================================ */
+
+.xref-page {
+    padding: 12px;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.xref-page h1 {
+    font-size: 1.15em;
+    color: #ff8a65;
+    margin: 0 0 12px 0;
+    text-align: center;
+}
+
+.xref-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.xref-list li {
+    margin: 0;
+    padding: 0;
+}
+
+.xref-list a {
+    display: block;
+    padding: 10px 12px;
+    min-height: 44px;
+    line-height: 24px;
+    color: #64b5f6;
+    border-bottom: 1px solid #222222;
+    text-decoration: none;
+}
+
+.xref-list a:active {
+    background-color: #2a2a2a;
+}
+
+.xref-current {
+    color: #888888;
+    font-style: italic;
+    font-size: 0.85em;
+    margin-left: 4px;
+}
+
+
+/* ================================================================
+   PERSONAL NOTES PAGES (notes/ and notes.html)
+   ================================================================ */
+
+.note-page {
+    padding: 12px;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.note-page h1 {
+    font-size: 1.15em;
+    color: #aed581;
+    margin: 0 0 12px 0;
+    text-align: center;
+}
+
+.verse-text {
+    margin: 12px 0;
+    padding: 10px 14px;
+    border-left: 3px solid #555555;
+    color: #b0b0b0;
+    font-style: italic;
+    line-height: 1.6;
+}
+
+.personal-note-body {
+    margin: 12px 0;
+    padding: 12px;
+    background-color: #222222;
+    -webkit-border-radius: 6px;
+    border-radius: 6px;
+    line-height: 1.7;
+}
+
+.note-meta {
+    color: #666666;
+    font-size: 0.8em;
+    font-family: Arial, Helvetica, sans-serif;
+    margin-top: 12px;
+}
+
+/* Notes viewer (notes.html) */
+.notes-viewer-page {
+    padding: 12px;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.note-entry {
+    margin: 0 0 16px 0;
+    padding: 10px;
+    background-color: #222222;
+    border: 1px solid #333333;
+    -webkit-border-radius: 6px;
+    border-radius: 6px;
+}
+
+.note-entry .note-ref {
+    font-weight: bold;
+    color: #aed581;
+    margin: 0 0 4px 0;
+}
+
+.note-entry .note-ref a {
+    color: #aed581;
+}
+
+.note-entry .note-text {
+    color: #e0e0e0;
+    line-height: 1.6;
+    margin: 4px 0;
+}
+
+.note-entry .bake-status {
+    font-size: 0.8em;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #888888;
+    margin-top: 6px;
+}
+
+.bake-status.unbaked {
+    color: #ffd54f;
+}
+
+.bake-status.baked {
+    color: #81c784;
+}
+
+
+/* ================================================================
+   CONCORDANCE & INDEX PAGES
+   ================================================================ */
+
+.concordance-page {
+    padding: 12px;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.concordance-page h1 {
+    text-align: center;
+    font-size: 1.3em;
+    color: #ffffff;
+    margin: 0 0 12px 0;
+}
+
+.concordance-letter {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #00bcd4;
+    margin: 16px 0 6px 0;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #333333;
+}
+
+.concordance-entry {
+    margin: 0 0 6px 0;
+    padding: 4px 0;
+}
+
+.concordance-word {
+    font-weight: bold;
+    color: #e0e0e0;
+}
+
+.concordance-refs {
+    color: #888888;
+    font-size: 0.85em;
+}
+
+.concordance-refs a {
+    color: #64b5f6;
+    margin-right: 4px;
+}
+
+
+/* ================================================================
+   SEARCH PAGE
+   ================================================================ */
+
+.search-page {
+    padding: 16px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.search-page h1 {
+    text-align: center;
+    font-size: 1.3em;
+    color: #ffffff;
+    margin: 0 0 16px 0;
+}
+
+.search-input {
+    display: block;
+    width: 100%;
+    padding: 12px 10px;
+    min-height: 48px;
+    font-size: 16px;
+    font-family: Georgia, "Times New Roman", serif;
+    color: #e0e0e0;
+    background-color: #2a2a2a;
+    border: 2px solid #555555;
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    margin: 0 0 12px 0;
+}
+
+.search-input:focus {
+    border-color: #00bcd4;
+    outline: none;
+}
+
+.search-results {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.search-results li {
+    padding: 8px 0;
+    border-bottom: 1px solid #222222;
+}
+
+.search-results a {
+    color: #64b5f6;
+}
+
+.search-results .verse-preview {
+    color: #b0b0b0;
+    font-size: 0.9em;
+    margin-top: 2px;
+}
+
+
+/* ================================================================
+   UTILITY CLASSES
+   ================================================================ */
+
+.text-center {
+    text-align: center;
+}
+
+.text-muted {
+    color: #888888;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Clearfix */
+.clearfix:after {
+    content: "";
+    display: table;
+    clear: both;
+}

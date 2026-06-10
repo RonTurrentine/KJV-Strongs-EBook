@@ -277,10 +277,12 @@ if (Test-Path $mal4) {
 $rev22 = Join-Path $OutputRoot 'books/66-Rev/22.html'
 if (Test-Path $rev22) {
     $content = Get-Content -Raw $rev22
-    if ($content -notmatch 'Next') {
-        Pass "Revelation 22: no Next button (correct -- last chapter)"
+if ($content -match 'btn-disabled.*Next|Next.*btn-disabled') {
+        Pass "Revelation 22: Next button is disabled (correct -- last chapter)"
+    } elseif ($content -match '<a href.*Next') {
+        Fail "Revelation 22: Next button is active but should be disabled"
     } else {
-        Fail "Revelation 22: Next button found but should not exist"
+        Fail "Revelation 22: Next button not found at all"
     }
     if ($content -match '21\.html') {
         Pass "Revelation 22: prev link points to Revelation 21 (correct)"
@@ -303,16 +305,17 @@ if (Test-Path $rev1) {
 }
 
 # Genesis 1 should have NO prev link
+# Genesis 1 should have a DISABLED prev button
 $gen1 = Join-Path $OutputRoot 'books/01-Gen/1.html'
 if (Test-Path $gen1) {
     $content = Get-Content -Raw $gen1
-    if ($content -notmatch 'Prev') {
-        Pass "Genesis 1: no Prev button (correct -- first chapter)"
+    if ($content -match 'btn-disabled.*Prev|Prev.*btn-disabled') {
+        Pass "Genesis 1: Prev button is disabled (correct -- first chapter)"
+    } elseif ($content -match '<a href.*Prev') {
+        Fail "Genesis 1: Prev button is active but should be disabled"
     } else {
-        Fail "Genesis 1: Prev button found but should not exist"
+        Fail "Genesis 1: Prev button not found at all"
     }
-} else {
-    Warn "Genesis 1 not generated yet -- skipping first chapter test"
 }
 
 # ── TEST 6: Strong's link target validation (spot check) ─────────────────────

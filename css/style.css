@@ -59,7 +59,13 @@ a:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: var(--bg-dark);
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-gray);
 }
 
 .nav {
@@ -129,6 +135,13 @@ a:hover {
 .chapter-return-btn:hover,
 .chapter-return-btn:focus-visible {
   background-color: rgba(255, 255, 255, 0.08);
+}
+
+.btn-disabled {
+  color: #555555;
+  border-color: #444444;
+  cursor: default;
+  opacity: 0.4;
 }
 
 .chapter-content {
@@ -327,3 +340,96 @@ a:hover {
       margin: 0;
     }
   }
+  
+  /* ── Dictionary Pages ──────────────────────────────────────────── */
+
+.dict-page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+.dict-header {
+    background-color: #1e1e1e;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-gray);
+    text-align: center;
+}
+
+.dict-strongs-id {
+    font-size: 1.8em;
+    color: #ffffff;
+    margin: 0 0 10px 0;
+}
+
+.dict-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.dict-body {
+    padding: 20px;
+}
+
+.dict-original {
+    font-size: 2em;
+    text-align: center;
+    margin: 0 0 16px 0;
+    color: #ffffff;
+    line-height: 1.4;
+}
+
+.dict-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 0 20px 0;
+}
+
+.dict-table th {
+    text-align: left;
+    padding: 8px 12px;
+    color: #999999;
+    font-weight: normal;
+    font-size: 0.9em;
+    width: 40%;
+    border-bottom: 1px solid var(--border-gray);
+}
+
+.dict-table td {
+    padding: 8px 12px;
+    color: #e0e0e0;
+    border-bottom: 1px solid var(--border-gray);
+}
+
+.dict-def {
+    margin: 0 0 20px 0;
+    padding: 16px;
+    background-color: #111111;
+    border-left: 3px solid var(--link-blue);
+    border-radius: 4px;
+}
+
+.dict-kjv {
+    margin: 0 0 20px 0;
+    padding: 16px;
+    background-color: #111111;
+    border-left: 3px solid var(--link-gold);
+    border-radius: 4px;
+}
+
+.dict-label {
+    font-size: 0.85em;
+    color: #888888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 8px 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.dict-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border-gray);
+    text-align: center;
+}

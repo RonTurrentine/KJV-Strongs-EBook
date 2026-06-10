@@ -441,11 +441,13 @@ foreach ($entry in $FlatChapters) {
     $prevHtml = ''
     $nextHtml = ''
 
-    if ($flatIdx -gt 0) {
+if ($flatIdx -gt 0) {
         $prev      = $FlatChapters[$flatIdx - 1]
         $prevHref  = if ($prev.Book.OsisId -eq $book.OsisId) { "$($prev.Chapter).html" } else { "../$($prev.Book.Folder)/$($prev.Chapter).html" }
         $prevLabel = "$($prev.Book.FullName) $($prev.Chapter)"
         $prevHtml  = "<a href=`"$prevHref`" class=`"btn`" title=`"$prevLabel`">&#9664; Prev</a>"
+    } else {
+        $prevHtml  = "<span class=`"btn btn-disabled`">&#9664; Prev</span>"
     }
 
     if ($flatIdx -lt ($FlatChapters.Count - 1)) {
@@ -453,6 +455,8 @@ foreach ($entry in $FlatChapters) {
         $nextHref  = if ($next.Book.OsisId -eq $book.OsisId) { "$($next.Chapter).html" } else { "../$($next.Book.Folder)/$($next.Chapter).html" }
         $nextLabel = "$($next.Book.FullName) $($next.Chapter)"
         $nextHtml  = "<a href=`"$nextHref`" class=`"btn`" title=`"$nextLabel`">Next &#9654;</a>"
+    } else {
+        $nextHtml  = "<span class=`"btn btn-disabled`">Next &#9654;</span>"
     }
 
     $bookFolder = Join-Path $OutputRoot "books/$($book.Folder)"
@@ -495,6 +499,7 @@ $($verseBlocks.ToString())
 
   <script src="../../js/fontsize.js"></script>
   <script src="../../js/bookmarks.js"></script>
+  <script src="../../js/sticky-header.js"></script>
   <script src="../../js/notes.js"></script>
 
 </body>
