@@ -15,7 +15,7 @@ body {
   font-size: var(--font-base);
   line-height: 1.6;
   margin: 0;
-  padding: 20px;
+  padding: 0 20px 20px 20px;
 }
 
 a {
@@ -38,35 +38,123 @@ a:hover {
   font-size: 1.8em;
 }
 
-.chapter-nav {
-  margin: 0;
-}
-
-.chapter-nav .btn {
-  color: var(--button-green);
-  text-decoration: none;
-  border: 1px solid var(--button-green);
-  padding: 5px 10px;
-  display: inline-block;
-  margin: 0 6px 6px 0;
-}
-
-.chapter-nav .btn:hover {
-  background-color: rgba(102, 204, 102, 0.2);
-}
+/* ── Chapter Navigation Header (always fixed) ──────────────────── */
 
 .chapter-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 0;
-  position: sticky;
+  display: block;
+  position: fixed;
   top: 0;
-  z-index: 100;
-  background-color: var(--bg-dark);
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border-gray);
+  left: 0;
+  width: 100%;
+  height: 90px;
+  z-index: 1000;
+  background-color: #1a1a1a;
+  border-bottom: 2px solid #00bcd4;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  box-sizing: border-box;
 }
+
+.chapter-nav h1,
+.book-chapter {
+  display: block;
+  float: left;
+  height: 90px;
+  line-height: 88px;
+  margin: 0;
+  padding: 0 12px;
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 50%;
+  box-sizing: border-box;
+}
+
+.nav-buttons {
+  display: block;
+  float: right;
+  height: 90px;
+  line-height: 88px;
+  margin: 0;
+  padding: 0 8px;
+  text-align: right;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.nav-buttons .btn,
+a.btn,
+button.btn {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 2px;
+  padding: 6px 10px;
+  min-height: 44px;
+  min-width: 44px;
+  height: 44px;
+  line-height: 28px;
+  font-size: 14px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: bold;
+  color: #e0e0e0;
+  background-color: #333333;
+  border: 1px solid #555555;
+  border-radius: 6px;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+}
+
+.nav-buttons .btn:hover,
+a.btn:hover,
+button.btn:hover {
+  background-color: #444444;
+  border-color: #00bcd4;
+}
+
+.btn-disabled,
+.btn[disabled] {
+  color: #555555;
+  border-color: #444444;
+  cursor: default;
+  opacity: 0.4;
+}
+
+.btn-disabled:active,
+.btn[disabled]:active {
+  background-color: #333333;
+  border-color: #444444;
+  color: #555555;
+}
+
+#unbaked-indicator {
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 28px;
+  height: 0;
+  overflow: hidden;
+}
+
+#unbaked-indicator.has-unbaked {
+  height: auto;
+  padding: 4px 8px;
+  margin-left: 2px;
+  font-size: 11px;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #ffd54f;
+  background-color: #4a3800;
+  border: 1px solid #ffd54f;
+  border-radius: 10px;
+}
+
+
+/* ── Nav (non-fixed contexts) ──────────────────────────────────── */
 
 .nav {
   margin-bottom: 12px;
@@ -137,17 +225,6 @@ a:hover {
   background-color: rgba(255, 255, 255, 0.08);
 }
 
-.btn-disabled {
-  color: #555555;
-  border-color: #444444;
-  cursor: default;
-  opacity: 0.4;
-}
-
-.chapter-content {
-  margin: 10px auto 0;
-  max-width: 960px;
-}
 
 .verse-block {
   background-color: #111;
@@ -180,11 +257,22 @@ a:hover {
   text-decoration: underline;
 }
 
+/* ── Chapter Content (includes header spacer padding) ───────────── */
+
+.chapter-content {
+  margin: 10px auto 0;
+  max-width: 960px;
+  padding-top: 95px !important;
+}
+
+
+/* ── Strong's Links ────────────────────────────────────────────── */
+
 .strongs-link {
   display: inline-block;
   color: #0a0a0a;
   text-decoration: none;
-  background-color: #008b8b ;
+  background-color: #008b8b;
   border-radius: 4px;
   padding: 1px 5px;
   margin: 0 2px;
@@ -199,6 +287,8 @@ a:hover {
   transform: translateY(-1px);
 }
 
+/* ── Superscript Links ─────────────────────────────────────────── */
+
 .superscript-link {
   display: inline-flex;
   align-items: center;
@@ -211,7 +301,6 @@ a:hover {
   margin-left: 4px;
   border-radius: 50%;
   background-color: rgba(255, 204, 0, 0.18);
-  box-shadow: 0 0 0 rgba(255, 204, 0, 0);
   transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -227,29 +316,30 @@ a:hover {
   color: #fff;
 }
 
-.superscript-link.note-superscript:hover,
-.superscript-link.note-superscript:focus-visible {
-  background-color: rgba(255, 204, 0, 0.34);
-}
-
 .superscript-link.xref-superscript {
   background-color: rgba(0, 188, 212, 0.18);
   color: #fff;
-}
-
-.superscript-link.xref-superscript:hover,
-.superscript-link.xref-superscript:focus-visible {
-  background-color: rgba(0, 188, 212, 0.28);
 }
 
 .superscript-link:hover {
   text-decoration: none;
 }
 
+/* ── Chapter Footer ────────────────────────────────────────────── */
+
 .chapter-footer {
   margin-top: 30px;
   padding-top: 10px;
   border-top: 1px solid var(--border-gray);
+}
+
+.chapter-footer .nav-buttons {
+  display: block;
+  float: none;
+  height: auto;
+  line-height: normal;
+  text-align: center;
+  white-space: normal;
 }
 
 .note-meta {
@@ -276,160 +366,211 @@ a:hover {
   margin-bottom: 10px;
   font-size: 1.1em;
 }
-  @media (max-width: 800px) {
-    body {
-      padding: 12px;
-    }
 
-    .page-header {
-      padding-bottom: 8px;
-    }
+/* ── Responsive ────────────────────────────────────────────────── */
 
-    .page-header h1 {
-      font-size: 1.4em;
-    }
-
-    .chapter-nav {
-      flex-direction: column;
-      align-items: stretch;
-    }
-
-    .chapter-nav .btn {
-      width: 100%;
-      margin: 0 0 8px 0;
-    }
-
-    .nav {
-      padding: 8px 0;
-      border-bottom-width: 1px;
-    }
-
-    .verse-block {
-      padding: 18px 18px;
-    }
-
-    .verse {
-      margin: 14px 0;
-      padding-left: 0;
-    }
-
-    .verse-num {
-      display: block;
-      margin-bottom: 8px;
-    }
-
-    .strongs-link {
-      padding: 4px 9px;
-      margin: 0 2px 4px 2px;
-    }
-
-    .superscript-link {
-      width: 1.2rem;
-      height: 1.2rem;
-      font-size: 0.8em;
-    }
-
-    .icon-btn {
-      width: 42px;
-      min-width: 42px;
-      padding: 10px;
-      font-size: 0;
-    }
-
-    .icon-btn::before {
-      margin: 0;
-    }
+@media (max-width: 800px) {
+  body {
+    padding: 12px;
   }
-  
-  /* ── Dictionary Pages ──────────────────────────────────────────── */
+
+  .page-header {
+    padding-bottom: 8px;
+  }
+
+  .page-header h1 {
+    font-size: 1.4em;
+  }
+
+  .verse-block {
+    padding: 18px;
+  }
+
+  .verse {
+    margin: 14px 0;
+  }
+
+  .verse-num {
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .strongs-link {
+    padding: 4px 9px;
+    margin: 0 2px 4px 2px;
+  }
+
+  .superscript-link {
+    width: 1.2rem;
+    height: 1.2rem;
+    font-size: 0.8em;
+  }
+
+  .icon-btn {
+    width: 42px;
+    min-width: 42px;
+    padding: 10px;
+    font-size: 0;
+  }
+
+  .icon-btn::before {
+    margin: 0;
+  }
+}
+
+/* ── Dictionary Pages ──────────────────────────────────────────── */
 
 .dict-page {
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 0;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0;
 }
 
 .dict-header {
-    background-color: #1e1e1e;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border-gray);
-    text-align: center;
+  background-color: #1e1e1e;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-gray);
+  text-align: center;
 }
 
 .dict-strongs-id {
-    font-size: 1.8em;
-    color: #ffffff;
-    margin: 0 0 10px 0;
+  font-size: 1.8em;
+  color: #ffffff;
+  margin: 0 0 10px 0;
 }
 
 .dict-nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
 }
 
 .dict-body {
-    padding: 20px;
+  padding: 20px;
 }
 
 .dict-original {
-    font-size: 2em;
-    text-align: center;
-    margin: 0 0 16px 0;
-    color: #ffffff;
-    line-height: 1.4;
+  font-size: 2em;
+  text-align: center;
+  margin: 0 0 16px 0;
+  color: #ffffff;
+  line-height: 1.4;
 }
 
 .dict-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 0 0 20px 0;
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 20px 0;
 }
 
 .dict-table th {
-    text-align: left;
-    padding: 8px 12px;
-    color: #999999;
-    font-weight: normal;
-    font-size: 0.9em;
-    width: 40%;
-    border-bottom: 1px solid var(--border-gray);
+  text-align: left;
+  padding: 8px 12px;
+  color: #999999;
+  font-weight: normal;
+  font-size: 0.9em;
+  width: 40%;
+  border-bottom: 1px solid var(--border-gray);
 }
 
 .dict-table td {
-    padding: 8px 12px;
-    color: #e0e0e0;
-    border-bottom: 1px solid var(--border-gray);
+  padding: 8px 12px;
+  color: #e0e0e0;
+  border-bottom: 1px solid var(--border-gray);
 }
 
 .dict-def {
-    margin: 0 0 20px 0;
-    padding: 16px;
-    background-color: #111111;
-    border-left: 3px solid var(--link-blue);
-    border-radius: 4px;
+  margin: 0 0 20px 0;
+  padding: 16px;
+  background-color: #111111;
+  border-left: 3px solid var(--link-blue);
+  border-radius: 4px;
 }
 
 .dict-kjv {
-    margin: 0 0 20px 0;
-    padding: 16px;
-    background-color: #111111;
-    border-left: 3px solid var(--link-gold);
-    border-radius: 4px;
+  margin: 0 0 20px 0;
+  padding: 16px;
+  background-color: #111111;
+  border-left: 3px solid var(--link-gold);
+  border-radius: 4px;
 }
 
 .dict-label {
-    font-size: 0.85em;
-    color: #888888;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 0 0 8px 0;
-    font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.85em;
+  color: #888888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 8px 0;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .dict-footer {
-    padding: 16px 20px;
-    border-top: 1px solid var(--border-gray);
-    text-align: center;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-gray);
+  text-align: center;
 }
+
+/* ── Index / TOC ───────────────────────────────────────────────── */
+
+.testament-heading {
+  font-size: 1.1em;
+  color: var(--link-blue);
+  margin: 20px 0 8px 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border-gray);
+}
+
+.book-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.book-list li {
+  margin: 0;
+  padding: 0;
+}
+
+.book-list a {
+  display: block;
+  padding: 10px 12px;
+  min-height: 44px;
+  line-height: 24px;
+  color: var(--text-light);
+  text-decoration: none;
+  border-bottom: 1px solid #222222;
+}
+
+.book-list a:hover {
+  background-color: #2a2a2a;
+  color: #ffffff;
+}
+
+.chapter-count {
+  color: #888888;
+  font-size: 0.85em;
+  margin-left: 6px;
+}
+
+.resume-prompt {
+  margin: 12px 0;
+  padding: 12px;
+  background-color: #1b3a2a;
+  border: 1px solid #2e7d32;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.resume-prompt a {
+  color: #81c784;
+  font-weight: bold;
+  font-size: 1.05em;
+}
+
+/* ── Font Size Classes ─────────────────────────────────────────── */
+
+body.font-small  .chapter-content { font-size: 14px; }
+body.font-normal .chapter-content { font-size: 18px; }
+body.font-large  .chapter-content { font-size: 22px; }
+body.font-xlarge .chapter-content { font-size: 26px; }

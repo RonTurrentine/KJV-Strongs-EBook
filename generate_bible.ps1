@@ -293,7 +293,7 @@ function ConvertTo-VerseHtml {
 
         switch ($localName) {
 			'w' {
-				$word     = $node.InnerText
+				$word     = [string]$node.InnerText
 				$lemma    = $node.GetAttribute('lemma')
 				if ($word -or $lemma) {
 					$linkHtml = Get-StrongLinkHtml -Word $word -Lemma $lemma -DictRelPath $DictRelPath
@@ -480,13 +480,14 @@ if ($flatIdx -gt 0) {
       <a href="../../navigate.html" class="btn">Go To</a>
       $prevHtml
       $nextHtml
-      <button class="btn" id="font-toggle" onclick="cycleFontSize()">Aa</button>
+      <button class="btn" id="font-decrease" onclick="decreaseFontSize()">a&#8595;</button>
+	  <button class="btn" id="font-increase" onclick="increaseFontSize()">A&#8593;</button>
       <span id="unbaked-indicator"></span>
     </div>
   </nav>
 
   <main class="chapter-content">
-$($verseBlocks.ToString())
+	$($verseBlocks.ToString())
   </main>
 
   <footer class="chapter-footer">
@@ -614,6 +615,7 @@ $($otLinks.ToString())    </ul>
     <ul class="book-list">
 $($ntLinks.ToString())    </ul>
   </main>
+  <script src="js/sticky-header.js"></script>
   <script src="js/bookmarks.js"></script>
 </body>
 </html>
@@ -657,6 +659,7 @@ Write-Host "Generating navigate.html..." -ForegroundColor Cyan
     </div>
   </main>
   <script src="js/bible-data.js"></script>
+  <script src="js/sticky-header.js"></script>
   <script>
   var selectedBookIdx = -1;
   function populateBooks() {
@@ -728,68 +731,6 @@ Write-Host "Generating navigate.html..." -ForegroundColor Cyan
 </html>
 '@ | Set-Content -Path (Join-Path $OutputRoot 'navigate.html') -Encoding UTF8
 Write-Host "navigate.html written." -ForegroundColor Green
-
-# Phase 7: Generate js/fontsize.js
-Write-Host "Generating js/fontsize.js..." -ForegroundColor Cyan
-@'
-(function () {
-  var SIZES = ['font-normal', 'font-large', 'font-xlarge', 'font-small'];
-  var KEY   = 'kjv-fontsize';
-  function applySize(size) {
-    var i;
-    for (i = 0; i < SIZES.length; i++) {
-      if (document.body.className.indexOf(SIZES[i]) !== -1) {
-        document.body.className = document.body.className.replace(SIZES[i], '');
-      }
-    }
-    document.body.className = (document.body.className + ' ' + size).replace(/\s+/g, ' ').replace(/^\s|\s$/, '');
-  }
-  var saved = '';
-  try { saved = localStorage.getItem(KEY) || ''; } catch(e) {}
-  if (saved) { applySize(saved); }
-  window.cycleFontSize = function () {
-    var current = '';
-    var i;
-    for (i = 0; i < SIZES.length; i++) {
-      if (document.body.className.indexOf(SIZES[i]) !== -1) { current = SIZES[i]; break; }
-    }
-    var nextIdx  = (SIZES.indexOf(current) + 1) % SIZES.length;
-    var nextSize = SIZES[nextIdx];
-    applySize(nextSize);
-    try { localStorage.setItem(KEY, nextSize); } catch(e) {}
-  };
-}());
-'@ | Set-Content -Path (Join-Path $OutputRoot 'js/fontsize.js') -Encoding UTF8
-Write-Host "js/fontsize.js written." -ForegroundColor Green
-
-# Phase 8: Generate js/bookmarks.js
-Write-Host "Generating js/bookmarks.js..." -ForegroundColor Cyan
-@'
-(function () {
-  var KEY = 'kjv-bookmark';
-  if (document.body.className.indexOf('bible-text') !== -1) {
-    var h1 = document.getElementsByTagName('h1')[0];
-    var pageTitle = h1 ? h1.innerText || h1.textContent : document.title;
-    window.onbeforeunload = function () {
-      var bookmark = { url: window.location.href, scroll: window.pageYOffset || document.documentElement.scrollTop || 0, title: pageTitle, saved: new Date().toISOString() };
-      try { localStorage.setItem(KEY, JSON.stringify(bookmark)); } catch(e) {}
-    };
-  }
-  var resumeDiv = document.getElementById('bookmark-resume');
-  if (resumeDiv) {
-    var saved = '';
-    try { saved = localStorage.getItem(KEY) || ''; } catch(e) {}
-    if (saved) {
-      var bm = null;
-      try { bm = JSON.parse(saved); } catch(e) {}
-      if (bm && bm.url && bm.title) {
-        resumeDiv.innerHTML = '<p class="bookmark-resume"><a href="' + bm.url + '" class="btn">Resume: ' + bm.title + '</a></p>';
-      }
-    }
-  }
-}());
-'@ | Set-Content -Path (Join-Path $OutputRoot 'js/bookmarks.js') -Encoding UTF8
-Write-Host "js/bookmarks.js written." -ForegroundColor Green
 
 # Done
 Write-Host ""

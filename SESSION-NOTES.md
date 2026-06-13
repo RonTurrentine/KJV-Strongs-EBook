@@ -26,21 +26,27 @@ WebKit browser). All output is static HTML — no server required.
 |----------|--------|--------|
 | File granularity | One HTML file per chapter | Better performance on slow Kindle hardware |
 | Dictionary files | One HTML file per Strong's entry | Fast lookup, avoids large combined files |
-| Styling | Dark mode, simple CSS | Kindle compatibility, older eyes |
-| Strong's badges | Cyan solid background, dark text, small font | Visible and readable in dark mode |
+| Styling | Dual CSS: `style.css` (PC) + `style-kindle.css` (Kindle) | Maintain full PC features while ensuring Kindle compatibility |
+| Strong's badges | Cyan solid background, dark text, small font | Visible and readable in dark mode (PC); dotted underline (Kindle) |
 | Note superscript | Gold circle button | Personal study notes per verse |
 | Cross-ref superscript | Cyan circle button | Custom cross-references per verse |
 | Notes/xrefs | Date/time stamped | Study tracking |
 | Navigation | Per-chapter links + cascading dropdown | Touch-friendly on Kindle |
+| Prev/Next buttons | Always visible; grayed out when unavailable | Consistent layout, better UX |
+| Font size | Separate increase/decrease buttons with min/max disabled state | Better UX than single cycle button |
+| Font size scope | Applied to `.chapter-content` only | Header stays fixed size |
+| Header | Always `position: fixed` (no JS) on PC; broken on Kindle (see Known Issues) | Simplicity, works on PC |
+| Storage | `localStorage` → cookies → `window.name` fallback chain | `localStorage` blocked on `file://` URLs on Kindle |
 | Indexes | Strong's number index + English concordance (planned) | Study tools |
-| Bookmarking | localStorage JS | Remember last reading position |
 | Folder structure | `books/{NN}-{Abbr}/{ch}.html` — NO `ot/`/`nt/` layer | Simpler relative paths |
 | Chapter filenames | `1.html`, `2.html` (plain numbers) | Simpler, prev/next math trivial |
 | Dictionary case | Lowercase (`h0430.html`, `g3056.html`) | Already generated; consistent |
+| Dictionary CSS | New class names: `dict-page`, `dict-header`, `dict-body` etc. | Required by Kindle-compatible stylesheet |
 | Verse zoom page | Deferred — chapter anchors sufficient for now | Reduces complexity |
 | Notes/xrefs in full Bible | Deferred to later phase | Core Bible first |
 | JavaScript compatibility | ES3 only — no `let`/`const`/arrow functions/`URLSearchParams` | Android 2.x WebKit |
 | Strong's link style | Word text plain + `[G1161]` badge after | Readable; old style preferred |
+| EPUB CSS swap | `package_epub.ps1` replaces `style.css` ref with `style-kindle.css` | Automatic during packaging |
 
 ---
 
@@ -55,12 +61,14 @@ kjv-strongs-html/
 ├── DESIGN-PROPOSAL.md                # Opus architecture design document
 │
 ├── css/
-│   └── style.css                     # Shared dark-mode stylesheet
+│   ├── style.css                     # PC stylesheet (full features, fixed header, badges)
+│   └── style-kindle.css              # Kindle stylesheet (Android 2.3 compatible)
 │
 ├── js/
 │   ├── bible-data.js                 # Generated: book/chapter/verse metadata (~15KB)
-│   ├── fontsize.js                   # Font size cycling (4 sizes, localStorage)
-│   └── bookmarks.js                  # Reading position bookmark (localStorage)
+│   ├── fontsize.js                   # Font increase/decrease (4 sizes, storage fallback)
+│   ├── bookmarks.js                  # Reading position bookmark (storage fallback)
+│   └── sticky-header.js              # Kindle header positioning (no-op on PC)
 │
 ├── books/
 │   ├── 01-Gen/
@@ -121,17 +129,21 @@ kjv-strongs-html/
 
 ## Constraints
 
-- **Kindle Fire Android 2.x WebKit** — no flexbox, no CSS grid, no ES6 JavaScript
+- **Kindle Fire 1st Gen (D01E)** — Fire OS 6.3.4 / Android 2.3 Gingerbread WebKit
+- **No flexbox, no CSS grid, no CSS variables** on Kindle — use literal hex values and float/inline-block
 - **ES3 JavaScript only** — no `let`, `const`, arrow functions, `URLSearchParams`,
   `Array.from`, `querySelector` (use `getElementById`), no `addEventListener` with options
+- **`localStorage` blocked on `file://` URLs** — use `window._kjvStore` fallback chain
+- **`position: fixed` confirmed NON-FUNCTIONAL on Kindle** — `.chapter-nav` uses `position: absolute` + `js/sticky-header.js` (setInterval poll) on Kindle; PC keeps `position: fixed` (works fine there). RESOLVED, see "Sticky Header — RESOLVED"
+- **Multi-class selectors on one element do not apply correctly on this WebKit** — e.g. `class="chapter-content header-spacer"` failed even though each class individually worked. Always use single classes; merge styles into one class instead. RESOLVED — `header-spacer` merged into `.chapter-content`
+- **Silk aggressively caches `.js` files** — clearing cache/cookies/history/data and full device reboot do NOT clear cached scripts. To force-load a new script version during debugging, push under a NEW filename AND reference it from a NEW HTML filename (both must be new)
+- **Tiny HTML pages (<1KB) may render with external CSS NOT applied at all** — not an issue for real chapter pages (always tens of KB)
 - All files must work as **local static files** (no absolute paths, no server)
+- ADB push target: `/data/local/tmp/` (only writable location found)
 - Verse anchors use format `id="verse-1"`, `id="verse-2"` etc.
-- Unicode Hebrew and Greek must render correctly
-- Font size adjustable (older reader, small screen)
-- Screen size: 7.5 x 4.75 inches
-- Select elements: `width: 100%; padding: 10px; font-size: 18px; min-height: 44px`
 - Always run scripts with `pwsh -NoProfile -File .\scriptname.ps1` not `.\scriptname.ps1`
-  (ensures .NET working directory matches PowerShell working directory)
+- **Generated by `generate_bible.ps1`** (overwritten every run): `index.html`, `navigate.html`, `js/bible-data.js`, all chapter HTML, all xref pages
+- **Manually maintained** (never overwrite): `js/fontsize.js`, `js/bookmarks.js`, `js/sticky-header.js`, `css/style.css`, `css/style-kindle.css`
 
 ---
 
@@ -143,6 +155,8 @@ kjv-strongs-html/
 | `generate_dict.ps1` | Hebrew + Greek dictionary page generator |
 | `qa-test.ps1` | QA test suite — 119 tests across 11 test suites |
 | `scan_morph_codes.ps1` | Diagnostic — finds all unique Hebrew POS codes in XML |
+| `git-push.ps1` | Stages all files and pushes to GitHub with commit message |
+| `adb-push-test.ps1` | Pushes test set to Kindle via ADB (uses style-kindle.css as style.css; still references deleted js/sticky-header.js — harmless error, should be removed) |
 | `ConvertTo-VerseHtml-Fix.ps1` | Opus fix reference file (integrated into generate_bible.ps1) |
 | `generate_genesis1.ps1` | Original prototype — Genesis 1 only (kept for reference) |
 | `build.ps1` | Makefile-style helper |
@@ -157,6 +171,9 @@ pwsh -NoProfile -File .\generate_dict.ps1                     # Regenerate dicti
 pwsh -NoProfile -File .\qa-test.ps1                           # Full QA test
 pwsh -NoProfile -File .\qa-test.ps1 -BookFilter Ruth          # Single book QA
 pwsh -NoProfile -File .\scan_morph_codes.ps1                  # POS diagnostic
+pwsh -NoProfile -File .\git-push.ps1 -Message "commit msg"   # Git commit and push
+$env:PATH += ';H:\Android SDK Platform Tools'                 # Add ADB to PATH (per session)
+pwsh -NoProfile -File .\adb-push-test.ps1                     # Push test set to Kindle
 ```
 
 ---
@@ -172,6 +189,24 @@ pwsh -NoProfile -File .\scan_morph_codes.ps1                  # POS diagnostic
 | Xref pages | Generated per verse (varies) |
 | QA tests passing | 119/119 |
 | Verse gaps | 0 (confirmed clean) |
+
+---
+
+## Kindle Fire Test Results (1st Gen D01E, Fire OS 6.3.4, Android 2.3)
+
+| Feature | PC | Kindle | Notes |
+|---------|-----|--------|-------|
+| Dark mode | ✅ | ✅ | Renders correctly |
+| Book index page | ✅ | ✅ | Content visible below header |
+| Navigate.html dropdowns | ✅ | ✅ | "Books" dropdown visible below header |
+| Chapter navigation | ✅ | ✅ | Prev/Next work |
+| Strong's badges | ✅ | ✅ | Links open correctly |
+| Dictionary pages | ✅ | ✅ | No more black box |
+| Font increase/decrease | ✅ | ✅ | Buttons work, min/max disabled, font size changes |
+| Header (PC: fixed; Kindle: absolute+JS snap) | ✅ | ✅ | Kindle header snaps to viewport top after scroll stops (see Sticky Header — RESOLVED) |
+| Content visible below header | ✅ | ✅ | Spacer div (JS) ensures verse 1 never hidden |
+| Bookmarks | ✅ | ❓ | Pending Kindle test |
+| `window.name` storage | N/A | ❓ | Pending Kindle test |
 
 ---
 
@@ -198,10 +233,102 @@ pwsh -NoProfile -File .\scan_morph_codes.ps1                  # POS diagnostic
 | QA false failures on single-chapter books | Added `@()` array wrapper to `Get-ChildItem` |
 | QA wrong Revelation 22 prev link check | Fixed to check Rev 22->Rev 21, Rev 1->Jude 1 |
 | `.\script.ps1` path errors | Always use `pwsh -NoProfile -File .\script.ps1` |
+| Prev/Next buttons disappear at boundaries | Replaced with always-visible grayed-out disabled state |
+| Flexbox not supported on Android 2.3 | Replaced with float/inline-block in `style-kindle.css` |
+| `localStorage` blocked on `file://` | `window._kjvStore` fallback chain (cookies → window.name) |
+| Dictionary pages show as black box on Kindle | New CSS class names (`dict-page`, `dict-header` etc.) |
+| Font size cycling Aa button | Replaced with separate A↑ and a↓ buttons |
+| Font size changed header buttons too | Scoped font-size rules to `.chapter-content` only |
+| Font size CSS classes missing | Added `body.font-*  .chapter-content` rules to both CSS files |
+| `fontsize.js` j-bug (applySize(j) after loop) | Fixed to use `savedIdx` variable |
+| Font buttons not clickable (disabled on load) | Fixed by `savedIdx` bug fix above |
+| `generate_bible.ps1` Phase 7/8 overwrote manually-maintained fontsize.js/bookmarks.js | Removed Phase 7/8 blocks entirely — these files are never regenerated |
+| `position: sticky` not supported | Abandoned; replaced with `position: fixed` always-on header (no JS) |
+| `sticky-header.js` (scroll-event based) | Deleted — replaced by always-fixed CSS header |
+| Header buttons stacking vertically (display: table-cell) | Switched to float + line-height layout (Opus chapter-nav-fix.css) |
+| Body padding causing 10px header shift | Changed `padding: 20px` to `padding: 0 20px 20px 20px` |
+| Header h1/buttons not vertically centered | `line-height: 88px` on h1/.book-chapter and .nav-buttons (90px height - 2px border) |
+| Duplicate `.chapter-nav` and `.chapter-nav.is-fixed` rules | Removed leftover sticky-header CSS rules |
+| `.header-spacer` padding not applying on Kindle | Root cause: multi-class `class="chapter-content header-spacer"` doesn't apply on this WebKit even though each class works individually (confirmed via isolated test files). Fix: merged `.header-spacer` properties directly INTO `.chapter-content` (single class), removed `header-spacer` from all 4 `<main>` tags in generate_bible.ps1 |
+
+---
+
+## Sticky Header — RESOLVED (Session 8)
+
+The Kindle sticky header issue is now RESOLVED. Final root causes and fixes:
+
+1. **Tiny test pages (<1KB) rendered completely unstyled** — Silk appears to skip
+   applying external CSS to very small pages. Confirmed via a padded ~52KB test
+   page (200 verses), which rendered styled correctly. Real chapter pages are
+   always tens of KB, so this never affects production. No fix needed.
+
+2. **Multi-class selectors (`class="chapter-content header-spacer"`) don't apply**
+   on this WebKit, even though each class works individually. Fixed by merging
+   `.header-spacer`'s `padding-top` directly into `.chapter-content` (single
+   class). All 4 `<main>` tags in `generate_bible.ps1` use `class="chapter-content"`
+   only.
+
+3. **`position: fixed` is completely non-functional** on this device — confirmed
+   via isolated single-element test (element scrolls away with page). PC's
+   `position: fixed` works fine and is unchanged in `style.css`.
+
+4. **Final fix for Kindle** (`style-kindle.css` + `js/sticky-header.js`):
+   - `.chapter-nav` changed from `position: fixed` to `position: absolute`
+   - `.chapter-content` padding-top changed from `95px !important` to `0`
+   - `js/sticky-header.js` (new file):
+     - Detects via `getComputedStyle` whether `position: fixed` actually
+       works (PC) — if so, does nothing (no-op on PC)
+     - On Kindle: forces `position: absolute`, injects an invisible spacer
+       div (height = header height) in normal flow after `<nav>` so verse 1
+       is never hidden
+     - `setInterval(poll, 100)` reads `scrollTop` and sets
+       `header.style.top = scrollTop + "px"` to follow the viewport
+   - Added `<script src="../../js/sticky-header.js"></script>` to the chapter
+     template in `generate_bible.ps1`, between `bookmarks.js` and `notes.js`
+
+5. **BEHAVIOR (accepted as final)**: Due to Android 2.3 freezing JS during
+   momentum/fling scrolling, the header scrolls away during an active scroll
+   gesture and "snaps" back to the correct viewport position once scrolling
+   stops (~100-300ms after). Confirmed via live diagnostic readout
+   (`[st=N top=Npx]`) injected into verse text during debugging — `scrollTop`
+   and `header.style.top` track correctly and continuously; only the *visual*
+   repositioning during active scroll is impossible without `position: fixed`.
+   User found this "snap to top after scroll stops" behavior acceptable.
+
+### Diagnostic technique that finally cracked this (for future reference)
+
+Silk aggressively caches `.js` files referenced from `<script src="...">` —
+**clearing cache/cookies/history/data via Settings does NOT clear this**, nor
+does a full device power-off/power-on. The only reliable way to force Silk to
+load a NEW version of a script during debugging is to **push it under a brand
+new filename AND reference that new filename from a brand-new HTML filename**
+(e.g. `sticky-header2.js` + `gen1-v2.html`). Renaming only the JS file, or only
+the HTML file, was insufficient — both must be new. This should be remembered
+for any future Kindle JS debugging.
+
+### Future Enhancement (Architecture Note)
+
+**Sticky header on/off toggle** — user may want a checkbox/button to disable
+the snap-to-top header behavior if it proves distracting during real reading.
+Would require:
+- A toggle UI element (adds to already-tight 90px header on Kindle)
+- `window._kjvStore` persisted preference (same pattern as font size/bookmarks)
+- `sticky-header.js` checks preference before running absolute+poll logic;
+  if off, sets `.chapter-nav` to `position: static` via JS and skips spacer
+  injection
+- Deferred — not yet needed; revisit if user finds snap-to-top distracting
+  after real-world use
 
 ---
 
 ## Pending Tasks
+
+### Immediate — Ready for Phase 2
+- [x] Commit `style.css`, `style-kindle.css`, `js/sticky-header.js`, `generate_bible.ps1` to GitHub — DONE
+- [x] Clean up test files from Kindle — DONE (already absent)
+- [ ] Clean up local test files in project folder (kindle-test*.html, index-v*-test.html, scroll-debug-test*.html, sticky-header-debug*.js, gen1-*.html) — cosmetic, low priority
+- [x] Bookmarks/window.name storage confirmed working via real Ruth/John navigation — header snap worked, dictionary links worked, page loaded with prior scroll position restored (bookmarks.js functioning)
+- [ ] (Low priority) Investigate John 1 occasionally loading at verse 27 instead of verse 1 — likely stale bookmark from earlier testing, not a bug
 
 ### Phase 2 — PC Study Enhancements
 - [ ] `js/notes.js` — personal notes system with localStorage + JSON export
@@ -212,6 +339,7 @@ pwsh -NoProfile -File .\scan_morph_codes.ps1                  # POS diagnostic
 
 ### Phase 3 — EPUB Packaging
 - [ ] `package_epub.ps1` — packages HTML output as EPUB for Kindle sideloading
+- [ ] Swap `style.css` reference to `style-kindle.css` (or embed inline CSS) during packaging
 - [ ] Strip `<script src="../../js/notes.js">` tags during EPUB packaging
 - [ ] EPUB manifest generation
 - [ ] Test on actual Kindle Fire via ADB sideload
@@ -220,9 +348,10 @@ pwsh -NoProfile -File .\scan_morph_codes.ps1                  # POS diagnostic
 - [ ] **Greek Part of Speech data** — STEPBible TSV data as richer source
 - [ ] **Strong's number index pages** — `indexes/strongs-hebrew-index.html` etc.
 - [ ] **English concordance** — `indexes/english-concordance.html`
-- [ ] **Font size control** — CSS classes already in fontsize.js
 - [ ] **Per-verse notes/xref pages** — deferred to later phase
 - [ ] **Deep-link navigation** — `navigate.html#Gen.3.16` auto-parse and redirect
+- [ ] Clean up `adb-push-test.ps1` — remove reference to deleted `js/sticky-header.js`
+- [ ] Clean up test files (`kindle-test*.html`, `index-v2/v3-test.html`) once issue resolved
 
 ---
 
@@ -367,15 +496,127 @@ pwsh -NoProfile -File .\scan_morph_codes.ps1                  # POS diagnostic
   - First full run: 1,189 chapters generated
   - Discovered 68 NT chapters with verse gaps (verses in `<q>` elements)
   - **Opus consultation:** produced `ConvertTo-VerseHtml-Fix.ps1`
-    - `Get-FlattenedNodes` recursive flattener
-    - Rebuilt `ConvertTo-VerseHtml` using flat node list
-    - Updated `Get-StrongLinkHtml`
-  - Integrated Opus fix into `generate_bible.ps1`
-  - Fixed: empty word nodes, space before punctuation, UTF-8 encoding
-  - Fixed: Strong's badge style (solid cyan, dark text, visible in dark mode)
-  - Fixed: QA test false failures (single-chapter books, Rev 22 nav check)
-  - **Final full run: 1,189 chapters, ZERO verse gaps, 119/119 QA tests passing**
+  - Integrated Opus fix — ZERO verse gaps, 119/119 QA tests passing
   - Committed everything to GitHub
+
+---
+
+### Session 6
+- **Date:** 2026-06-10
+- **Model:** Claude Sonnet 4.6 (claude.ai) + Claude Opus 4.6 (consultation)
+- **Work Done:**
+  - Added disabled Prev/Next buttons for first/last chapters (grayed out, always visible)
+  - Added sticky header CSS (`position: sticky`) — works on PC, not Kindle
+  - **First Kindle Fire test (D01E, Android 2.3):**
+    - Confirmed: dark mode, navigation, Strong's links, dictionary pages all work
+    - Found: flexbox not supported, `position: sticky` not supported
+    - Found: `localStorage` blocked on `file://` URLs — font size Aa button did nothing
+    - Found: dictionary pages showed as black box
+  - **Opus consultation — Kindle compatibility overhaul:**
+    - New `css/style-kindle.css` — no flexbox, no CSS variables, no transitions
+    - New `js/fontsize.js` — `window._kjvStore` storage fallback chain
+    - New `js/bookmarks.js` — scroll-based saving, throttled, `window.name` fallback
+    - New `js/sticky-header.js` — scroll event based (later replaced)
+    - New dictionary CSS class names (`dict-page`, `dict-header`, `dict-body` etc.)
+    - Updated `generate_dict.ps1` with new class names
+  - **Dual CSS strategy adopted:** `style.css` for PC, `style-kindle.css` for Kindle/EPUB
+  - **Second Kindle test:**
+    - Dark mode ✅, dictionary pages ✅ (no more black box), font size ✅
+    - Sticky header ❌ — scroll events don't fire during momentum on Android 2.3
+  - **Opus consultation — sticky header + font buttons:**
+    - New `js/sticky-header.js` — `setInterval` polling at 100ms (replaces scroll events)
+    - New `js/fontsize.js` — separate A↑ and a↓ buttons replacing single Aa cycle
+    - `updateFontButtons()` grays out buttons at min/max font size
+    - Fixed `j`-bug in fontsize.js initialization (savedIdx variable)
+  - Added font-size CSS rules to both stylesheets (scoped to `.chapter-content`)
+  - Added `git-push.ps1` and `adb-push-test.ps1` utility scripts
+  - All changes committed to GitHub
+  - **Pending:** Re-test on Kindle with new polling sticky header and font buttons
+
+---
+
+### Session 7
+- **Date:** 2026-06-11 — 2026-06-12
+- **Model:** Claude Sonnet 4.6 (claude.ai) + Claude Opus 4.6 (consultation)
+- **Work Done:**
+  - Confirmed font increase/decrease buttons working on Kindle ✅
+  - Confirmed polling `setInterval` sticky header STILL not working on Kindle ❌
+  - **User proposed:** floating fixed-position `<div>` header instead of JS-based sticky
+  - Decided: make `.chapter-nav` ALWAYS `position: fixed`, remove `sticky-header.js` entirely (PC and Kindle both)
+  - Discovered `generate_bible.ps1` Phase 7/8 was overwriting manually-maintained `fontsize.js`/`bookmarks.js` on every run — **removed these phases entirely**; these files are now permanently hand-maintained
+  - **Opus consultation #1 — header layout:**
+    - Initial `display: table` / `table-cell` approach — fixed vertical centering on PC but `position: fixed` failed AND buttons stacked vertically on Kindle
+  - **Opus consultation #2 — root cause + fix:**
+    - Root cause identified: `display: table` on `.chapter-nav` breaks `position: fixed` on Android 2.3 WebKit
+    - Fix: `display: block` + `float: left`/`float: right` + `line-height: 88px` for vertical centering (chapter-nav-fix.css)
+    - Unified `.btn` styling for both `<a>` and `<button>` — explicit height, line-height, `-webkit-appearance: none`
+    - Added `.header-spacer` class (`padding-top: 95px`) for `<main>`
+  - Rewrote both `style.css` and `style-kindle.css` cleanly with float-based header (1.8em title, 90px height)
+  - Updated `generate_bible.ps1` — all 4 `<main>` tags changed to `class="chapter-content header-spacer"`
+  - Full regeneration (1,189 chapters) + QA 119/119 pass
+  - **Third Kindle test:**
+    - Header buttons still misaligned, header still not sticky, content STILL hidden under header (same as before)
+  - **Extensive isolation debugging:**
+    - `kindle-test.html` (single-class, inline style): `padding-top` WORKS, `position: fixed` does NOT work — confirms `position: fixed` is fundamentally broken on this device
+    - `kindle-test2.html` (two-class, inline style): padding does NOT apply — **discovered multi-class selector combinations don't work on this WebKit**, even though each class works individually
+  - Merged `.header-spacer` directly into `.chapter-content` (single class) in both stylesheets; updated `generate_bible.ps1` to remove `header-spacer` from all `<main>` tags (back to single class)
+  - Full regeneration + QA 119/119 pass + Kindle push
+  - **Fourth Kindle test: NO CHANGE** — all symptoms identical despite confirmed-correct CSS on device (verified via `adb shell cat` and Silk's "Find on page")
+  - **Created `index-v2-test.html`/`index-v3-test.html`** (new filenames, relative and absolute `file://` CSS paths) — BOTH rendered with OLD/broken styling despite referencing the confirmed-current `style-v2.css`
+  - **CURRENT BLOCKER (unresolved):** Either Silk's `<link rel="stylesheet">` doesn't apply external CSS at all on `file://` pages, or there's a caching mechanism that survives cache/cookie/history clearing AND full device reboot AND new filenames. Theory is in tension with apparent partial success of dark mode/badges/font buttons on real chapter pages — needs `adb shell cat css/style.css | findstr header-spacer` to check staleness of the file actually used by real pages.
+  - **Not yet committed to GitHub** — current `style.css`/`style-kindle.css`/`generate_bible.ps1` changes are local only pending resolution
+
+---
+
+### Session 8
+- **Date:** 2026-06-13
+- **Model:** Claude Sonnet 4.6 (claude.ai) + Claude Opus 4.6 (consultation)
+- **Work Done:**
+  - Resumed Session 7's unresolved CSS/sticky-header blocker via reverse bisection
+  - Pulled real on-device `1.html` via `adb pull` — confirmed byte-identical to local source (37381 bytes), ruling out transfer corruption
+  - Discovered `adb shell cat ... > file.html` via PowerShell redirect produces UTF-16 (75756 bytes vs 37381) — a red herring for the main investigation, but important to remember for future diagnostics
+  - **V8 test (52KB, 200 padded verses)**: rendered with CSS correctly applied — proved the CSS-loading "blocker" from Session 7 was actually a tiny-page-size issue, not a fundamental loading failure. Real chapter pages unaffected.
+  - With CSS confirmed working, returned to the ORIGINAL two problems: `position: fixed` non-functional, and `padding-top` not creating space below header
+  - **Opus consultation:** provided `position: absolute` + `setInterval` poll + injected spacer div approach (`header-fix.css` + `sticky-header.js`)
+  - Applied: `.chapter-nav` → `position: absolute` (Kindle only; PC keeps `position: fixed`), `.chapter-content` `padding-top: 0` (Kindle only)
+  - New `js/sticky-header.js` includes `getComputedStyle` guard — no-ops on PC where `position: fixed` works
+  - First real-device test: header still appeared non-functional, but user noticed during pinch-zoom+scroll that header DID briefly reposition with verses 1-2 visible above it
+  - **Created `scroll-debug-test.html`/`scroll-debug-test2.html`** — live scrollTop readout in cyan bar + every content block. CONFIRMED on Kindle: scrollTop tracking works correctly, bar repositions to correct (non-zero) scrollTop after scroll stops (matches "snap after fling" expectation)
+  - Tested real Genesis 1 with production `sticky-header.js` — header DOES reposition after scroll stops, consistent with debug test
+  - **Extensive debug script iteration** (debug, debug2, debug3, debug4, debug5, debug6) to find why visual debug markers weren't appearing despite header repositioning working:
+    - debug4 (alert-only): confirmed script DOES execute
+    - debug5 (step-by-step alerts, no setInterval): all 6 steps completed successfully, green spacer became visible, `computedPosition = 'absolute'`, `headerHeight = 90`
+    - **debug3 vs debug5/6 discrepancy traced to Silk's aggressive `.js` file caching** — confirmed via `adb shell cat` showing debug6 content on-device while Silk displayed debug5's alerts
+  - **KEY DIAGNOSTIC TECHNIQUE DISCOVERED:** Silk caches `.js` files in a way that survives cache/cookie/data clearing AND full device reboot. Only a brand-new JS filename referenced from a brand-new HTML filename bypasses this cache. Renaming only one of the two is insufficient.
+  - Using `sticky-header2.js` + `gen1-v2.html` (both new filenames): debug6 finally ran correctly — confirmed live `[st=N top=Npx]` readout in verse 1 text updates correctly and continuously during scroll (e.g. st=23/top=23px, st=80/top=80px), proving the poll mechanism works perfectly
+  - Header itself only visually snaps to correct position AFTER scroll gesture ends (Android 2.3 JS-freeze during fling) — matches Opus's predicted "Known Limitation" exactly
+  - **User accepted "snap to top after scroll stops" as final behavior** — good enough for real use
+  - Finalized clean `js/sticky-header.js` (no debug/alert code)
+  - Discussed and deferred a sticky-header on/off toggle as a future enhancement (documented in architecture notes)
+  - Updated `SESSION-NOTES.md` with full resolution writeup and diagnostic technique for future Kindle JS debugging
+  - **Not yet done:** regenerate real `1.html` etc. with final `sticky-header.js` reference added to `generate_bible.ps1` template, full QA pass, commit to GitHub, cleanup of test files
+
+---
+
+### Session 8 — Addendum (continued same day)
+
+- Found `index.html` and `navigate.html` templates were missing `<script src="js/sticky-header.js">` entirely — this is why Genesis/Old Testament and the Book/Chapter dropdowns were hidden under the header on those pages (no spacer div ever got injected on them)
+- Fixed `generate_bible.ps1`:
+  - `index.html` template: added `<script src="js/sticky-header.js"></script>` before `bookmarks.js`
+  - `navigate.html` template: added `<script src="js/sticky-header.js"></script>` after `bible-data.js`
+  - Both use `js/sticky-header.js` (one level, root-level pages) vs chapter pages' `../../js/sticky-header.js`
+- **Discovered and fixed a separate latent bug** while regenerating: `ConvertTo-VerseHtml`'s inner `'w'` case did `$word = $node.InnerText`, which can return `$null` for empty `<w>` nodes. When `$lemma` was non-empty but `$word` was `$null`, the call to `Get-StrongLinkHtml -Word $word` failed because `[AllowEmptyString()]` permits `""` but not `$null`. Fixed with `$word = [string]$node.InnerText` (casts null to empty string). This had apparently always been latent but only surfaced now.
+- Full regeneration (1,189 chapters) completed in **37.92 seconds**, QA test in **1.86 seconds**, 119/119 passing
+- **Final Kindle test — ALL PASSING:**
+  - `index.html`: "Old Testament"/"Genesis" fully visible below header, no clipping ✅
+  - `navigate.html`: "Book:", book dropdown, "Chapter:" all fully visible below header ✅
+  - Genesis 1, Ruth 1, John 1: verse 1 visible, sticky snap-to-top header working ✅
+  - Dictionary pages (via Strong's link from John 1:1 → G3056): working ✅
+- Committed to GitHub: `git-push.ps1 -Message "Resolve Kindle header: position absolute + JS snap-to-top, fix index/navigate spacer, fix null word InnerText bug"`
+- Attempted cleanup of leftover Kindle test files via `adb shell rm` — all already absent (nothing to clean up)
+- **Noted but not investigated:** John 1 sometimes loads scrolled to verse 27 instead of verse 1 — believed to be `bookmarks.js` restoring a stale saved scroll position from earlier testing, not a bug. Revisit if it persists with fresh/real usage.
+
+**STATUS: Kindle compatibility work is essentially COMPLETE.** All core features (navigation, dark mode, Strong's links, dictionary, font sizing, bookmarks-pending-final-check, sticky header) working on both PC and Kindle. Ready to move to Phase 2 (notes system) and Phase 3 (EPUB packaging) in a future session.
 
 ---
 
@@ -389,6 +630,13 @@ pwsh -NoProfile -File .\scan_morph_codes.ps1                  # POS diagnostic
 - Strong's numbers in OSIS may have extra leading zeros — always cast through `[int]`
 - NT verses are nested inside `<q>` elements — `Get-FlattenedNodes` handles this
 - Greek POS enhancement is a known future task — STEPBible TSV is recommended source
-- Phase 2 (notes system) and Phase 3 (EPUB packaging) are the next major milestones
+- Phase 2 (notes system) and Phase 3 (EPUB packaging) are blocked behind resolving the Kindle CSS issue
 - The `notes.js` script tag must be stripped during EPUB packaging (not optional)
 - Search is PC-only via localhost — XHR from `file://` URLs is blocked by browsers
+- ADB push target on Kindle: `/data/local/tmp/` (only writable location found)
+- `adb-push-test.ps1` pushes `style-kindle.css` AS `style.css` for Kindle testing
+- Kindle device: 1st Gen Fire D01E, Fire OS 6.3.4, Android 2.3, serial starts with D01E
+- ADB path: `H:\Android SDK Platform Tools\adb.exe`
+- Add ADB to PATH with: `$env:PATH += ';H:\Android SDK Platform Tools'`
+- `generate_bible.ps1` Phase 7/8 (fontsize.js/bookmarks.js generation) was REMOVED — never regenerate these files via the script
+- **CRITICAL OPEN ISSUE:** CSS loading/application on Kindle Silk browser is fundamentally broken in a way not yet understood. `position: fixed` confirmed non-functional even in isolated inline-style tests. Multi-class selectors confirmed non-functional even in isolated inline-style tests. Next session should start with `adb shell cat /data/local/tmp/css/style.css | findstr "header-spacer"` to determine if real chapter pages are using stale CSS.

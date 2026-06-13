@@ -408,7 +408,7 @@ foreach ($rel in $structSample) {
     $issues  = @()
 
     if ($content -notmatch '<nav class="chapter-nav">')   { $issues += 'missing chapter-nav' }
-    if ($content -notmatch '<main class="chapter-content">') { $issues += 'missing chapter-content' }
+	if ($content -notmatch '<main class="chapter-content') { $issues += 'missing chapter-content' }
     if ($content -notmatch 'id="verse-1"')                 { $issues += 'missing verse-1 anchor' }
     if ($content -notmatch 'css/style\.css')               { $issues += 'missing style.css link' }
     if ($content -notmatch 'js/fontsize\.js')              { $issues += 'missing fontsize.js' }

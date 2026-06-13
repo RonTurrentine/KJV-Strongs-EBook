@@ -2,16 +2,17 @@
    KJV Strong's Bible — Android 2.3 WebKit Compatible Stylesheet
    ================================================================
    Target: Kindle Fire D01E / Fire OS 6.3.4 / Android 2.3 WebKit
-   
+
    COMPATIBILITY RULES ENFORCED:
    - No display: flex / inline-flex / grid
    - No gap property (use margin)
-   - No position: sticky (JS handles this)
+   - No position: sticky
    - No calc(), var(), rem units
-   - No transition / animation (removed)
+   - No transition / animation
    - -webkit- prefix on border-radius, box-shadow, box-sizing
    - Hex color fallbacks before rgba()
-   - px and em units only (no rem)
+   - px and em units only
+   - Float + line-height for header layout (table layout breaks fixed)
    ================================================================ */
 
 
@@ -34,7 +35,7 @@ body {
     font-family: Georgia, "Times New Roman", serif;
     font-size: 16px;
     line-height: 1.6;
-    padding: 0;
+    padding: 0 20px 20px 20px;
     margin: 0;
     -webkit-tap-highlight-color: rgba(0, 188, 212, 0.3);
 }
@@ -54,88 +55,78 @@ img {
 }
 
 
-/* ── Font Size Classes ─────────────────────────────────────────── */
+/* ── Font size classes ─────────────────────────────────────────── */
 
-body.font-small {
-    font-size: 13px;
-}
-
-/* font-normal is the default 16px on body */
-body.font-normal {
-    font-size: 16px;
-}
-
-body.font-large {
-    font-size: 19px;
-}
-
-body.font-xlarge {
-    font-size: 22px;
-}
+body.font-small  .chapter-content { font-size: 14px; }
+body.font-normal .chapter-content { font-size: 18px; }
+body.font-large  .chapter-content { font-size: 22px; }
+body.font-xlarge .chapter-content { font-size: 26px; }
 
 
-/* ── Chapter Navigation Header ─────────────────────────────────── 
-   Replaced: display: flex → inline-block buttons in centered div
-   The .is-fixed class is toggled by sticky-header.js              */
+/* ── Chapter Navigation Header (always fixed, float layout) ─────── */
 
 .chapter-nav {
-    background-color: #252525;
-    padding: 8px 10px;
-    border-bottom: 1px solid #333333;
-    position: relative;
-    z-index: 100;
-}
-
-.chapter-nav.is-fixed {
-    position: fixed;
+    display: block;
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
+    height: 90px;
     z-index: 1000;
+    background-color: #1a1a1a;
     border-bottom: 2px solid #00bcd4;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
 }
 
-/* Placeholder inserted by JS to prevent content jump */
-.header-placeholder {
-    display: none;
-}
-
+.chapter-nav h1,
 .book-chapter {
-    font-size: 1.15em;
+    display: block;
+    float: left;
+    height: 90px;
+    line-height: 88px;
+    margin: 0;
+    padding: 0 12px;
+    font-size: 1.8em;
     font-weight: bold;
     color: #ffffff;
-    text-align: center;
-    margin: 0 0 6px 0;
-    padding: 0;
-    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 50%;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 .nav-buttons {
-    text-align: center;
-    /* clearfix for any floated children */
-    overflow: hidden;
+    display: block;
+    float: right;
+    height: 90px;
+    line-height: 88px;
+    margin: 0;
+    padding: 0 8px;
+    text-align: right;
+    white-space: nowrap;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
 }
 
-.nav-buttons:after {
-    content: "";
-    display: table;
-    clear: both;
-}
 
+/* ── Buttons — unified for <a> AND <button> ────────────────────── */
 
-/* ── Buttons (.btn) ────────────────────────────────────────────── 
-   Replaced: inline-flex → inline-block
-   Removed: gap → margin
-   Min 44px touch target enforced                                  */
-
-.btn {
+.nav-buttons .btn,
+a.btn,
+button.btn {
     display: inline-block;
     vertical-align: middle;
-    margin: 3px;
-    padding: 8px 14px;
+    margin: 2px;
+    padding: 6px 10px;
     min-height: 44px;
     min-width: 44px;
-    line-height: 26px;
+    height: 44px;
+    line-height: 28px;
     font-size: 14px;
     font-family: Arial, Helvetica, sans-serif;
     font-weight: bold;
@@ -147,78 +138,69 @@ body.font-xlarge {
     text-align: center;
     text-decoration: none;
     cursor: pointer;
-    /* Remove default button styling */
+    white-space: nowrap;
     -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
 }
 
-.btn:active {
+.nav-buttons .btn:active,
+a.btn:active,
+button.btn:active {
     background-color: #444444;
     border-color: #00bcd4;
     color: #ffffff;
 }
 
-button.btn {
-    /* Ensure <button> elements match <a> styling */
-    font-size: 14px;
-    font-family: Arial, Helvetica, sans-serif;
-    font-weight: bold;
+.btn-disabled,
+.btn[disabled] {
+    color: #555555;
+    border-color: #444444;
+    cursor: default;
+    opacity: 0.4;
 }
 
-.btn-primary {
-    background-color: #00695c;
-    border-color: #00897b;
-    color: #ffffff;
-}
-
-.btn-primary:active {
-    background-color: #00897b;
-}
-
-
-/* ── Font Size Toggle Button ───────────────────────────────────── */
-
-#font-toggle {
-    font-size: 16px;
-    font-weight: bold;
-    min-width: 48px;
-    padding: 8px 12px;
-    letter-spacing: 1px;
+.btn-disabled:active,
+.btn[disabled]:active {
+    background-color: #333333;
+    border-color: #444444;
+    color: #555555;
 }
 
 
-/* ── Unbaked Notes Indicator ───────────────────────────────────── */
+/* ── Unbaked notes indicator ───────────────────────────────────── */
 
-.unbaked-badge {
+#unbaked-indicator {
     display: inline-block;
     vertical-align: middle;
-    margin: 3px;
-    padding: 6px 10px;
-    min-height: 36px;
-    line-height: 24px;
-    font-size: 12px;
+    line-height: 28px;
+    height: 0;
+    overflow: hidden;
+}
+
+#unbaked-indicator.has-unbaked {
+    height: auto;
+    padding: 4px 8px;
+    margin-left: 2px;
+    font-size: 11px;
     font-family: Arial, Helvetica, sans-serif;
     color: #ffd54f;
     background-color: #4a3800;
     border: 1px solid #ffd54f;
-    -webkit-border-radius: 12px;
-    border-radius: 12px;
-    cursor: pointer;
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
 }
 
 
-/* ── Chapter Content & Verses ──────────────────────────────────── */
 
-.chapter-content {
-    padding: 12px;
-    max-width: 720px;
-    margin: 0 auto;
-}
+
 
 .verse {
     margin: 0 0 8px 0;
     padding: 4px 0;
     line-height: 1.7;
-    text-indent: 0;
 }
 
 .verse-num {
@@ -232,13 +214,23 @@ button.btn {
 }
 
 
-/* ── Strong's Links ────────────────────────────────────────────── 
-   Cyan badges — primary interactive element for study              */
+/* ── Chapter Content & Verses (includes header spacer padding) ──── */
+
+.chapter-content {
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-bottom: 12px;
+    padding-top: 0;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+
+/* ── Strong's Links ────────────────────────────────────────────── */
 
 .strongs-link {
     color: #00bcd4;
     text-decoration: none;
-    /* Subtle underline to indicate tappable */
     border-bottom: 1px dotted #00838f;
     padding-bottom: 1px;
 }
@@ -256,8 +248,7 @@ button.btn {
 }
 
 
-/* ── Cross-Reference Superscripts (OSIS) ───────────────────────── 
-   Replaced: display: inline-flex → display: inline                 */
+/* ── Cross-Reference Superscripts ──────────────────────────────── */
 
 .superscript-link {
     display: inline;
@@ -277,8 +268,7 @@ button.btn {
 }
 
 
-/* ── Personal Note Indicators ──────────────────────────────────── 
-   Gold/green to distinguish from OSIS xrefs (orange)               */
+/* ── Personal Note Indicators ──────────────────────────────────── */
 
 .superscript-link.personal-note {
     color: #aed581;
@@ -299,7 +289,7 @@ em.added,
 }
 
 
-/* ── Divine Name (LORD in Small Caps) ──────────────────────────── */
+/* ── Divine Name ───────────────────────────────────────────────── */
 
 .divine-name {
     font-variant: small-caps;
@@ -308,7 +298,7 @@ em.added,
 }
 
 
-/* ── Section Titles (Psalm Titles, etc.) ───────────────────────── */
+/* ── Section Titles ────────────────────────────────────────────── */
 
 .section-title {
     display: block;
@@ -328,11 +318,16 @@ em.added,
 }
 
 .chapter-footer .nav-buttons {
+    display: block;
+    float: none;
+    height: auto;
+    line-height: normal;
     text-align: center;
+    white-space: normal;
 }
 
 
-/* ── Note "+" Button (injected by notes.js) ────────────────────── */
+/* ── Note Add Button ───────────────────────────────────────────── */
 
 .note-add-btn {
     display: inline;
@@ -350,13 +345,12 @@ em.added,
     color: #aed581;
 }
 
-/* Verse has an existing note — show filled indicator */
 .note-add-btn.has-note {
     color: #aed581;
 }
 
 
-/* ── Inline Note Editor (injected by notes.js) ─────────────────── */
+/* ── Inline Note Editor ────────────────────────────────────────── */
 
 .note-editor {
     display: block;
@@ -396,9 +390,7 @@ em.added,
 
 /* ================================================================
    DICTIONARY PAGES
-   ================================================================ 
-   Replaced all flex layouts with block/inline-block.
-   These styles fix the "black box" rendering issue.               */
+   ================================================================ */
 
 .dict-page {
     padding: 0;
@@ -411,68 +403,85 @@ em.added,
     text-align: center;
 }
 
-.dict-header h1 {
+.dict-strongs-id {
     font-size: 1.3em;
     color: #00bcd4;
     margin: 0 0 4px 0;
 }
 
-.dict-header .pronunciation {
-    font-size: 1.1em;
-    color: #b0b0b0;
-    font-style: italic;
+.dict-nav {
+    text-align: center;
+    padding: 8px 0 0 0;
 }
 
-.dict-entry {
+.dict-nav .btn {
+    margin: 4px;
+}
+
+.dict-body {
     padding: 12px;
     max-width: 720px;
     margin: 0 auto;
 }
 
-.dict-entry h2 {
-    font-size: 1.05em;
-    color: #90caf9;
-    margin: 16px 0 6px 0;
-    border-bottom: 1px solid #333333;
-    padding-bottom: 4px;
-}
-
-.dict-definition {
-    margin: 8px 0;
-    line-height: 1.7;
-}
-
-.dict-strongs-num {
-    display: inline-block;
-    font-family: Arial, Helvetica, sans-serif;
-    font-weight: bold;
-    color: #00bcd4;
-    background-color: #003d42;
-    padding: 2px 8px;
-    -webkit-border-radius: 4px;
-    border-radius: 4px;
-    font-size: 0.9em;
-    margin-right: 6px;
-}
-
-.dict-original-word {
+.dict-original {
     font-size: 1.4em;
     color: #ffffff;
+    text-align: center;
     margin: 6px 0;
 }
 
-.dict-transliteration {
-    font-style: italic;
-    color: #b0b0b0;
-    margin: 4px 0;
+.dict-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0 16px 0;
 }
 
-.dict-related {
-    margin: 12px 0;
-    padding: 8px;
+.dict-table th {
+    text-align: left;
+    padding: 6px 8px;
+    color: #888888;
+    font-weight: normal;
+    font-size: 0.85em;
+    width: 40%;
+    border-bottom: 1px solid #333333;
+}
+
+.dict-table td {
+    padding: 6px 8px;
+    color: #e0e0e0;
+    border-bottom: 1px solid #333333;
+}
+
+.dict-def {
+    margin: 0 0 16px 0;
+    padding: 10px;
     background-color: #222222;
-    -webkit-border-radius: 6px;
-    border-radius: 6px;
+    border-left: 3px solid #00bcd4;
+    line-height: 1.7;
+}
+
+.dict-kjv {
+    margin: 0 0 16px 0;
+    padding: 10px;
+    background-color: #222222;
+    border-left: 3px solid #ffcc00;
+    line-height: 1.7;
+}
+
+.dict-label {
+    font-size: 0.8em;
+    color: #888888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 6px 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.dict-footer {
+    padding: 12px;
+    border-top: 1px solid #333333;
+    text-align: center;
 }
 
 .dict-related a {
@@ -481,19 +490,6 @@ em.added,
     color: #00bcd4;
 }
 
-.dict-nav {
-    text-align: center;
-    padding: 12px;
-    border-top: 1px solid #333333;
-    margin-top: 12px;
-}
-
-.dict-nav .btn {
-    margin: 4px;
-}
-
-/* Icon buttons used in dictionary pages */
-/* Replaced: display: inline-flex → display: inline-block */
 .icon-btn {
     display: inline-block;
     vertical-align: middle;
@@ -519,19 +515,8 @@ em.added,
 
 
 /* ================================================================
-   INDEX PAGE (Table of Contents)
+   INDEX PAGE
    ================================================================ */
-
-.index-page {
-    padding: 12px;
-}
-
-.index-page h1 {
-    text-align: center;
-    color: #ffffff;
-    font-size: 1.4em;
-    margin: 0 0 16px 0;
-}
 
 .testament-heading {
     font-size: 1.1em;
@@ -568,13 +553,12 @@ em.added,
     color: #ffffff;
 }
 
-.book-list .chapter-count {
+.chapter-count {
     color: #888888;
     font-size: 0.85em;
     margin-left: 6px;
 }
 
-/* Resume reading prompt */
 .resume-prompt {
     margin: 12px;
     padding: 12px;
@@ -591,28 +575,15 @@ em.added,
     font-size: 1.05em;
 }
 
-.resume-prompt .resume-meta {
-    color: #888888;
-    font-size: 0.85em;
-    margin-top: 4px;
-}
-
 
 /* ================================================================
-   NAVIGATE PAGE (Cascading Dropdowns)
+   NAVIGATE PAGE
    ================================================================ */
 
-.navigate-page {
+.navigator-form {
     padding: 16px;
     max-width: 400px;
     margin: 0 auto;
-}
-
-.navigate-page h1 {
-    text-align: center;
-    font-size: 1.3em;
-    color: #ffffff;
-    margin: 0 0 20px 0;
 }
 
 .form-group {
@@ -633,7 +604,6 @@ em.added,
     padding: 10px 8px;
     min-height: 44px;
     font-size: 16px;
-    font-family: Georgia, "Times New Roman", serif;
     color: #e0e0e0;
     background-color: #2a2a2a;
     border: 1px solid #555555;
@@ -647,52 +617,10 @@ em.added,
     background-color: #222222;
 }
 
-#go-button {
-    display: block;
-    width: 100%;
-    margin-top: 16px;
-    padding: 14px;
-    min-height: 52px;
-    font-size: 18px;
-    font-weight: bold;
-    font-family: Arial, Helvetica, sans-serif;
-    color: #ffffff;
-    background-color: #00695c;
-    border: 2px solid #00897b;
-    -webkit-border-radius: 8px;
-    border-radius: 8px;
-    cursor: pointer;
-    -webkit-appearance: none;
-}
-
-#go-button:active {
-    background-color: #00897b;
-}
-
-#go-button:disabled {
-    background-color: #333333;
-    border-color: #555555;
-    color: #666666;
-    cursor: default;
-}
-
 
 /* ================================================================
-   CROSS-REFERENCE PAGES (xrefs/)
+   CROSS-REFERENCE PAGES
    ================================================================ */
-
-.xref-page {
-    padding: 12px;
-    max-width: 720px;
-    margin: 0 auto;
-}
-
-.xref-page h1 {
-    font-size: 1.15em;
-    color: #ff8a65;
-    margin: 0 0 12px 0;
-    text-align: center;
-}
 
 .xref-list {
     list-style: none;
@@ -719,30 +647,10 @@ em.added,
     background-color: #2a2a2a;
 }
 
-.xref-current {
-    color: #888888;
-    font-style: italic;
-    font-size: 0.85em;
-    margin-left: 4px;
-}
-
 
 /* ================================================================
-   PERSONAL NOTES PAGES (notes/ and notes.html)
+   PERSONAL NOTES PAGES
    ================================================================ */
-
-.note-page {
-    padding: 12px;
-    max-width: 720px;
-    margin: 0 auto;
-}
-
-.note-page h1 {
-    font-size: 1.15em;
-    color: #aed581;
-    margin: 0 0 12px 0;
-    text-align: center;
-}
 
 .verse-text {
     margin: 12px 0;
@@ -767,13 +675,6 @@ em.added,
     font-size: 0.8em;
     font-family: Arial, Helvetica, sans-serif;
     margin-top: 12px;
-}
-
-/* Notes viewer (notes.html) */
-.notes-viewer-page {
-    padding: 12px;
-    max-width: 720px;
-    margin: 0 auto;
 }
 
 .note-entry {
@@ -818,114 +719,6 @@ em.added,
 
 
 /* ================================================================
-   CONCORDANCE & INDEX PAGES
-   ================================================================ */
-
-.concordance-page {
-    padding: 12px;
-    max-width: 720px;
-    margin: 0 auto;
-}
-
-.concordance-page h1 {
-    text-align: center;
-    font-size: 1.3em;
-    color: #ffffff;
-    margin: 0 0 12px 0;
-}
-
-.concordance-letter {
-    font-size: 1.2em;
-    font-weight: bold;
-    color: #00bcd4;
-    margin: 16px 0 6px 0;
-    padding-bottom: 4px;
-    border-bottom: 1px solid #333333;
-}
-
-.concordance-entry {
-    margin: 0 0 6px 0;
-    padding: 4px 0;
-}
-
-.concordance-word {
-    font-weight: bold;
-    color: #e0e0e0;
-}
-
-.concordance-refs {
-    color: #888888;
-    font-size: 0.85em;
-}
-
-.concordance-refs a {
-    color: #64b5f6;
-    margin-right: 4px;
-}
-
-
-/* ================================================================
-   SEARCH PAGE
-   ================================================================ */
-
-.search-page {
-    padding: 16px;
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.search-page h1 {
-    text-align: center;
-    font-size: 1.3em;
-    color: #ffffff;
-    margin: 0 0 16px 0;
-}
-
-.search-input {
-    display: block;
-    width: 100%;
-    padding: 12px 10px;
-    min-height: 48px;
-    font-size: 16px;
-    font-family: Georgia, "Times New Roman", serif;
-    color: #e0e0e0;
-    background-color: #2a2a2a;
-    border: 2px solid #555555;
-    -webkit-border-radius: 8px;
-    border-radius: 8px;
-    -webkit-box-sizing: border-box;
-    box-sizing: border-box;
-    margin: 0 0 12px 0;
-}
-
-.search-input:focus {
-    border-color: #00bcd4;
-    outline: none;
-}
-
-.search-results {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-.search-results li {
-    padding: 8px 0;
-    border-bottom: 1px solid #222222;
-}
-
-.search-results a {
-    color: #64b5f6;
-}
-
-.search-results .verse-preview {
-    color: #b0b0b0;
-    font-size: 0.9em;
-    margin-top: 2px;
-}
-
-
-/* ================================================================
    UTILITY CLASSES
    ================================================================ */
 
@@ -941,7 +734,6 @@ em.added,
     display: none;
 }
 
-/* Clearfix */
 .clearfix:after {
     content: "";
     display: table;
