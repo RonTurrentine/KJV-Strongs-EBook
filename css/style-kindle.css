@@ -739,3 +739,80 @@ em.added,
     display: table;
     clear: both;
 }
+
+/* ── Strong's Index Pages ──────────────────────────────────────── */
+
+.index-controls {
+    margin: 12px 0;
+    padding: 10px 0;
+    border-bottom: 1px solid #333333;
+}
+
+.index-status {
+    display: block;
+    color: #aaaaaa;
+    font-size: 0.85em;
+    margin-bottom: 8px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.index-perpage-label {
+    color: #888888;
+    font-size: 0.85em;
+    font-family: Arial, Helvetica, sans-serif;
+    margin-right: 4px;
+}
+
+.index-nav {
+    margin: 10px 0;
+    min-height: 10px;
+}
+
+.btn-active {
+    background-color: #005f5f;
+    border-color: #00bcd4;
+    color: #ffffff;
+}
+
+.dict-index-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85em;
+}
+
+.dict-index-table th {
+    text-align: left;
+    padding: 6px 8px;
+    background-color: #111111;
+    color: #00bcd4;
+    border-bottom: 2px solid #333333;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 0.8em;
+}
+
+.dict-index-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #222222;
+    vertical-align: top;
+}
+
+.dict-index-link {
+    color: #00bcd4;
+    text-decoration: none;
+    font-weight: bold;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.dict-index-orig {
+    font-size: 1.1em;
+    color: #ffffff;
+}
+
+.dict-index-xlit {
+    color: #aaaaaa;
+    font-style: italic;
+}
+
+.dict-index-def {
+    color: #cccccc;
+}
