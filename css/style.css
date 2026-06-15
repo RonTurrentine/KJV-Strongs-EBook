@@ -575,92 +575,22 @@ body.font-normal .chapter-content { font-size: 18px; }
 body.font-large  .chapter-content { font-size: 22px; }
 body.font-xlarge .chapter-content { font-size: 26px; }
 
-/* ── Strong's Index Pages ──────────────────────────────────────── */
+/* ── Two-column Book Index ─────────────────────────────────────── */
 
-.index-controls {
-  margin: 12px 0;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border-gray);
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
+.book-columns {
+  overflow: hidden;
 }
 
-.index-status {
-  color: #aaaaaa;
-  font-size: 0.9em;
-  margin-right: 10px;
-  font-family: Arial, Helvetica, sans-serif;
+.book-col {
+  float: left;
+  width: 49%;
+  box-sizing: border-box;
 }
 
-.index-perpage-label {
-  color: #888888;
-  font-size: 0.85em;
-  font-family: Arial, Helvetica, sans-serif;
+.book-col:last-of-type {
+  float: right;
 }
 
-.index-nav {
-  margin: 10px 0;
-  min-height: 10px;
-}
-
-.btn-active {
-  background-color: #005f5f;
-  border-color: var(--link-blue);
-  color: #ffffff;
-}
-
-.dict-index-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9em;
-}
-
-.dict-index-table th {
-  text-align: left;
-  padding: 8px 10px;
-  background-color: #111111;
-  color: var(--link-blue);
-  border-bottom: 2px solid var(--border-gray);
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 0.85em;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.dict-index-table td {
-  padding: 6px 10px;
-  border-bottom: 1px solid #222222;
-  vertical-align: top;
-}
-
-.dict-index-table tr:hover td {
-  background-color: #1e1e1e;
-}
-
-.dict-index-link {
-  color: var(--link-blue);
-  text-decoration: none;
-  font-weight: bold;
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-.dict-index-link:hover {
-  text-decoration: underline;
-}
-
-.dict-index-orig {
-  font-size: 1.1em;
-  color: #ffffff;
-}
-
-.dict-index-xlit {
-  color: #aaaaaa;
-  font-style: italic;
-}
-
-.dict-index-def {
-  color: #cccccc;
-  max-width: 400px;
+.book-col-clear {
+  clear: both;
 }

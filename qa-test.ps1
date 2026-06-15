@@ -277,9 +277,9 @@ if (Test-Path $mal4) {
 $rev22 = Join-Path $OutputRoot 'books/66-Rev/22.html'
 if (Test-Path $rev22) {
     $content = Get-Content -Raw $rev22
-if ($content -match 'btn-disabled.*Next|Next.*btn-disabled') {
+if ($content -match 'btn-disabled.*V&#9654;|V&#9654;.*btn-disabled') {
         Pass "Revelation 22: Next button is disabled (correct -- last chapter)"
-    } elseif ($content -match '<a href.*Next') {
+    } elseif ($content -match '<a href.*V&#9654;') {
         Fail "Revelation 22: Next button is active but should be disabled"
     } else {
         Fail "Revelation 22: Next button not found at all"
@@ -309,9 +309,9 @@ if (Test-Path $rev1) {
 $gen1 = Join-Path $OutputRoot 'books/01-Gen/1.html'
 if (Test-Path $gen1) {
     $content = Get-Content -Raw $gen1
-    if ($content -match 'btn-disabled.*Prev|Prev.*btn-disabled') {
+    if ($content -match 'btn-disabled.*&#9664;V|&#9664;V.*btn-disabled') {
         Pass "Genesis 1: Prev button is disabled (correct -- first chapter)"
-    } elseif ($content -match '<a href.*Prev') {
+    } elseif ($content -match '<a href.*&#9664;V') {
         Fail "Genesis 1: Prev button is active but should be disabled"
     } else {
         Fail "Genesis 1: Prev button not found at all"

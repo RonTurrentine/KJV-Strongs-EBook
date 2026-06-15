@@ -293,7 +293,7 @@ function ConvertTo-VerseHtml {
 
         switch ($localName) {
 			'w' {
-				$word     = [string]$node.InnerText
+				$word     = $node.InnerText
 				$lemma    = $node.GetAttribute('lemma')
 				if ($word -or $lemma) {
 					$linkHtml = Get-StrongLinkHtml -Word $word -Lemma $lemma -DictRelPath $DictRelPath
@@ -388,6 +388,9 @@ foreach ($book in $booksToProcess) {
     $VerseCountData[$book.OsisId] = @(0) * $book.Chapters
 }
 
+# Pre-compute book array for prev/next book navigation
+$allBooks = @($booksToProcess)
+
 Ensure-Dir (Join-Path $OutputRoot 'books')
 Ensure-Dir (Join-Path $OutputRoot 'xrefs')
 Ensure-Dir (Join-Path $OutputRoot 'js')
@@ -441,22 +444,44 @@ foreach ($entry in $FlatChapters) {
     $prevHtml = ''
     $nextHtml = ''
 
-if ($flatIdx -gt 0) {
+# Prev/Next Chapter buttons
+    if ($flatIdx -gt 0) {
         $prev      = $FlatChapters[$flatIdx - 1]
         $prevHref  = if ($prev.Book.OsisId -eq $book.OsisId) { "$($prev.Chapter).html" } else { "../$($prev.Book.Folder)/$($prev.Chapter).html" }
         $prevLabel = "$($prev.Book.FullName) $($prev.Chapter)"
-        $prevHtml  = "<a href=`"$prevHref`" class=`"btn`" title=`"$prevLabel`">&#9664; Prev</a>"
+        $prevHtml  = "<a href=`"$prevHref`" class=`"btn`" title=`"$prevLabel`">&#9664;V</a>"
     } else {
-        $prevHtml  = "<span class=`"btn btn-disabled`">&#9664; Prev</span>"
+        $prevHtml  = "<span class=`"btn btn-disabled`">&#9664;V</span>"
     }
 
     if ($flatIdx -lt ($FlatChapters.Count - 1)) {
         $next      = $FlatChapters[$flatIdx + 1]
         $nextHref  = if ($next.Book.OsisId -eq $book.OsisId) { "$($next.Chapter).html" } else { "../$($next.Book.Folder)/$($next.Chapter).html" }
         $nextLabel = "$($next.Book.FullName) $($next.Chapter)"
-        $nextHtml  = "<a href=`"$nextHref`" class=`"btn`" title=`"$nextLabel`">Next &#9654;</a>"
+        $nextHtml  = "<a href=`"$nextHref`" class=`"btn`" title=`"$nextLabel`">V&#9654;</a>"
     } else {
-        $nextHtml  = "<span class=`"btn btn-disabled`">Next &#9654;</span>"
+        $nextHtml  = "<span class=`"btn btn-disabled`">V&#9654;</span>"
+    }
+
+    # Prev/Next Book buttons (always jump to chapter 1 of that book)
+    $bookIdx      = -1
+    for ($bi = 0; $bi -lt $allBooks.Count; $bi++) {
+        if ($allBooks[$bi].OsisId -eq $book.OsisId) { $bookIdx = $bi; break }
+    }
+    if ($bookIdx -gt 0) {
+        $prevBook     = $allBooks[$bookIdx - 1]
+        $prevBookHref = "../$($prevBook.Folder)/1.html"
+        $prevBookHtml = "<a href=`"$prevBookHref`" class=`"btn`" title=`"$($prevBook.FullName)`">&#9664;B</a>"
+    } else {
+        $prevBookHtml = "<span class=`"btn btn-disabled`">&#9664;B</span>"
+    }
+
+    if ($bookIdx -ge 0 -and $bookIdx -lt ($allBooks.Count - 1)) {
+        $nextBook     = $allBooks[$bookIdx + 1]
+        $nextBookHref = "../$($nextBook.Folder)/1.html"
+        $nextBookHtml = "<a href=`"$nextBookHref`" class=`"btn`" title=`"$($nextBook.FullName)`">B&#9654;</a>"
+    } else {
+        $nextBookHtml = "<span class=`"btn btn-disabled`">B&#9654;</span>"
     }
 
     $bookFolder = Join-Path $OutputRoot "books/$($book.Folder)"
@@ -477,9 +502,11 @@ if ($flatIdx -gt 0) {
     <h1 class="book-chapter">$($book.FullName) $chNum</h1>
     <div class="nav-buttons">
       <a href="../../index.html" class="btn">Books</a>
-      <a href="../../navigate.html" class="btn">Go To</a>
+      <a href="../../navigate.html#$($book.OsisId)" class="btn">Go To</a>
+      $prevBookHtml
       $prevHtml
       $nextHtml
+      $nextBookHtml
       <button class="btn" id="font-decrease" onclick="decreaseFontSize()">a&#8595;</button>
 	  <button class="btn" id="font-increase" onclick="increaseFontSize()">A&#8593;</button>
       <span id="unbaked-indicator"></span>
@@ -608,12 +635,19 @@ foreach ($book in $BookTable) {
   </nav>
   <main class="chapter-content">
     <div id="bookmark-resume"></div>
-    <h2 class="testament-heading">Old Testament</h2>
-    <ul class="book-list">
-$($otLinks.ToString())    </ul>
-    <h2 class="testament-heading">New Testament</h2>
-    <ul class="book-list">
-$($ntLinks.ToString())    </ul>
+    <div class="book-columns">
+      <div class="book-col">
+        <h2 class="testament-heading">Old Testament</h2>
+        <ul class="book-list">
+$($otLinks.ToString())        </ul>
+      </div>
+      <div class="book-col">
+        <h2 class="testament-heading">New Testament</h2>
+        <ul class="book-list">
+$($ntLinks.ToString())        </ul>
+      </div>
+      <div class="book-col-clear"></div>
+    </div>
   </main>
   <script src="js/sticky-header.js"></script>
   <script src="js/bookmarks.js"></script>
@@ -659,7 +693,6 @@ Write-Host "Generating navigate.html..." -ForegroundColor Cyan
     </div>
   </main>
   <script src="js/bible-data.js"></script>
-  <script src="js/sticky-header.js"></script>
   <script>
   var selectedBookIdx = -1;
   function populateBooks() {
@@ -711,14 +744,17 @@ Write-Host "Generating navigate.html..." -ForegroundColor Cyan
       vsSel.appendChild(opt);
     }
     vsSel.disabled = false;
+    // Auto-select verse 1
+    if (vsSel.options.length > 1) { vsSel.value = 1; }
   }
   function onGo() {
     var bookSel = document.getElementById('book-select');
     var chSel   = document.getElementById('chapter-select');
     var vsSel   = document.getElementById('verse-select');
     var idx     = parseInt(bookSel.value, 10);
-    var chNum   = parseInt(chSel.value, 10);
-    if (isNaN(idx) || isNaN(chNum)) { alert('Please select a book and chapter.'); return; }
+    if (isNaN(idx)) { alert('Please select a book.'); return; }
+    var chNum = parseInt(chSel.value, 10);
+    if (isNaN(chNum)) { chNum = 1; }
     var book  = BIBLE_DATA[idx];
     var url   = 'books/' + book.folder + '/' + chNum + '.html';
     var vsVal = vsSel.value;
@@ -726,6 +762,27 @@ Write-Host "Generating navigate.html..." -ForegroundColor Cyan
     window.location.href = url;
   }
   populateBooks();
+
+  // Auto-select current book from URL hash e.g. navigate.html#Gen
+  (function() {
+    var hash = window.location.hash.replace('#', '');
+    if (!hash) { return; }
+    var sel = document.getElementById('book-select');
+    var i;
+    for (i = 0; i < BIBLE_DATA.length; i++) {
+      if (BIBLE_DATA[i].abbr === hash) {
+        sel.value = i;
+        onBookChange();
+        // Auto-select chapter 1
+        var chSel = document.getElementById('chapter-select');
+        if (chSel && chSel.options.length > 1) {
+          chSel.value = 1;
+          onChapterChange();
+        }
+        break;
+      }
+    }
+  })();
   </script>
 </body>
 </html>

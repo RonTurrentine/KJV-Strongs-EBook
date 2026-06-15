@@ -31,7 +31,6 @@
     </div>
   </main>
   <script src="js/bible-data.js"></script>
-  <script src="js/sticky-header.js"></script>
   <script>
   var selectedBookIdx = -1;
   function populateBooks() {
@@ -83,14 +82,17 @@
       vsSel.appendChild(opt);
     }
     vsSel.disabled = false;
+    // Auto-select verse 1
+    if (vsSel.options.length > 1) { vsSel.value = 1; }
   }
   function onGo() {
     var bookSel = document.getElementById('book-select');
     var chSel   = document.getElementById('chapter-select');
     var vsSel   = document.getElementById('verse-select');
     var idx     = parseInt(bookSel.value, 10);
-    var chNum   = parseInt(chSel.value, 10);
-    if (isNaN(idx) || isNaN(chNum)) { alert('Please select a book and chapter.'); return; }
+    if (isNaN(idx)) { alert('Please select a book.'); return; }
+    var chNum = parseInt(chSel.value, 10);
+    if (isNaN(chNum)) { chNum = 1; }
     var book  = BIBLE_DATA[idx];
     var url   = 'books/' + book.folder + '/' + chNum + '.html';
     var vsVal = vsSel.value;
@@ -98,6 +100,27 @@
     window.location.href = url;
   }
   populateBooks();
+
+  // Auto-select current book from URL hash e.g. navigate.html#Gen
+  (function() {
+    var hash = window.location.hash.replace('#', '');
+    if (!hash) { return; }
+    var sel = document.getElementById('book-select');
+    var i;
+    for (i = 0; i < BIBLE_DATA.length; i++) {
+      if (BIBLE_DATA[i].abbr === hash) {
+        sel.value = i;
+        onBookChange();
+        // Auto-select chapter 1
+        var chSel = document.getElementById('chapter-select');
+        if (chSel && chSel.options.length > 1) {
+          chSel.value = 1;
+          onChapterChange();
+        }
+        break;
+      }
+    }
+  })();
   </script>
 </body>
 </html>

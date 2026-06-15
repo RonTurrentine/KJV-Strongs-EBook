@@ -222,7 +222,7 @@ function Write-IndexPage {
     $lang     = $Language.ToLower()
     $prefix   = if ($lang -eq 'hebrew') { 'H' } else { 'G' }
     $cssPath  = '../css/style.css'
-    $title    = "Strong's $Language Lexicon Index"
+    $title    = "$Language Index"
     $titleEsc = HtmlEscape $title
     $total    = $Entries.Count
 

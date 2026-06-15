@@ -323,12 +323,21 @@ Would require:
 
 ## Pending Tasks
 
-### Immediate — Ready for Phase 2
-- [x] Commit `style.css`, `style-kindle.css`, `js/sticky-header.js`, `generate_bible.ps1` to GitHub — DONE
-- [x] Clean up test files from Kindle — DONE (already absent)
-- [ ] Clean up local test files in project folder (kindle-test*.html, index-v*-test.html, scroll-debug-test*.html, sticky-header-debug*.js, gen1-*.html) — cosmetic, low priority
-- [x] Bookmarks/window.name storage confirmed working via real Ruth/John navigation — header snap worked, dictionary links worked, page loaded with prior scroll position restored (bookmarks.js functioning)
-- [ ] (Low priority) Investigate John 1 occasionally loading at verse 27 instead of verse 1 — likely stale bookmark from earlier testing, not a bug
+### Immediate — Phase 3 (EPUB Packaging)
+- [x] Phase 2 notes system complete — DONE
+- [x] Strong's index pages — DONE
+- [x] Navigation improvements (B/V buttons, Go To auto-select) — DONE
+- [x] Two-column book index — DONE
+- [x] Kindle header button overflow fixed — DONE
+- [ ] **Test notes system end-to-end** — double-click start-study.bat, write a note, verify it bakes, verify Sync to Kindle works
+- [ ] **Phase 3: `package_epub.ps1`** — package HTML as EPUB for Kindle sideloading
+  - Swap `style.css` references to `style-kindle.css`
+  - Strip `<script src="../../js/notes.js">` (notes are PC-only)
+  - Strip `<script src="../../js/sticky-header.js">` (EPUB readers handle scrolling)
+  - Generate EPUB manifest (content.opf, toc.ncx)
+  - Test sideloading via ADB
+- [ ] (Low priority) Clean up local test files (kindle-test*.html, scroll-debug-test*.html etc.)
+- [ ] (Low priority) Investigate John 1 occasionally loading at verse 27 — likely stale bookmark
 
 ### Phase 2 — PC Study Enhancements
 - [ ] `js/notes.js` — personal notes system with localStorage + JSON export
@@ -640,3 +649,69 @@ Would require:
 - Add ADB to PATH with: `$env:PATH += ';H:\Android SDK Platform Tools'`
 - `generate_bible.ps1` Phase 7/8 (fontsize.js/bookmarks.js generation) was REMOVED — never regenerate these files via the script
 - **CRITICAL OPEN ISSUE:** CSS loading/application on Kindle Silk browser is fundamentally broken in a way not yet understood. `position: fixed` confirmed non-functional even in isolated inline-style tests. Multi-class selectors confirmed non-functional even in isolated inline-style tests. Next session should start with `adb shell cat /data/local/tmp/css/style.css | findstr "header-spacer"` to determine if real chapter pages are using stale CSS.
+
+---
+
+### Session 9
+- **Date:** 2026-06-15
+- **Model:** Claude Sonnet 4.6 (claude.ai) + Claude Opus 4.6 (consultation)
+- **Work Done:**
+
+  **Strong's Index Pages**
+  - Added `indexes/strongs-hebrew-index.html` and `indexes/strongs-greek-index.html`
+  - Paginated table (50/100/200/All) with active button highlighting
+  - Padded IDs (H0001, G0023) consistent with inline verse display
+  - Short definition preview per entry
+  - "Hebrew Index" / "Greek Index" buttons on dictionary pages now work (no more 404)
+  - Index title shortened to "$Language Index" (was "Strong's $Language Lexicon Index") to prevent header truncation
+
+  **Notes System (Phase 2) — Opus consultation**
+  - `start-study.ps1` — PowerShell HTTP server on localhost:8080
+  - `start-study.bat` — double-click launcher
+  - `js/notes.js` — ES3, gold ✏ pencil button per verse, modal editor
+  - Save/Edit/Delete all immediately bake into chapter HTML (no separate bake step)
+  - ⚡ Sync to Kindle button pushes modified chapter files via ADB
+  - Modal hidden on `file://` (Kindle) — only baked notes visible there
+  - `notes.json` and `.last-sync` excluded via `.gitignore`
+  - CSS additions (notes-additions.css) appended to both `style.css` and `style-kindle.css`
+
+  **Navigation improvements**
+  - `[<B][<V][V>][B>]` buttons replace old `[◀ Prev][Next ▶]`
+  - `<B` / `B>` jump to first chapter of previous/next book
+  - `<V` / `V>` navigate previous/next chapter (as before)
+  - `$allBooks` pre-computed outside chapter loop for efficiency
+  - Book index lookup uses OsisId matching loop (ES3 compatible)
+
+  **Go To Passage improvements**
+  - "Go To" link now passes current book as URL hash: `navigate.html#Gen`
+  - Hash-based auto-select in navigate.html (replaces broken referrer approach)
+  - Uses `BIBLE_DATA[i].abbr` field for hash matching
+  - Auto-selects chapter 1 and verse 1 when book is pre-selected
+  - `onGo()` defaults to chapter 1 if no chapter selected (no more alert)
+
+  **Two-column Book Index**
+  - `index.html` now shows OT books (left) and NT books (right) in float-based columns
+  - `width: 49%` float layout — Kindle compatible, no flexbox
+  - `.book-columns`, `.book-col`, `.book-col-clear` CSS classes added to both stylesheets
+  - Added `sticky-header.js` to `index.html` template (was missing)
+
+  **Kindle header button overflow fix**
+  - `.book-chapter` font-size reduced from 1.8em to 1.1em in `style-kindle.css`
+  - Button padding reduced from 6px 10px to 4px 7px
+  - Button font-size reduced from 14px to 12px
+  - Button margin reduced from 2px to 1px
+  - Fixes missing buttons on long book names (Deuteronomy, Ecclesiastes, 1 Thessalonians etc.)
+
+  **Bug fixes**
+  - Removed stray "powershell" text from chapter nav template (line 505)
+  - Fixed `$Books` reference to use `$booksToProcess` / `$allBooks`
+  - QA test updated for new V/B button label patterns
+  - `generate_dict.ps1` title shortened to prevent header overflow
+  - `style-kindle.css` CSS corruption fixed (restored from GitHub)
+  - `adb-push-all.ps1` — new script to push complete Bible to Kindle
+
+  **QA: 119/119 passing**
+  **All changes committed to GitHub**
+
+---
+
