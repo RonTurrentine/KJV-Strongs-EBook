@@ -195,15 +195,7 @@ button.btn:hover {
   font-size: 1em;
 }
 
-.note-btn {
-  color: #ffdd55;
-  border-color: rgba(255, 204, 0, 0.65);
-}
 
-.note-btn:hover,
-.note-btn:focus-visible {
-  background-color: rgba(255, 204, 0, 0.18);
-}
 
 .xref-btn {
   color: #00d5f0;
@@ -958,4 +950,70 @@ body.is-localhost .sync-btn {
 
 .verse {
   scroll-margin-top: 100px;
+}
+
+/* ── Note Book Picker ──────────────────────────────────────────── */
+
+.note-picker-toggle {
+  color: #ffd700;
+  font-size: 0.85em;
+  text-decoration: none;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.note-picker-toggle:hover {
+  text-decoration: underline;
+}
+
+.note-book-picker {
+  margin: 0 0 12px 0;
+  padding: 10px;
+  background-color: #1a1a1a;
+  border: 1px solid #444444;
+  border-radius: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.note-picker-section {
+  margin-bottom: 8px;
+}
+
+.note-picker-heading {
+  font-size: 0.75em;
+  color: #888888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: Arial, Helvetica, sans-serif;
+  margin: 0 0 6px 0;
+}
+
+.note-picker-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.note-picker-book {
+  display: inline-block;
+  padding: 3px 8px;
+  font-size: 0.78em;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #c5e1a5;
+  background-color: #1b2e00;
+  border: 1px solid #689f38;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-appearance: none;
+  min-height: 0;
+  min-width: 0;
+  height: auto;
+  line-height: normal;
+}
+
+.note-picker-book:hover {
+  background-color: #2a4a00;
+  border-color: #8bc34a;
+  color: #ffffff;
 }

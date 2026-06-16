@@ -153,6 +153,65 @@
         modalTextarea.className = "note-modal-textarea";
         modalTextarea.setAttribute("placeholder", "Type your study note here...");
 
+        var hint = document.createElement("p");
+        hint.className = "note-modal-hint";
+        hint.innerHTML = "Tip: Use [[Book.Ch.Vs]] to link to a verse &mdash; e.g. [[John.3.16]] &nbsp; <a href=\"#\" class=\"note-picker-toggle\" id=\"note-picker-toggle\" onclick=\"toggleBookPicker(); return false;\">&#128366; Show Book List</a>";
+
+        /* Book picker panel */
+        var pickerPanel = document.createElement("div");
+        pickerPanel.className = "note-book-picker";
+        pickerPanel.id = "note-book-picker";
+        pickerPanel.style.display = "none";
+
+        var OT_BOOKS = [
+            ["Gen","Genesis"],["Exod","Exodus"],["Lev","Leviticus"],["Num","Numbers"],
+            ["Deut","Deuteronomy"],["Josh","Joshua"],["Judg","Judges"],["Ruth","Ruth"],
+            ["1Sam","1 Samuel"],["2Sam","2 Samuel"],["1Kgs","1 Kings"],["2Kgs","2 Kings"],
+            ["1Chr","1 Chronicles"],["2Chr","2 Chronicles"],["Ezra","Ezra"],["Neh","Nehemiah"],
+            ["Esth","Esther"],["Job","Job"],["Ps","Psalms"],["Prov","Proverbs"],
+            ["Eccl","Ecclesiastes"],["Song","Song of Solomon"],["Isa","Isaiah"],["Jer","Jeremiah"],
+            ["Lam","Lamentations"],["Ezek","Ezekiel"],["Dan","Daniel"],["Hos","Hosea"],
+            ["Joel","Joel"],["Amos","Amos"],["Obad","Obadiah"],["Jonah","Jonah"],
+            ["Mic","Micah"],["Nah","Nahum"],["Hab","Habakkuk"],["Zeph","Zephaniah"],
+            ["Hag","Haggai"],["Zech","Zechariah"],["Mal","Malachi"]
+        ];
+        var NT_BOOKS = [
+            ["Matt","Matthew"],["Mark","Mark"],["Luke","Luke"],["John","John"],
+            ["Acts","Acts"],["Rom","Romans"],["1Cor","1 Corinthians"],["2Cor","2 Corinthians"],
+            ["Gal","Galatians"],["Eph","Ephesians"],["Phil","Philippians"],["Col","Colossians"],
+            ["1Thess","1 Thessalonians"],["2Thess","2 Thessalonians"],["1Tim","1 Timothy"],
+            ["2Tim","2 Timothy"],["Titus","Titus"],["Phlm","Philemon"],["Heb","Hebrews"],
+            ["Jas","James"],["1Pet","1 Peter"],["2Pet","2 Peter"],["1John","1 John"],
+            ["2John","2 John"],["3John","3 John"],["Jude","Jude"],["Rev","Revelation"]
+        ];
+
+        function makeBookSection(label, books) {
+            var sec = document.createElement("div");
+            sec.className = "note-picker-section";
+            var hd = document.createElement("p");
+            hd.className = "note-picker-heading";
+            hd.appendChild(document.createTextNode(label));
+            sec.appendChild(hd);
+            var grid = document.createElement("div");
+            grid.className = "note-picker-grid";
+            var i;
+            for (i = 0; i < books.length; i++) {
+                (function(abbr, name) {
+                    var btn = document.createElement("button");
+                    btn.className = "note-picker-book";
+                    btn.title = abbr;
+                    btn.appendChild(document.createTextNode(name));
+                    btn.onclick = function() { insertBookRef(abbr); return false; };
+                    grid.appendChild(btn);
+                })(books[i][0], books[i][1]);
+            }
+            sec.appendChild(grid);
+            return sec;
+        }
+
+        pickerPanel.appendChild(makeBookSection("Old Testament", OT_BOOKS));
+        pickerPanel.appendChild(makeBookSection("New Testament", NT_BOOKS));
+
         var btnRow = document.createElement("div");
         btnRow.className = "note-modal-buttons";
 
@@ -178,6 +237,8 @@
         box.appendChild(modalTitle);
         box.appendChild(modalVerse);
         box.appendChild(modalTextarea);
+        box.appendChild(hint);
+        box.appendChild(pickerPanel);
         box.appendChild(btnRow);
         modal.appendChild(box);
 
@@ -248,6 +309,35 @@
         currentRef = "";
     }
     window.closeNoteModal = closeNoteModal;
+
+    /* Insert book abbreviation at cursor in textarea */
+    window.insertBookRef = function(abbr) {
+        if (!modalTextarea) { return; }
+        var start = modalTextarea.selectionStart;
+        var end   = modalTextarea.selectionEnd;
+        var val   = modalTextarea.value;
+        var insert = "[[" + abbr + ".";
+        modalTextarea.value = val.substring(0, start) + insert + val.substring(end);
+        /* Place cursor after the inserted text */
+        var pos = start + insert.length;
+        modalTextarea.selectionStart = pos;
+        modalTextarea.selectionEnd   = pos;
+        modalTextarea.focus();
+    };
+
+    /* Toggle book picker panel visibility */
+    window.toggleBookPicker = function() {
+        var panel  = document.getElementById("note-book-picker");
+        var toggle = document.getElementById("note-picker-toggle");
+        if (!panel) { return; }
+        if (panel.style.display === "none") {
+            panel.style.display = "block";
+            if (toggle) { toggle.innerHTML = "&#128366; Hide Book List"; }
+        } else {
+            panel.style.display = "none";
+            if (toggle) { toggle.innerHTML = "&#128366; Show Book List"; }
+        }
+    };
 
     /* -- Save note ----------------------------------------------  */
 
@@ -419,26 +509,9 @@
 
     window.syncToKindle = function () {
         if (!isLocalhost) { return; }
-
-        /* Show sync wait modal */
-        var syncModal = document.getElementById("sync-modal");
-        if (!syncModal) {
-            syncModal = document.createElement("div");
-            syncModal.id = "sync-modal";
-            syncModal.className = "sync-modal";
-            var syncBox = document.createElement("div");
-            syncBox.className = "sync-modal-box";
-            var syncText = document.createElement("p");
-            syncText.className = "sync-modal-text";
-            syncText.innerHTML = "&#9889; Syncing to Kindle&hellip;<br><br>Please wait until sync is complete.";
-            syncBox.appendChild(syncText);
-            syncModal.appendChild(syncBox);
-            document.body.appendChild(syncModal);
-        }
-        addClass(syncModal, "is-open");
+        showToast("Syncing to Kindle...", "");
 
         ajax("POST", "/api/sync-kindle", null, function (status, data) {
-            removeClass(syncModal, "is-open");
             if (status === 200 && data) {
                 var msg = "Pushed " + (data.pushed || 0) + " file(s) to Kindle";
                 showToast(msg, "success");
