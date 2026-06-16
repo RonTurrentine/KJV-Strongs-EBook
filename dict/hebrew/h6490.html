@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="../../BiblePencil.ico">
   <title>H6490 - פִּקּוּד</title>
   <link rel="stylesheet" href="../../css/style.css">
 </head>
@@ -44,5 +45,82 @@
     </div>
 
   </div>
+
+<div class="conc-section">
+  <h2 class="conc-heading">Occurrences in Old Testament <span class="conc-total">(24 total)</span></h2>
+
+  <div class="conc-book" id="conc-book-0">
+    <button class="conc-book-toggle" id="conc-toggle-0" onclick="toggleBook(0)">
+      &#9654; Psalms <span class="conc-count">(24)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-0" style="display:none">
+      <div class="conc-page" id="conc-page-0-0" style="display:block">
+      <a href="../../books/19-Ps/19.html#verse-8" class="conc-link">Ps 19:8 <span class="conc-word">&ldquo;The statutes&rdquo;</span></a>
+      <a href="../../books/19-Ps/103.html#verse-18" class="conc-link">Ps 103:18 <span class="conc-word">&ldquo;his commandmen…&rdquo;</span></a>
+      <a href="../../books/19-Ps/111.html#verse-7" class="conc-link">Ps 111:7 <span class="conc-word">&ldquo;all his comman…&rdquo;</span></a>
+      <a href="../../books/19-Ps/119.html#verse-4" class="conc-link">Ps 119:4 <span class="conc-word">&ldquo;thy precepts&rdquo;</span></a>
+      <a href="../../books/19-Ps/119.html#verse-15" class="conc-link">Ps 119:15 <span class="conc-word">&ldquo;in thy precepts&rdquo;</span></a>
+      <a href="../../books/19-Ps/119.html#verse-27" class="conc-link">Ps 119:27 <span class="conc-word">&ldquo;of thy precepts&rdquo;</span></a>
+      <a href="../../books/19-Ps/119.html#verse-40" class="conc-link">Ps 119:40 <span class="conc-word">&ldquo;after thy prec…&rdquo;</span></a>
+      <a href="../../books/19-Ps/119.html#verse-45" class="conc-link">Ps 119:45 <span class="conc-word">&ldquo;thy precepts&rdquo;</span></a>
+      <a href="../../books/19-Ps/119.html#verse-56" class="conc-link">Ps 119:56 <span class="conc-word">&ldquo;thy precepts&rdquo;</span></a>
+      <a href="../../books/19-Ps/119.html#verse-63" class="conc-link">Ps 119:63 <span class="conc-word">&ldquo;thy precepts&rdquo;</span></a>
+      <a href="../../books/19-Ps/119.html#verse-69" class="conc-link">Ps 119:69 <span class="conc-word">&ldquo;thy precepts&rdquo;</span></a>
+      <a href="../../books/19-Ps/119.html#verse-78" class="conc-link">Ps 119:78 <span class="conc-word">&ldquo;in thy precepts&rdquo;</span></a>
+      <a href="../../books/19-Ps/119.html#verse-87" class="conc-link">Ps 119:87 <span class="conc-word">&ldquo;not thy precep…&rdquo;</span></a>
+      <a href="../../books/19-Ps/119.html#verse-93" class="conc-link">Ps 119:93 <span class="conc-word">&ldquo;thy precepts&rdquo;</span></a>
+      <a href="../../books/19-Ps/119.html#verse-94" class="conc-link">Ps 119:94 <span class="conc-word">&ldquo;thy precepts&rdquo;</span></a>
+      <a href="../../books/19-Ps/119.html#verse-100" class="conc-link">Ps 119:100 <span class="conc-word">&ldquo;thy precepts&rdquo;</span></a>
+      <a href="../../books/19-Ps/119.html#verse-104" class="conc-link">Ps 119:104 <span class="conc-word">&ldquo;Through thy pr…&rdquo;</span></a>
+      <a href="../../books/19-Ps/119.html#verse-110" class="conc-link">Ps 119:110 <span class="conc-word">&ldquo;not from thy p…&rdquo;</span></a>
+      <a href="../../books/19-Ps/119.html#verse-128" class="conc-link">Ps 119:128 <span class="conc-word">&ldquo;precepts&rdquo;</span></a>
+      <a href="../../books/19-Ps/119.html#verse-134" class="conc-link">Ps 119:134 <span class="conc-word">&ldquo;thy precepts&rdquo;</span></a>
+      <a href="../../books/19-Ps/119.html#verse-141" class="conc-link">Ps 119:141 <span class="conc-word">&ldquo;thy precepts&rdquo;</span></a>
+      <a href="../../books/19-Ps/119.html#verse-159" class="conc-link">Ps 119:159 <span class="conc-word">&ldquo;thy precepts&rdquo;</span></a>
+      <a href="../../books/19-Ps/119.html#verse-168" class="conc-link">Ps 119:168 <span class="conc-word">&ldquo;thy precepts&rdquo;</span></a>
+      <a href="../../books/19-Ps/119.html#verse-173" class="conc-link">Ps 119:173 <span class="conc-word">&ldquo;thy precepts&rdquo;</span></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var concPages = {};
+function toggleBook(idx) {
+  var el = document.getElementById("conc-verses-" + idx);
+  var btn = document.getElementById("conc-toggle-" + idx);
+  if (!el || !btn) return;
+  if (el.style.display === "none") {
+    el.style.display = "block";
+    var t = btn.innerHTML;
+    btn.innerHTML = t.replace("\u25B6", "\u25BC");
+  } else {
+    el.style.display = "none";
+    var t2 = btn.innerHTML;
+    btn.innerHTML = t2.replace("\u25BC", "\u25B6");
+  }
+}
+function concPage(bookIdx, delta) {
+  if (!concPages[bookIdx]) concPages[bookIdx] = 0;
+  var cur = concPages[bookIdx];
+  var next = cur + delta;
+  var curEl = document.getElementById("conc-page-" + bookIdx + "-" + cur);
+  var nextEl = document.getElementById("conc-page-" + bookIdx + "-" + next);
+  if (!nextEl) return;
+  if (curEl) curEl.style.display = "none";
+  nextEl.style.display = "block";
+  concPages[bookIdx] = next;
+  var total = 0;
+  for (var i = 0; i < 200; i++) {
+    if (document.getElementById("conc-page-" + bookIdx + "-" + i)) {
+      total++;
+    } else {
+      break;
+    }
+  }
+  var label = document.getElementById("conc-pg-" + bookIdx);
+  if (label) label.innerHTML = "Page " + (next + 1) + " of " + total;
+}
+</script>
 </body>
 </html>

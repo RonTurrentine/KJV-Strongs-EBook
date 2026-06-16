@@ -3,14 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>G486 - ἀντιλοιδορέω</title>
+  <link rel="icon" type="image/x-icon" href="../../BiblePencil.ico">
+  <title>G0486 - ἀντιλοιδορέω</title>
   <link rel="stylesheet" href="../../css/style.css">
 </head>
 <body>
   <div class="dict-page">
 
     <div class="dict-header">
-      <h1 class="dict-strongs-id">G486</h1>
+      <h1 class="dict-strongs-id">G0486</h1>
       <div class="dict-nav">
         <a href="javascript:history.back()" class="btn">Back</a>
         <a href="../../indexes/strongs-greek-index.html" class="btn">Greek Index</a>
@@ -26,7 +27,7 @@
           <tr><th>Transliteration</th><td>antiloidoréō</td></tr>
           <tr><th>Phonetic</th><td>an-tee-loy-dor-eh'-o</td></tr>
 
-          <tr><th>Origin</th><td>from <a href="../../dict/greek/g0473.html" class="strongs-link">G473</a> and <a href="../../dict/greek/g3058.html" class="strongs-link">G3058</a>;</td></tr>
+          <tr><th>Origin</th><td>from <a href="../../dict/greek/g0473.html" class="strongs-link">G0473</a> and <a href="../../dict/greek/g3058.html" class="strongs-link">G3058</a>;</td></tr>
         </tbody>
       </table>
 
@@ -44,5 +45,57 @@
     </div>
 
   </div>
+
+<div class="conc-section">
+  <h2 class="conc-heading">Occurrences in New Testament <span class="conc-total">(1 total)</span></h2>
+
+  <div class="conc-book" id="conc-book-0">
+    <button class="conc-book-toggle" id="conc-toggle-0" onclick="toggleBook(0)">
+      &#9654; 1 Peter <span class="conc-count">(1)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-0" style="display:none">
+      <a href="../../books/60-1Pet/2.html#verse-23" class="conc-link">1Pet 2:23 <span class="conc-word">&ldquo;reviled&rdquo;</span></a>
+    </div>
+  </div>
+</div>
+
+<script>
+var concPages = {};
+function toggleBook(idx) {
+  var el = document.getElementById("conc-verses-" + idx);
+  var btn = document.getElementById("conc-toggle-" + idx);
+  if (!el || !btn) return;
+  if (el.style.display === "none") {
+    el.style.display = "block";
+    var t = btn.innerHTML;
+    btn.innerHTML = t.replace("\u25B6", "\u25BC");
+  } else {
+    el.style.display = "none";
+    var t2 = btn.innerHTML;
+    btn.innerHTML = t2.replace("\u25BC", "\u25B6");
+  }
+}
+function concPage(bookIdx, delta) {
+  if (!concPages[bookIdx]) concPages[bookIdx] = 0;
+  var cur = concPages[bookIdx];
+  var next = cur + delta;
+  var curEl = document.getElementById("conc-page-" + bookIdx + "-" + cur);
+  var nextEl = document.getElementById("conc-page-" + bookIdx + "-" + next);
+  if (!nextEl) return;
+  if (curEl) curEl.style.display = "none";
+  nextEl.style.display = "block";
+  concPages[bookIdx] = next;
+  var total = 0;
+  for (var i = 0; i < 200; i++) {
+    if (document.getElementById("conc-page-" + bookIdx + "-" + i)) {
+      total++;
+    } else {
+      break;
+    }
+  }
+  var label = document.getElementById("conc-pg-" + bookIdx);
+  if (label) label.innerHTML = "Page " + (next + 1) + " of " + total;
+}
+</script>
 </body>
 </html>

@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="../../BiblePencil.ico">
   <title>H4688 - מְצוֹלָה</title>
   <link rel="stylesheet" href="../../css/style.css">
 </head>
@@ -44,5 +45,115 @@
     </div>
 
   </div>
+
+<div class="conc-section">
+  <h2 class="conc-heading">Occurrences in Old Testament <span class="conc-total">(11 total)</span></h2>
+
+  <div class="conc-book" id="conc-book-0">
+    <button class="conc-book-toggle" id="conc-toggle-0" onclick="toggleBook(0)">
+      &#9654; Exodus <span class="conc-count">(1)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-0" style="display:none">
+      <a href="../../books/02-Exod/15.html#verse-5" class="conc-link">Exod 15:5 <span class="conc-word">&ldquo;into the bottom&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-1">
+    <button class="conc-book-toggle" id="conc-toggle-1" onclick="toggleBook(1)">
+      &#9654; Nehemiah <span class="conc-count">(1)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-1" style="display:none">
+      <a href="../../books/16-Neh/9.html#verse-11" class="conc-link">Neh 9:11 <span class="conc-word">&ldquo;into the deeps&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-2">
+    <button class="conc-book-toggle" id="conc-toggle-2" onclick="toggleBook(2)">
+      &#9654; Job <span class="conc-count">(1)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-2" style="display:none">
+      <a href="../../books/18-Job/41.html#verse-31" class="conc-link">Job 41:31 <span class="conc-word">&ldquo;He maketh the …&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-3">
+    <button class="conc-book-toggle" id="conc-toggle-3" onclick="toggleBook(3)">
+      &#9654; Psalms <span class="conc-count">(5)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-3" style="display:none">
+      <a href="../../books/19-Ps/68.html#verse-22" class="conc-link">Ps 68:22 <span class="conc-word">&ldquo;from the depths&rdquo;</span></a>
+      <a href="../../books/19-Ps/69.html#verse-2" class="conc-link">Ps 69:2 <span class="conc-word">&ldquo;in deep&rdquo;</span></a>
+      <a href="../../books/19-Ps/69.html#verse-15" class="conc-link">Ps 69:15 <span class="conc-word">&ldquo;me, neither le…&rdquo;</span></a>
+      <a href="../../books/19-Ps/88.html#verse-6" class="conc-link">Ps 88:6 <span class="conc-word">&ldquo;in the deeps&rdquo;</span></a>
+      <a href="../../books/19-Ps/107.html#verse-24" class="conc-link">Ps 107:24 <span class="conc-word">&ldquo;in the deep&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-4">
+    <button class="conc-book-toggle" id="conc-toggle-4" onclick="toggleBook(4)">
+      &#9654; Jonah <span class="conc-count">(1)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-4" style="display:none">
+      <a href="../../books/32-Jonah/2.html#verse-3" class="conc-link">Jonah 2:3 <span class="conc-word">&ldquo;me into the de…&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-5">
+    <button class="conc-book-toggle" id="conc-toggle-5" onclick="toggleBook(5)">
+      &#9654; Micah <span class="conc-count">(1)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-5" style="display:none">
+      <a href="../../books/33-Mic/7.html#verse-19" class="conc-link">Mic 7:19 <span class="conc-word">&ldquo;into the depths&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-6">
+    <button class="conc-book-toggle" id="conc-toggle-6" onclick="toggleBook(6)">
+      &#9654; Zechariah <span class="conc-count">(1)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-6" style="display:none">
+      <a href="../../books/38-Zech/10.html#verse-11" class="conc-link">Zech 10:11 <span class="conc-word">&ldquo;and all the de…&rdquo;</span></a>
+    </div>
+  </div>
+</div>
+
+<script>
+var concPages = {};
+function toggleBook(idx) {
+  var el = document.getElementById("conc-verses-" + idx);
+  var btn = document.getElementById("conc-toggle-" + idx);
+  if (!el || !btn) return;
+  if (el.style.display === "none") {
+    el.style.display = "block";
+    var t = btn.innerHTML;
+    btn.innerHTML = t.replace("\u25B6", "\u25BC");
+  } else {
+    el.style.display = "none";
+    var t2 = btn.innerHTML;
+    btn.innerHTML = t2.replace("\u25BC", "\u25B6");
+  }
+}
+function concPage(bookIdx, delta) {
+  if (!concPages[bookIdx]) concPages[bookIdx] = 0;
+  var cur = concPages[bookIdx];
+  var next = cur + delta;
+  var curEl = document.getElementById("conc-page-" + bookIdx + "-" + cur);
+  var nextEl = document.getElementById("conc-page-" + bookIdx + "-" + next);
+  if (!nextEl) return;
+  if (curEl) curEl.style.display = "none";
+  nextEl.style.display = "block";
+  concPages[bookIdx] = next;
+  var total = 0;
+  for (var i = 0; i < 200; i++) {
+    if (document.getElementById("conc-page-" + bookIdx + "-" + i)) {
+      total++;
+    } else {
+      break;
+    }
+  }
+  var label = document.getElementById("conc-pg-" + bookIdx);
+  if (label) label.innerHTML = "Page " + (next + 1) + " of " + total;
+}
+</script>
 </body>
 </html>

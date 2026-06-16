@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="../../BiblePencil.ico">
   <title>H1423 - גְּדִי</title>
   <link rel="stylesheet" href="../../css/style.css">
 </head>
@@ -44,5 +45,112 @@
     </div>
 
   </div>
+
+<div class="conc-section">
+  <h2 class="conc-heading">Occurrences in Old Testament <span class="conc-total">(16 total)</span></h2>
+
+  <div class="conc-book" id="conc-book-0">
+    <button class="conc-book-toggle" id="conc-toggle-0" onclick="toggleBook(0)">
+      &#9654; Genesis <span class="conc-count">(5)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-0" style="display:none">
+      <a href="../../books/01-Gen/27.html#verse-9" class="conc-link">Gen 27:9 <span class="conc-word">&ldquo;kids&rdquo;</span></a>
+      <a href="../../books/01-Gen/27.html#verse-16" class="conc-link">Gen 27:16 <span class="conc-word">&ldquo;of the kids&rdquo;</span></a>
+      <a href="../../books/01-Gen/38.html#verse-17" class="conc-link">Gen 38:17 <span class="conc-word">&ldquo;a kid&rdquo;</span></a>
+      <a href="../../books/01-Gen/38.html#verse-20" class="conc-link">Gen 38:20 <span class="conc-word">&ldquo;the kid&rdquo;</span></a>
+      <a href="../../books/01-Gen/38.html#verse-23" class="conc-link">Gen 38:23 <span class="conc-word">&ldquo;this kid&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-1">
+    <button class="conc-book-toggle" id="conc-toggle-1" onclick="toggleBook(1)">
+      &#9654; Exodus <span class="conc-count">(2)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-1" style="display:none">
+      <a href="../../books/02-Exod/23.html#verse-19" class="conc-link">Exod 23:19 <span class="conc-word">&ldquo;a kid&rdquo;</span></a>
+      <a href="../../books/02-Exod/34.html#verse-26" class="conc-link">Exod 34:26 <span class="conc-word">&ldquo;a kid&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-2">
+    <button class="conc-book-toggle" id="conc-toggle-2" onclick="toggleBook(2)">
+      &#9654; Deuteronomy <span class="conc-count">(1)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-2" style="display:none">
+      <a href="../../books/05-Deut/14.html#verse-21" class="conc-link">Deut 14:21 <span class="conc-word">&ldquo;a kid&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-3">
+    <button class="conc-book-toggle" id="conc-toggle-3" onclick="toggleBook(3)">
+      &#9654; Judges <span class="conc-count">(5)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-3" style="display:none">
+      <a href="../../books/07-Judg/6.html#verse-19" class="conc-link">Judg 6:19 <span class="conc-word">&ldquo;a kid&rdquo;</span></a>
+      <a href="../../books/07-Judg/13.html#verse-15" class="conc-link">Judg 13:15 <span class="conc-word">&ldquo;a kid&rdquo;</span></a>
+      <a href="../../books/07-Judg/13.html#verse-19" class="conc-link">Judg 13:19 <span class="conc-word">&ldquo;a kid&rdquo;</span></a>
+      <a href="../../books/07-Judg/14.html#verse-6" class="conc-link">Judg 14:6 <span class="conc-word">&ldquo;a kid&rdquo;</span></a>
+      <a href="../../books/07-Judg/15.html#verse-1" class="conc-link">Judg 15:1 <span class="conc-word">&ldquo;with a kid&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-4">
+    <button class="conc-book-toggle" id="conc-toggle-4" onclick="toggleBook(4)">
+      &#9654; 1 Samuel <span class="conc-count">(2)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-4" style="display:none">
+      <a href="../../books/09-1Sam/10.html#verse-3" class="conc-link">1Sam 10:3 <span class="conc-word">&ldquo;kids&rdquo;</span></a>
+      <a href="../../books/09-1Sam/16.html#verse-20" class="conc-link">1Sam 16:20 <span class="conc-word">&ldquo;kid&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-5">
+    <button class="conc-book-toggle" id="conc-toggle-5" onclick="toggleBook(5)">
+      &#9654; Isaiah <span class="conc-count">(1)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-5" style="display:none">
+      <a href="../../books/23-Isa/11.html#verse-6" class="conc-link">Isa 11:6 <span class="conc-word">&ldquo;with the kid&rdquo;</span></a>
+    </div>
+  </div>
+</div>
+
+<script>
+var concPages = {};
+function toggleBook(idx) {
+  var el = document.getElementById("conc-verses-" + idx);
+  var btn = document.getElementById("conc-toggle-" + idx);
+  if (!el || !btn) return;
+  if (el.style.display === "none") {
+    el.style.display = "block";
+    var t = btn.innerHTML;
+    btn.innerHTML = t.replace("\u25B6", "\u25BC");
+  } else {
+    el.style.display = "none";
+    var t2 = btn.innerHTML;
+    btn.innerHTML = t2.replace("\u25BC", "\u25B6");
+  }
+}
+function concPage(bookIdx, delta) {
+  if (!concPages[bookIdx]) concPages[bookIdx] = 0;
+  var cur = concPages[bookIdx];
+  var next = cur + delta;
+  var curEl = document.getElementById("conc-page-" + bookIdx + "-" + cur);
+  var nextEl = document.getElementById("conc-page-" + bookIdx + "-" + next);
+  if (!nextEl) return;
+  if (curEl) curEl.style.display = "none";
+  nextEl.style.display = "block";
+  concPages[bookIdx] = next;
+  var total = 0;
+  for (var i = 0; i < 200; i++) {
+    if (document.getElementById("conc-page-" + bookIdx + "-" + i)) {
+      total++;
+    } else {
+      break;
+    }
+  }
+  var label = document.getElementById("conc-pg-" + bookIdx);
+  if (label) label.innerHTML = "Page " + (next + 1) + " of " + total;
+}
+</script>
 </body>
 </html>

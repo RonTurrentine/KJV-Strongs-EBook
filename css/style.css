@@ -1017,3 +1017,231 @@ body.is-localhost .sync-btn {
   border-color: #8bc34a;
   color: #ffffff;
 }
+
+.conc-section {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px solid #333333;
+}
+
+.conc-heading {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #00bcd4;
+    margin: 0 0 14px 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.conc-total {
+    font-weight: normal;
+    font-size: 0.85em;
+    color: #888888;
+}
+
+
+/* ── Individual Book Section ───────────────────────────────────── */
+
+.conc-book {
+    margin: 0 0 2px 0;
+}
+
+
+/* ── Book Toggle Button ────────────────────────────────────────── */
+/* Full-width clickable header, left-aligned text                   */
+
+.conc-book-toggle {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    min-height: 44px;
+    margin: 0;
+    text-align: left;
+    font-size: 0.95em;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    color: #e0e0e0;
+    background-color: #222222;
+    border: none;
+    border-bottom: 1px solid #2a2a2a;
+    cursor: pointer;
+    -webkit-appearance: none;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: rgba(0, 188, 212, 0.2);
+}
+
+.conc-book-toggle:active {
+    background-color: #2a2a2a;
+    color: #ffffff;
+}
+
+.conc-count {
+    font-weight: normal;
+    color: #888888;
+    font-size: 0.85em;
+}
+
+
+/* ── Collapsible Verse List ────────────────────────────────────── */
+
+.conc-verses {
+    padding: 8px 12px 12px 12px;
+    background-color: #1a1a1a;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+
+/* ── Individual Verse Reference Link ───────────────────────────── */
+/* Compact inline links that flow like text                         */
+
+.conc-link {
+    display: inline-block;
+    padding: 4px 8px;
+    margin: 2px;
+    min-height: 32px;
+    line-height: 24px;
+    font-size: 0.8em;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #64b5f6;
+    background-color: #252525;
+    border: 1px solid #333333;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.conc-link:active {
+    background-color: #333333;
+    border-color: #00bcd4;
+    color: #ffffff;
+}
+
+
+/* ── Pagination Page Container ─────────────────────────────────── */
+
+.conc-page {
+    /* Pages shown/hidden by JS */
+}
+
+
+/* ── Pagination Navigation ─────────────────────────────────────── */
+
+.conc-nav {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid #333333;
+    text-align: center;
+}
+
+.conc-nav-btn {
+    display: inline-block;
+    vertical-align: middle;
+    padding: 6px 14px;
+    min-height: 38px;
+    min-width: 70px;
+    font-size: 13px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    color: #e0e0e0;
+    background-color: #333333;
+    border: 1px solid #555555;
+    -webkit-border-radius: 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    -webkit-appearance: none;
+}
+
+.conc-nav-btn:active {
+    background-color: #444444;
+    border-color: #00bcd4;
+}
+
+.conc-pg-label {
+    display: inline-block;
+    vertical-align: middle;
+    padding: 0 12px;
+    font-size: 0.85em;
+    color: #888888;
+    font-family: Arial, Helvetica, sans-serif;
+}
+   ================================================================ */
+
+.conc-word {
+    font-style: italic;
+    font-size: 0.85em;
+    color: #a5d6a7;                /* light green — distinct from the blue reference */
+    margin-left: 2px;
+}
+
+/* Inside active/tapped state, word inherits the link highlight */
+.conc-link:active .conc-word {
+    color: #c8e6c9;
+}
+
+/* ── Note Book Picker ──────────────────────────────────────────── */
+
+.note-picker-toggle {
+  color: #ffd700;
+  font-size: 0.85em;
+  text-decoration: none;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.note-picker-toggle:hover {
+  text-decoration: underline;
+}
+
+.note-book-picker {
+  margin: 0 0 12px 0;
+  padding: 10px;
+  background-color: #1a1a1a;
+  border: 1px solid #444444;
+  border-radius: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.note-picker-section {
+  margin-bottom: 8px;
+}
+
+.note-picker-heading {
+  font-size: 0.75em;
+  color: #888888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: Arial, Helvetica, sans-serif;
+  margin: 0 0 6px 0;
+}
+
+.note-picker-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.note-picker-book {
+  display: inline-block;
+  padding: 3px 8px;
+  font-size: 0.78em;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #c5e1a5;
+  background-color: #1b2e00;
+  border: 1px solid #689f38;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-appearance: none;
+  min-height: 0;
+  min-width: 0;
+  height: auto;
+  line-height: normal;
+}
+
+.note-picker-book:hover {
+  background-color: #2a4a00;
+  border-color: #8bc34a;
+  color: #ffffff;
+}

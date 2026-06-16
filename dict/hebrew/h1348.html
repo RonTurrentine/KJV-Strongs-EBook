@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="../../BiblePencil.ico">
   <title>H1348 - גֵּאוּת</title>
   <link rel="stylesheet" href="../../css/style.css">
 </head>
@@ -44,5 +45,72 @@
     </div>
 
   </div>
+
+<div class="conc-section">
+  <h2 class="conc-heading">Occurrences in Old Testament <span class="conc-total">(8 total)</span></h2>
+
+  <div class="conc-book" id="conc-book-0">
+    <button class="conc-book-toggle" id="conc-toggle-0" onclick="toggleBook(0)">
+      &#9654; Psalms <span class="conc-count">(3)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-0" style="display:none">
+      <a href="../../books/19-Ps/17.html#verse-10" class="conc-link">Ps 17:10 <span class="conc-word">&ldquo;proudly&rdquo;</span></a>
+      <a href="../../books/19-Ps/89.html#verse-9" class="conc-link">Ps 89:9 <span class="conc-word">&ldquo;the raging&rdquo;</span></a>
+      <a href="../../books/19-Ps/93.html#verse-1" class="conc-link">Ps 93:1 <span class="conc-word">&ldquo;with majesty&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-1">
+    <button class="conc-book-toggle" id="conc-toggle-1" onclick="toggleBook(1)">
+      &#9654; Isaiah <span class="conc-count">(5)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-1" style="display:none">
+      <a href="../../books/23-Isa/9.html#verse-18" class="conc-link">Isa 9:18 <span class="conc-word">&ldquo;the lifting up&rdquo;</span></a>
+      <a href="../../books/23-Isa/12.html#verse-5" class="conc-link">Isa 12:5 <span class="conc-word">&ldquo;excellent thin…&rdquo;</span></a>
+      <a href="../../books/23-Isa/26.html#verse-10" class="conc-link">Isa 26:10 <span class="conc-word">&ldquo;the majesty&rdquo;</span></a>
+      <a href="../../books/23-Isa/28.html#verse-1" class="conc-link">Isa 28:1 <span class="conc-word">&ldquo;of pride&rdquo;</span></a>
+      <a href="../../books/23-Isa/28.html#verse-3" class="conc-link">Isa 28:3 <span class="conc-word">&ldquo;of pride&rdquo;</span></a>
+    </div>
+  </div>
+</div>
+
+<script>
+var concPages = {};
+function toggleBook(idx) {
+  var el = document.getElementById("conc-verses-" + idx);
+  var btn = document.getElementById("conc-toggle-" + idx);
+  if (!el || !btn) return;
+  if (el.style.display === "none") {
+    el.style.display = "block";
+    var t = btn.innerHTML;
+    btn.innerHTML = t.replace("\u25B6", "\u25BC");
+  } else {
+    el.style.display = "none";
+    var t2 = btn.innerHTML;
+    btn.innerHTML = t2.replace("\u25BC", "\u25B6");
+  }
+}
+function concPage(bookIdx, delta) {
+  if (!concPages[bookIdx]) concPages[bookIdx] = 0;
+  var cur = concPages[bookIdx];
+  var next = cur + delta;
+  var curEl = document.getElementById("conc-page-" + bookIdx + "-" + cur);
+  var nextEl = document.getElementById("conc-page-" + bookIdx + "-" + next);
+  if (!nextEl) return;
+  if (curEl) curEl.style.display = "none";
+  nextEl.style.display = "block";
+  concPages[bookIdx] = next;
+  var total = 0;
+  for (var i = 0; i < 200; i++) {
+    if (document.getElementById("conc-page-" + bookIdx + "-" + i)) {
+      total++;
+    } else {
+      break;
+    }
+  }
+  var label = document.getElementById("conc-pg-" + bookIdx);
+  if (label) label.innerHTML = "Page " + (next + 1) + " of " + total;
+}
+</script>
 </body>
 </html>

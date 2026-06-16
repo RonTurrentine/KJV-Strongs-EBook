@@ -844,3 +844,75 @@ Would require:
 
 ---
 
+
+---
+
+### Session 12
+- **Date:** 2026-06-16
+- **Model:** Claude Sonnet 4.6 (claude.ai) + Claude Opus 4.6 (consultation x2)
+- **Work Done:**
+
+  **Concordance System (Phase 2 enhancement)**
+  - `generate_bible.ps1` — inline concordance builder during Phase 3 verse generation
+  - Extracts Strong's number + English KJV word from OSIS `<w>` elements
+  - Writes `concordance.json` with `{book, folder, ch, vs, word}` per entry
+  - 14,070 Strong's entries, deduped per verse
+  - `generate_dict.ps1` — loads concordance.json, bakes collapsible/paginated occurrence sections into every dictionary page
+  - Books grouped with expand/collapse toggle, pagination at 50/page for large books
+  - English word shown alongside each verse reference: `Gen 1:1 "God"`
+  - `Format-ConcordanceLink` helper function for clean link generation
+  - `.conc-word` CSS class (italic, light green) in both stylesheets
+
+  **Concordance padding bug fix**
+  - OSIS lemma format inconsistent: some `strong:H06531` (5-digit), some `strong:H6531` (4-digit)
+  - Fix: `TrimStart('0')` before `PadLeft(4,'0')` normalizes all to 4-digit
+  - H6531 (rigour) now correctly shows 6 occurrences
+  - No more over-padded keys (H02087 etc.) in concordance.json
+
+  **Dictionary page padding fixes**
+  - StrongsId display was unpadded (G26 instead of G0026)
+  - Fixed Hebrew and Greek `Write-DictPage` calls to use `PadLeft(4,'0')`
+  - Fixed origin link display text (was showing G25, now shows G0025)
+  - Fixed `Resolve-StrongsRefs` display for Greek derivation fields
+
+  **Favicon**
+  - `BiblePencil.ico` added to project root
+  - Favicon link added to all page templates in both generators
+  - Correct relative paths: `BiblePencil.ico` (root), `../../BiblePencil.ico` (deep pages), `../BiblePencil.ico` (indexes)
+
+  **Clickable origin references**
+  - H/G number references in dictionary Origin field now render as clickable teal badges
+  - Links to the referenced dictionary page
+
+  **Note book picker**
+  - "📖 Show Book List" toggle in note modal expands all 66 books
+  - Clicking a book inserts `[[BookAbbr.` at cursor position
+  - Collapsible panel, OT/NT sections
+
+  **QA Tests expanded (Tests 12-15)**
+  - TEST 12: Favicon present in root, chapter, and dictionary pages
+  - TEST 13: Notes system — pencil buttons, placeholders, notes.js, linkifyVerseRefs, BOOK_FOLDERS
+  - TEST 14: Concordance — entry count, H0430/H6531/G3056 spot checks, padding validation, conc-section in dict pages
+  - TEST 15: Navigation — B/V buttons, Go To hash, sticky-header in navigate.html
+  - 151/152 passing (1 warning: sync button needs regeneration)
+
+  **Scripts reorganized**
+  - All PS1 scripts moved to `scripts\` subfolder via `git mv`
+  - `start-study.ps1` and `start-study.bat` remain in project root
+  - Commands now: `pwsh -NoProfile -File .\scripts\generate_bible.ps1`
+
+  **GitHub cleanup**
+  - Removed obsolete `ci.yml` workflow (was referencing deleted sample scripts)
+  - No more "CI: All jobs have failed" emails
+
+  **Correct generation order (IMPORTANT):**
+  1. `scripts\generate_bible.ps1` — builds chapters + concordance.json
+  2. `scripts\generate_dict.ps1` — builds dictionary + concordance sections
+  3. `scripts\qa-test.ps1`
+  4. `scripts\rebake-notes.ps1`
+
+  **QA: 151/152 passing**
+  **All changes committed to GitHub**
+
+---
+

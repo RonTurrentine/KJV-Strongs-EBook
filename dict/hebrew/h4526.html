@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="../../BiblePencil.ico">
   <title>H4526 - מִסְגֶּרֶת</title>
   <link rel="stylesheet" href="../../css/style.css">
 </head>
@@ -44,5 +45,110 @@
     </div>
 
   </div>
+
+<div class="conc-section">
+  <h2 class="conc-heading">Occurrences in Old Testament <span class="conc-total">(14 total)</span></h2>
+
+  <div class="conc-book" id="conc-book-0">
+    <button class="conc-book-toggle" id="conc-toggle-0" onclick="toggleBook(0)">
+      &#9654; Exodus <span class="conc-count">(4)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-0" style="display:none">
+      <a href="../../books/02-Exod/25.html#verse-25" class="conc-link">Exod 25:25 <span class="conc-word">&ldquo;unto it a bord…&rdquo;</span></a>
+      <a href="../../books/02-Exod/25.html#verse-27" class="conc-link">Exod 25:27 <span class="conc-word">&ldquo;the border&rdquo;</span></a>
+      <a href="../../books/02-Exod/37.html#verse-12" class="conc-link">Exod 37:12 <span class="conc-word">&ldquo;thereunto a bo…&rdquo;</span></a>
+      <a href="../../books/02-Exod/37.html#verse-14" class="conc-link">Exod 37:14 <span class="conc-word">&ldquo;the border&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-1">
+    <button class="conc-book-toggle" id="conc-toggle-1" onclick="toggleBook(1)">
+      &#9654; 2 Samuel <span class="conc-count">(1)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-1" style="display:none">
+      <a href="../../books/10-2Sam/22.html#verse-46" class="conc-link">2Sam 22:46 <span class="conc-word">&ldquo;out of their c…&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-2">
+    <button class="conc-book-toggle" id="conc-toggle-2" onclick="toggleBook(2)">
+      &#9654; 1 Kings <span class="conc-count">(6)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-2" style="display:none">
+      <a href="../../books/11-1Kgs/7.html#verse-28" class="conc-link">1Kgs 7:28 <span class="conc-word">&ldquo;they had borde…&rdquo;</span></a>
+      <a href="../../books/11-1Kgs/7.html#verse-29" class="conc-link">1Kgs 7:29 <span class="conc-word">&ldquo;And on the bor…&rdquo;</span></a>
+      <a href="../../books/11-1Kgs/7.html#verse-31" class="conc-link">1Kgs 7:31 <span class="conc-word">&ldquo;with their bor…&rdquo;</span></a>
+      <a href="../../books/11-1Kgs/7.html#verse-32" class="conc-link">1Kgs 7:32 <span class="conc-word">&ldquo;the borders&rdquo;</span></a>
+      <a href="../../books/11-1Kgs/7.html#verse-35" class="conc-link">1Kgs 7:35 <span class="conc-word">&ldquo;thereof and th…&rdquo;</span></a>
+      <a href="../../books/11-1Kgs/7.html#verse-36" class="conc-link">1Kgs 7:36 <span class="conc-word">&ldquo;thereof, and o…&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-3">
+    <button class="conc-book-toggle" id="conc-toggle-3" onclick="toggleBook(3)">
+      &#9654; 2 Kings <span class="conc-count">(1)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-3" style="display:none">
+      <a href="../../books/12-2Kgs/16.html#verse-17" class="conc-link">2Kgs 16:17 <span class="conc-word">&ldquo;the borders&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-4">
+    <button class="conc-book-toggle" id="conc-toggle-4" onclick="toggleBook(4)">
+      &#9654; Psalms <span class="conc-count">(1)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-4" style="display:none">
+      <a href="../../books/19-Ps/18.html#verse-45" class="conc-link">Ps 18:45 <span class="conc-word">&ldquo;out of their c…&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-5">
+    <button class="conc-book-toggle" id="conc-toggle-5" onclick="toggleBook(5)">
+      &#9654; Micah <span class="conc-count">(1)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-5" style="display:none">
+      <a href="../../books/33-Mic/7.html#verse-17" class="conc-link">Mic 7:17 <span class="conc-word">&ldquo;out of their h…&rdquo;</span></a>
+    </div>
+  </div>
+</div>
+
+<script>
+var concPages = {};
+function toggleBook(idx) {
+  var el = document.getElementById("conc-verses-" + idx);
+  var btn = document.getElementById("conc-toggle-" + idx);
+  if (!el || !btn) return;
+  if (el.style.display === "none") {
+    el.style.display = "block";
+    var t = btn.innerHTML;
+    btn.innerHTML = t.replace("\u25B6", "\u25BC");
+  } else {
+    el.style.display = "none";
+    var t2 = btn.innerHTML;
+    btn.innerHTML = t2.replace("\u25BC", "\u25B6");
+  }
+}
+function concPage(bookIdx, delta) {
+  if (!concPages[bookIdx]) concPages[bookIdx] = 0;
+  var cur = concPages[bookIdx];
+  var next = cur + delta;
+  var curEl = document.getElementById("conc-page-" + bookIdx + "-" + cur);
+  var nextEl = document.getElementById("conc-page-" + bookIdx + "-" + next);
+  if (!nextEl) return;
+  if (curEl) curEl.style.display = "none";
+  nextEl.style.display = "block";
+  concPages[bookIdx] = next;
+  var total = 0;
+  for (var i = 0; i < 200; i++) {
+    if (document.getElementById("conc-page-" + bookIdx + "-" + i)) {
+      total++;
+    } else {
+      break;
+    }
+  }
+  var label = document.getElementById("conc-pg-" + bookIdx);
+  if (label) label.innerHTML = "Page " + (next + 1) + " of " + total;
+}
+</script>
 </body>
 </html>

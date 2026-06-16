@@ -3,14 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>H502 - אָלַף</title>
+  <link rel="icon" type="image/x-icon" href="../../BiblePencil.ico">
+  <title>H0502 - אָלַף</title>
   <link rel="stylesheet" href="../../css/style.css">
 </head>
 <body>
   <div class="dict-page">
 
     <div class="dict-header">
-      <h1 class="dict-strongs-id">H502</h1>
+      <h1 class="dict-strongs-id">H0502</h1>
       <div class="dict-nav">
         <a href="javascript:history.back()" class="btn">Back</a>
         <a href="../../indexes/strongs-hebrew-index.html" class="btn">Hebrew Index</a>
@@ -44,5 +45,68 @@
     </div>
 
   </div>
+
+<div class="conc-section">
+  <h2 class="conc-heading">Occurrences in Old Testament <span class="conc-total">(4 total)</span></h2>
+
+  <div class="conc-book" id="conc-book-0">
+    <button class="conc-book-toggle" id="conc-toggle-0" onclick="toggleBook(0)">
+      &#9654; Job <span class="conc-count">(3)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-0" style="display:none">
+      <a href="../../books/18-Job/15.html#verse-5" class="conc-link">Job 15:5 <span class="conc-word">&ldquo;uttereth&rdquo;</span></a>
+      <a href="../../books/18-Job/33.html#verse-33" class="conc-link">Job 33:33 <span class="conc-word">&ldquo;and I shall te…&rdquo;</span></a>
+      <a href="../../books/18-Job/35.html#verse-11" class="conc-link">Job 35:11 <span class="conc-word">&ldquo;Who teacheth&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-1">
+    <button class="conc-book-toggle" id="conc-toggle-1" onclick="toggleBook(1)">
+      &#9654; Proverbs <span class="conc-count">(1)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-1" style="display:none">
+      <a href="../../books/20-Prov/22.html#verse-25" class="conc-link">Prov 22:25 <span class="conc-word">&ldquo;Lest thou learn&rdquo;</span></a>
+    </div>
+  </div>
+</div>
+
+<script>
+var concPages = {};
+function toggleBook(idx) {
+  var el = document.getElementById("conc-verses-" + idx);
+  var btn = document.getElementById("conc-toggle-" + idx);
+  if (!el || !btn) return;
+  if (el.style.display === "none") {
+    el.style.display = "block";
+    var t = btn.innerHTML;
+    btn.innerHTML = t.replace("\u25B6", "\u25BC");
+  } else {
+    el.style.display = "none";
+    var t2 = btn.innerHTML;
+    btn.innerHTML = t2.replace("\u25BC", "\u25B6");
+  }
+}
+function concPage(bookIdx, delta) {
+  if (!concPages[bookIdx]) concPages[bookIdx] = 0;
+  var cur = concPages[bookIdx];
+  var next = cur + delta;
+  var curEl = document.getElementById("conc-page-" + bookIdx + "-" + cur);
+  var nextEl = document.getElementById("conc-page-" + bookIdx + "-" + next);
+  if (!nextEl) return;
+  if (curEl) curEl.style.display = "none";
+  nextEl.style.display = "block";
+  concPages[bookIdx] = next;
+  var total = 0;
+  for (var i = 0; i < 200; i++) {
+    if (document.getElementById("conc-page-" + bookIdx + "-" + i)) {
+      total++;
+    } else {
+      break;
+    }
+  }
+  var label = document.getElementById("conc-pg-" + bookIdx);
+  if (label) label.innerHTML = "Page " + (next + 1) + " of " + total;
+}
+</script>
 </body>
 </html>

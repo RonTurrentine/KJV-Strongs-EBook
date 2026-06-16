@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="../../BiblePencil.ico">
   <title>G2666 - καταπίνω</title>
   <link rel="stylesheet" href="../../css/style.css">
 </head>
@@ -44,5 +45,103 @@
     </div>
 
   </div>
+
+<div class="conc-section">
+  <h2 class="conc-heading">Occurrences in New Testament <span class="conc-total">(7 total)</span></h2>
+
+  <div class="conc-book" id="conc-book-0">
+    <button class="conc-book-toggle" id="conc-toggle-0" onclick="toggleBook(0)">
+      &#9654; Matthew <span class="conc-count">(1)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-0" style="display:none">
+      <a href="../../books/40-Matt/23.html#verse-24" class="conc-link">Matt 23:24 <span class="conc-word">&ldquo;swallow&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-1">
+    <button class="conc-book-toggle" id="conc-toggle-1" onclick="toggleBook(1)">
+      &#9654; 1 Corinthians <span class="conc-count">(1)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-1" style="display:none">
+      <a href="../../books/46-1Cor/15.html#verse-54" class="conc-link">1Cor 15:54 <span class="conc-word">&ldquo;is swallowed up&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-2">
+    <button class="conc-book-toggle" id="conc-toggle-2" onclick="toggleBook(2)">
+      &#9654; 2 Corinthians <span class="conc-count">(2)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-2" style="display:none">
+      <a href="../../books/47-2Cor/2.html#verse-7" class="conc-link">2Cor 2:7 <span class="conc-word">&ldquo;should be swal…&rdquo;</span></a>
+      <a href="../../books/47-2Cor/5.html#verse-4" class="conc-link">2Cor 5:4 <span class="conc-word">&ldquo;might be swall…&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-3">
+    <button class="conc-book-toggle" id="conc-toggle-3" onclick="toggleBook(3)">
+      &#9654; Hebrews <span class="conc-count">(1)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-3" style="display:none">
+      <a href="../../books/58-Heb/11.html#verse-29" class="conc-link">Heb 11:29 <span class="conc-word">&ldquo;were drowned&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-4">
+    <button class="conc-book-toggle" id="conc-toggle-4" onclick="toggleBook(4)">
+      &#9654; 1 Peter <span class="conc-count">(1)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-4" style="display:none">
+      <a href="../../books/60-1Pet/5.html#verse-8" class="conc-link">1Pet 5:8 <span class="conc-word">&ldquo;he may devour&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-5">
+    <button class="conc-book-toggle" id="conc-toggle-5" onclick="toggleBook(5)">
+      &#9654; Revelation <span class="conc-count">(1)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-5" style="display:none">
+      <a href="../../books/66-Rev/12.html#verse-16" class="conc-link">Rev 12:16 <span class="conc-word">&ldquo;swallowed up&rdquo;</span></a>
+    </div>
+  </div>
+</div>
+
+<script>
+var concPages = {};
+function toggleBook(idx) {
+  var el = document.getElementById("conc-verses-" + idx);
+  var btn = document.getElementById("conc-toggle-" + idx);
+  if (!el || !btn) return;
+  if (el.style.display === "none") {
+    el.style.display = "block";
+    var t = btn.innerHTML;
+    btn.innerHTML = t.replace("\u25B6", "\u25BC");
+  } else {
+    el.style.display = "none";
+    var t2 = btn.innerHTML;
+    btn.innerHTML = t2.replace("\u25BC", "\u25B6");
+  }
+}
+function concPage(bookIdx, delta) {
+  if (!concPages[bookIdx]) concPages[bookIdx] = 0;
+  var cur = concPages[bookIdx];
+  var next = cur + delta;
+  var curEl = document.getElementById("conc-page-" + bookIdx + "-" + cur);
+  var nextEl = document.getElementById("conc-page-" + bookIdx + "-" + next);
+  if (!nextEl) return;
+  if (curEl) curEl.style.display = "none";
+  nextEl.style.display = "block";
+  concPages[bookIdx] = next;
+  var total = 0;
+  for (var i = 0; i < 200; i++) {
+    if (document.getElementById("conc-page-" + bookIdx + "-" + i)) {
+      total++;
+    } else {
+      break;
+    }
+  }
+  var label = document.getElementById("conc-pg-" + bookIdx);
+  if (label) label.innerHTML = "Page " + (next + 1) + " of " + total;
+}
+</script>
 </body>
 </html>

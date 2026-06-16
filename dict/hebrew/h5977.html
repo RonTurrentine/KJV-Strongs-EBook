@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="../../BiblePencil.ico">
   <title>H5977 - עֹמֶד</title>
   <link rel="stylesheet" href="../../css/style.css">
 </head>
@@ -44,5 +45,82 @@
     </div>
 
   </div>
+
+<div class="conc-section">
+  <h2 class="conc-heading">Occurrences in Old Testament <span class="conc-total">(10 total)</span></h2>
+
+  <div class="conc-book" id="conc-book-0">
+    <button class="conc-book-toggle" id="conc-toggle-0" onclick="toggleBook(0)">
+      &#9654; 2 Chronicles <span class="conc-count">(3)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-0" style="display:none">
+      <a href="../../books/14-2Chr/30.html#verse-16" class="conc-link">2Chr 30:16 <span class="conc-word">&ldquo;in their place&rdquo;</span></a>
+      <a href="../../books/14-2Chr/34.html#verse-31" class="conc-link">2Chr 34:31 <span class="conc-word">&ldquo;in his place&rdquo;</span></a>
+      <a href="../../books/14-2Chr/35.html#verse-10" class="conc-link">2Chr 35:10 <span class="conc-word">&ldquo;in their place&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-1">
+    <button class="conc-book-toggle" id="conc-toggle-1" onclick="toggleBook(1)">
+      &#9654; Nehemiah <span class="conc-count">(3)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-1" style="display:none">
+      <a href="../../books/16-Neh/8.html#verse-7" class="conc-link">Neh 8:7 <span class="conc-word">&ldquo;in their place&rdquo;</span></a>
+      <a href="../../books/16-Neh/9.html#verse-3" class="conc-link">Neh 9:3 <span class="conc-word">&ldquo;in their place&rdquo;</span></a>
+      <a href="../../books/16-Neh/13.html#verse-11" class="conc-link">Neh 13:11 <span class="conc-word">&ldquo;them in their …&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-2">
+    <button class="conc-book-toggle" id="conc-toggle-2" onclick="toggleBook(2)">
+      &#9654; Daniel <span class="conc-count">(4)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-2" style="display:none">
+      <a href="../../books/27-Dan/8.html#verse-17" class="conc-link">Dan 8:17 <span class="conc-word">&ldquo;where I stood&rdquo;</span></a>
+      <a href="../../books/27-Dan/8.html#verse-18" class="conc-link">Dan 8:18 <span class="conc-word">&ldquo;me upright&rdquo;</span></a>
+      <a href="../../books/27-Dan/10.html#verse-11" class="conc-link">Dan 10:11 <span class="conc-word">&ldquo;upright&rdquo;</span></a>
+      <a href="../../books/27-Dan/11.html#verse-1" class="conc-link">Dan 11:1 <span class="conc-word">&ldquo;I, stood&rdquo;</span></a>
+    </div>
+  </div>
+</div>
+
+<script>
+var concPages = {};
+function toggleBook(idx) {
+  var el = document.getElementById("conc-verses-" + idx);
+  var btn = document.getElementById("conc-toggle-" + idx);
+  if (!el || !btn) return;
+  if (el.style.display === "none") {
+    el.style.display = "block";
+    var t = btn.innerHTML;
+    btn.innerHTML = t.replace("\u25B6", "\u25BC");
+  } else {
+    el.style.display = "none";
+    var t2 = btn.innerHTML;
+    btn.innerHTML = t2.replace("\u25BC", "\u25B6");
+  }
+}
+function concPage(bookIdx, delta) {
+  if (!concPages[bookIdx]) concPages[bookIdx] = 0;
+  var cur = concPages[bookIdx];
+  var next = cur + delta;
+  var curEl = document.getElementById("conc-page-" + bookIdx + "-" + cur);
+  var nextEl = document.getElementById("conc-page-" + bookIdx + "-" + next);
+  if (!nextEl) return;
+  if (curEl) curEl.style.display = "none";
+  nextEl.style.display = "block";
+  concPages[bookIdx] = next;
+  var total = 0;
+  for (var i = 0; i < 200; i++) {
+    if (document.getElementById("conc-page-" + bookIdx + "-" + i)) {
+      total++;
+    } else {
+      break;
+    }
+  }
+  var label = document.getElementById("conc-pg-" + bookIdx);
+  if (label) label.innerHTML = "Page " + (next + 1) + " of " + total;
+}
+</script>
 </body>
 </html>

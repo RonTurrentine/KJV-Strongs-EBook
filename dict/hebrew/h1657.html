@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="../../BiblePencil.ico">
   <title>H1657 - גֹּשֶׁן</title>
   <link rel="stylesheet" href="../../css/style.css">
 </head>
@@ -44,5 +45,86 @@
     </div>
 
   </div>
+
+<div class="conc-section">
+  <h2 class="conc-heading">Occurrences in Old Testament <span class="conc-total">(14 total)</span></h2>
+
+  <div class="conc-book" id="conc-book-0">
+    <button class="conc-book-toggle" id="conc-toggle-0" onclick="toggleBook(0)">
+      &#9654; Genesis <span class="conc-count">(9)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-0" style="display:none">
+      <a href="../../books/01-Gen/45.html#verse-10" class="conc-link">Gen 45:10 <span class="conc-word">&ldquo;of Goshen&rdquo;</span></a>
+      <a href="../../books/01-Gen/46.html#verse-28" class="conc-link">Gen 46:28 <span class="conc-word">&ldquo;unto Goshen&rdquo;</span></a>
+      <a href="../../books/01-Gen/46.html#verse-29" class="conc-link">Gen 46:29 <span class="conc-word">&ldquo;to Goshen&rdquo;</span></a>
+      <a href="../../books/01-Gen/46.html#verse-34" class="conc-link">Gen 46:34 <span class="conc-word">&ldquo;of Goshen&rdquo;</span></a>
+      <a href="../../books/01-Gen/47.html#verse-1" class="conc-link">Gen 47:1 <span class="conc-word">&ldquo;of Goshen&rdquo;</span></a>
+      <a href="../../books/01-Gen/47.html#verse-4" class="conc-link">Gen 47:4 <span class="conc-word">&ldquo;of Goshen&rdquo;</span></a>
+      <a href="../../books/01-Gen/47.html#verse-6" class="conc-link">Gen 47:6 <span class="conc-word">&ldquo;of Goshen&rdquo;</span></a>
+      <a href="../../books/01-Gen/47.html#verse-27" class="conc-link">Gen 47:27 <span class="conc-word">&ldquo;of Goshen&rdquo;</span></a>
+      <a href="../../books/01-Gen/50.html#verse-8" class="conc-link">Gen 50:8 <span class="conc-word">&ldquo;of Goshen&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-1">
+    <button class="conc-book-toggle" id="conc-toggle-1" onclick="toggleBook(1)">
+      &#9654; Exodus <span class="conc-count">(2)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-1" style="display:none">
+      <a href="../../books/02-Exod/8.html#verse-22" class="conc-link">Exod 8:22 <span class="conc-word">&ldquo;of Goshen&rdquo;</span></a>
+      <a href="../../books/02-Exod/9.html#verse-26" class="conc-link">Exod 9:26 <span class="conc-word">&ldquo;of Goshen&rdquo;</span></a>
+    </div>
+  </div>
+
+  <div class="conc-book" id="conc-book-2">
+    <button class="conc-book-toggle" id="conc-toggle-2" onclick="toggleBook(2)">
+      &#9654; Joshua <span class="conc-count">(3)</span>
+    </button>
+    <div class="conc-verses" id="conc-verses-2" style="display:none">
+      <a href="../../books/06-Josh/10.html#verse-41" class="conc-link">Josh 10:41 <span class="conc-word">&ldquo;of Goshen&rdquo;</span></a>
+      <a href="../../books/06-Josh/11.html#verse-16" class="conc-link">Josh 11:16 <span class="conc-word">&ldquo;of Goshen&rdquo;</span></a>
+      <a href="../../books/06-Josh/15.html#verse-51" class="conc-link">Josh 15:51 <span class="conc-word">&ldquo;And Goshen&rdquo;</span></a>
+    </div>
+  </div>
+</div>
+
+<script>
+var concPages = {};
+function toggleBook(idx) {
+  var el = document.getElementById("conc-verses-" + idx);
+  var btn = document.getElementById("conc-toggle-" + idx);
+  if (!el || !btn) return;
+  if (el.style.display === "none") {
+    el.style.display = "block";
+    var t = btn.innerHTML;
+    btn.innerHTML = t.replace("\u25B6", "\u25BC");
+  } else {
+    el.style.display = "none";
+    var t2 = btn.innerHTML;
+    btn.innerHTML = t2.replace("\u25BC", "\u25B6");
+  }
+}
+function concPage(bookIdx, delta) {
+  if (!concPages[bookIdx]) concPages[bookIdx] = 0;
+  var cur = concPages[bookIdx];
+  var next = cur + delta;
+  var curEl = document.getElementById("conc-page-" + bookIdx + "-" + cur);
+  var nextEl = document.getElementById("conc-page-" + bookIdx + "-" + next);
+  if (!nextEl) return;
+  if (curEl) curEl.style.display = "none";
+  nextEl.style.display = "block";
+  concPages[bookIdx] = next;
+  var total = 0;
+  for (var i = 0; i < 200; i++) {
+    if (document.getElementById("conc-page-" + bookIdx + "-" + i)) {
+      total++;
+    } else {
+      break;
+    }
+  }
+  var label = document.getElementById("conc-pg-" + bookIdx);
+  if (label) label.innerHTML = "Page " + (next + 1) + " of " + total;
+}
+</script>
 </body>
 </html>
