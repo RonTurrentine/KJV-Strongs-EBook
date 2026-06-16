@@ -19,6 +19,7 @@
       <a href="../36-Zeph/1.html" class="btn" title="Zephaniah">B&#9654;</a>
       <button class="btn" id="font-decrease" onclick="decreaseFontSize()">a&#8595;</button>
 	  <button class="btn" id="font-increase" onclick="increaseFontSize()">A&#8593;</button>
+      <button class="btn sync-btn" id="sync-btn" onclick="syncToKindle()" title="Sync to Kindle">&#9889; K</button>
       <span id="unbaked-indicator"></span>
     </div>
   </nav>
@@ -27,80 +28,118 @@
 	
     <p class="verse" id="verse-1">
       <span class="verse-num">1</span>
+      <button class="note-btn" onclick="openNoteModal('Hab.3.1')" title="Add note">&#9998;</button>
       A prayer <a href="../../dict/hebrew/h8605.html" class="strongs-link" title="H8605">[H8605]</a> of Habakkuk <a href="../../dict/hebrew/h2265.html" class="strongs-link" title="H2265">[H2265]</a> the prophet <a href="../../dict/hebrew/h5030.html" class="strongs-link" title="H5030">[H5030]</a> upon Shigionoth <a href="../../dict/hebrew/h7692.html" class="strongs-link" title="H7692">[H7692]</a>.
     </p>
+    <div class="verse-note" id="note-verse-1"></div>
     <p class="verse" id="verse-2">
       <span class="verse-num">2</span>
+      <button class="note-btn" onclick="openNoteModal('Hab.3.2')" title="Add note">&#9998;</button>
       O Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>, I have heard <a href="../../dict/hebrew/h8085.html" class="strongs-link" title="H8085">[H8085]</a> thy speech <a href="../../dict/hebrew/h8088.html" class="strongs-link" title="H8088">[H8088]</a>, <em class="added">and</em> was afraid <a href="../../dict/hebrew/h3372.html" class="strongs-link" title="H3372">[H3372]</a>: O Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>, revive <a href="../../dict/hebrew/h2421.html" class="strongs-link" title="H2421">[H2421]</a> thy work <a href="../../dict/hebrew/h6467.html" class="strongs-link" title="H6467">[H6467]</a> in the midst <a href="../../dict/hebrew/h7130.html" class="strongs-link" title="H7130">[H7130]</a> of the years <a href="../../dict/hebrew/h8141.html" class="strongs-link" title="H8141">[H8141]</a>, in the midst <a href="../../dict/hebrew/h7130.html" class="strongs-link" title="H7130">[H7130]</a> of the years <a href="../../dict/hebrew/h8141.html" class="strongs-link" title="H8141">[H8141]</a> make known <a href="../../dict/hebrew/h3045.html" class="strongs-link" title="H3045">[H3045]</a>; in wrath <a href="../../dict/hebrew/h7267.html" class="strongs-link" title="H7267">[H7267]</a> remember <a href="../../dict/hebrew/h2142.html" class="strongs-link" title="H2142">[H2142]</a> mercy <a href="../../dict/hebrew/h7355.html" class="strongs-link" title="H7355">[H7355]</a>.
     </p>
+    <div class="verse-note" id="note-verse-2"></div>
     <p class="verse" id="verse-3">
       <span class="verse-num">3</span>
+      <button class="note-btn" onclick="openNoteModal('Hab.3.3')" title="Add note">&#9998;</button>
       God <a href="../../dict/hebrew/h0433.html" class="strongs-link" title="H0433">[H0433]</a> came <a href="../../dict/hebrew/h0935.html" class="strongs-link" title="H0935">[H0935]</a> from Teman <a href="../../dict/hebrew/h8487.html" class="strongs-link" title="H8487">[H8487]</a>, and the Holy One <a href="../../dict/hebrew/h6918.html" class="strongs-link" title="H6918">[H6918]</a> from mount <a href="../../dict/hebrew/h2022.html" class="strongs-link" title="H2022">[H2022]</a> Paran <a href="../../dict/hebrew/h6290.html" class="strongs-link" title="H6290">[H6290]</a>. Selah <a href="../../dict/hebrew/h5542.html" class="strongs-link" title="H5542">[H5542]</a>. His glory <a href="../../dict/hebrew/h1935.html" class="strongs-link" title="H1935">[H1935]</a> covered <a href="../../dict/hebrew/h3680.html" class="strongs-link" title="H3680">[H3680]</a> the heavens <a href="../../dict/hebrew/h8064.html" class="strongs-link" title="H8064">[H8064]</a>, and the earth <a href="../../dict/hebrew/h0776.html" class="strongs-link" title="H0776">[H0776]</a> was full <a href="../../dict/hebrew/h4390.html" class="strongs-link" title="H4390">[H4390]</a> of his praise <a href="../../dict/hebrew/h8416.html" class="strongs-link" title="H8416">[H8416]</a>.
     </p>
+    <div class="verse-note" id="note-verse-3"></div>
     <p class="verse" id="verse-4">
       <span class="verse-num">4</span>
+      <button class="note-btn" onclick="openNoteModal('Hab.3.4')" title="Add note">&#9998;</button>
       And <em class="added">his</em> brightness <a href="../../dict/hebrew/h5051.html" class="strongs-link" title="H5051">[H5051]</a> was as the light <a href="../../dict/hebrew/h0216.html" class="strongs-link" title="H0216">[H0216]</a>; he had horns <a href="../../dict/hebrew/h7161.html" class="strongs-link" title="H7161">[H7161]</a> <em class="added">coming</em> out of his hand <a href="../../dict/hebrew/h3027.html" class="strongs-link" title="H3027">[H3027]</a>: and there <em class="added">was</em> the hiding <a href="../../dict/hebrew/h2253.html" class="strongs-link" title="H2253">[H2253]</a> of his power <a href="../../dict/hebrew/h5797.html" class="strongs-link" title="H5797">[H5797]</a>.
     </p>
+    <div class="verse-note" id="note-verse-4"></div>
     <p class="verse" id="verse-5">
       <span class="verse-num">5</span>
+      <button class="note-btn" onclick="openNoteModal('Hab.3.5')" title="Add note">&#9998;</button>
       Before <a href="../../dict/hebrew/h6440.html" class="strongs-link" title="H6440">[H6440]</a> him went <a href="../../dict/hebrew/h3212.html" class="strongs-link" title="H3212">[H3212]</a> the pestilence <a href="../../dict/hebrew/h1698.html" class="strongs-link" title="H1698">[H1698]</a>, and burning coals <a href="../../dict/hebrew/h7565.html" class="strongs-link" title="H7565">[H7565]</a> went forth <a href="../../dict/hebrew/h3318.html" class="strongs-link" title="H3318">[H3318]</a> at his feet <a href="../../dict/hebrew/h7272.html" class="strongs-link" title="H7272">[H7272]</a>.
     </p>
+    <div class="verse-note" id="note-verse-5"></div>
     <p class="verse" id="verse-6">
       <span class="verse-num">6</span>
+      <button class="note-btn" onclick="openNoteModal('Hab.3.6')" title="Add note">&#9998;</button>
       He stood <a href="../../dict/hebrew/h5975.html" class="strongs-link" title="H5975">[H5975]</a>, and measured <a href="../../dict/hebrew/h4128.html" class="strongs-link" title="H4128">[H4128]</a> the earth <a href="../../dict/hebrew/h0776.html" class="strongs-link" title="H0776">[H0776]</a>: he beheld <a href="../../dict/hebrew/h7200.html" class="strongs-link" title="H7200">[H7200]</a>, and drove asunder <a href="../../dict/hebrew/h5425.html" class="strongs-link" title="H5425">[H5425]</a> the nations <a href="../../dict/hebrew/h1471.html" class="strongs-link" title="H1471">[H1471]</a>; and the everlasting <a href="../../dict/hebrew/h5703.html" class="strongs-link" title="H5703">[H5703]</a> mountains <a href="../../dict/hebrew/h2042.html" class="strongs-link" title="H2042">[H2042]</a> were scattered <a href="../../dict/hebrew/h6327.html" class="strongs-link" title="H6327">[H6327]</a>, the perpetual <a href="../../dict/hebrew/h5769.html" class="strongs-link" title="H5769">[H5769]</a> hills <a href="../../dict/hebrew/h1389.html" class="strongs-link" title="H1389">[H1389]</a> did bow <a href="../../dict/hebrew/h7817.html" class="strongs-link" title="H7817">[H7817]</a>: his ways <a href="../../dict/hebrew/h1979.html" class="strongs-link" title="H1979">[H1979]</a> <em class="added">are</em> everlasting <a href="../../dict/hebrew/h5769.html" class="strongs-link" title="H5769">[H5769]</a>.
     </p>
+    <div class="verse-note" id="note-verse-6"></div>
     <p class="verse" id="verse-7">
       <span class="verse-num">7</span>
+      <button class="note-btn" onclick="openNoteModal('Hab.3.7')" title="Add note">&#9998;</button>
       I saw <a href="../../dict/hebrew/h7200.html" class="strongs-link" title="H7200">[H7200]</a> the tents <a href="../../dict/hebrew/h0168.html" class="strongs-link" title="H0168">[H0168]</a> of Cushan <a href="../../dict/hebrew/h3572.html" class="strongs-link" title="H3572">[H3572]</a> in affliction <a href="../../dict/hebrew/h0205.html" class="strongs-link" title="H0205">[H0205]</a>: <em class="added">and</em> the curtains <a href="../../dict/hebrew/h3407.html" class="strongs-link" title="H3407">[H3407]</a> of the land <a href="../../dict/hebrew/h0776.html" class="strongs-link" title="H0776">[H0776]</a> of Midian <a href="../../dict/hebrew/h4080.html" class="strongs-link" title="H4080">[H4080]</a> did tremble <a href="../../dict/hebrew/h7264.html" class="strongs-link" title="H7264">[H7264]</a>.
     </p>
+    <div class="verse-note" id="note-verse-7"></div>
     <p class="verse" id="verse-8">
       <span class="verse-num">8</span>
+      <button class="note-btn" onclick="openNoteModal('Hab.3.8')" title="Add note">&#9998;</button>
       Was the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> displeased <a href="../../dict/hebrew/h2734.html" class="strongs-link" title="H2734">[H2734]</a> against the rivers <a href="../../dict/hebrew/h5104.html" class="strongs-link" title="H5104">[H5104]</a>? <em class="added">was</em> thine anger <a href="../../dict/hebrew/h0639.html" class="strongs-link" title="H0639">[H0639]</a> against the rivers <a href="../../dict/hebrew/h5104.html" class="strongs-link" title="H5104">[H5104]</a>? <em class="added">was</em> thy wrath <a href="../../dict/hebrew/h5678.html" class="strongs-link" title="H5678">[H5678]</a> against the sea <a href="../../dict/hebrew/h3220.html" class="strongs-link" title="H3220">[H3220]</a>, that thou didst ride <a href="../../dict/hebrew/h7392.html" class="strongs-link" title="H7392">[H7392]</a> upon thine horses <a href="../../dict/hebrew/h5483.html" class="strongs-link" title="H5483">[H5483]</a> <em class="added">and</em> thy chariots <a href="../../dict/hebrew/h4818.html" class="strongs-link" title="H4818">[H4818]</a> of salvation <a href="../../dict/hebrew/h3444.html" class="strongs-link" title="H3444">[H3444]</a>?
     </p>
+    <div class="verse-note" id="note-verse-8"></div>
     <p class="verse" id="verse-9">
       <span class="verse-num">9</span>
+      <button class="note-btn" onclick="openNoteModal('Hab.3.9')" title="Add note">&#9998;</button>
       Thy bow <a href="../../dict/hebrew/h7198.html" class="strongs-link" title="H7198">[H7198]</a> was made quite <a href="../../dict/hebrew/h6181.html" class="strongs-link" title="H6181">[H6181]</a> naked <a href="../../dict/hebrew/h5783.html" class="strongs-link" title="H5783">[H5783]</a>, <em class="added">according</em> to the oaths <a href="../../dict/hebrew/h7621.html" class="strongs-link" title="H7621">[H7621]</a> of the tribes <a href="../../dict/hebrew/h4294.html" class="strongs-link" title="H4294">[H4294]</a>, <em class="added">even thy</em> word <a href="../../dict/hebrew/h0562.html" class="strongs-link" title="H0562">[H0562]</a>. Selah <a href="../../dict/hebrew/h5542.html" class="strongs-link" title="H5542">[H5542]</a>. Thou didst cleave <a href="../../dict/hebrew/h1234.html" class="strongs-link" title="H1234">[H1234]</a> the earth <a href="../../dict/hebrew/h0776.html" class="strongs-link" title="H0776">[H0776]</a> with rivers <a href="../../dict/hebrew/h5104.html" class="strongs-link" title="H5104">[H5104]</a>.
     </p>
+    <div class="verse-note" id="note-verse-9"></div>
     <p class="verse" id="verse-10">
       <span class="verse-num">10</span>
+      <button class="note-btn" onclick="openNoteModal('Hab.3.10')" title="Add note">&#9998;</button>
       The mountains <a href="../../dict/hebrew/h2022.html" class="strongs-link" title="H2022">[H2022]</a> saw <a href="../../dict/hebrew/h7200.html" class="strongs-link" title="H7200">[H7200]</a>  thee, <em class="added">and</em> they trembled <a href="../../dict/hebrew/h2342.html" class="strongs-link" title="H2342">[H2342]</a>: the overflowing <a href="../../dict/hebrew/h2230.html" class="strongs-link" title="H2230">[H2230]</a> of the water <a href="../../dict/hebrew/h4325.html" class="strongs-link" title="H4325">[H4325]</a> passed by <a href="../../dict/hebrew/h5674.html" class="strongs-link" title="H5674">[H5674]</a>: the deep <a href="../../dict/hebrew/h8415.html" class="strongs-link" title="H8415">[H8415]</a> uttered <a href="../../dict/hebrew/h5414.html" class="strongs-link" title="H5414">[H5414]</a> his voice <a href="../../dict/hebrew/h6963.html" class="strongs-link" title="H6963">[H6963]</a>, <em class="added">and</em> lifted up <a href="../../dict/hebrew/h5375.html" class="strongs-link" title="H5375">[H5375]</a> his hands <a href="../../dict/hebrew/h3027.html" class="strongs-link" title="H3027">[H3027]</a> on high <a href="../../dict/hebrew/h7315.html" class="strongs-link" title="H7315">[H7315]</a>.
     </p>
+    <div class="verse-note" id="note-verse-10"></div>
     <p class="verse" id="verse-11">
       <span class="verse-num">11</span>
+      <button class="note-btn" onclick="openNoteModal('Hab.3.11')" title="Add note">&#9998;</button>
       The sun <a href="../../dict/hebrew/h8121.html" class="strongs-link" title="H8121">[H8121]</a> <em class="added">and</em> moon <a href="../../dict/hebrew/h3394.html" class="strongs-link" title="H3394">[H3394]</a> stood still <a href="../../dict/hebrew/h5975.html" class="strongs-link" title="H5975">[H5975]</a> in their habitation <a href="../../dict/hebrew/h2073.html" class="strongs-link" title="H2073">[H2073]</a>: at the light <a href="../../dict/hebrew/h0216.html" class="strongs-link" title="H0216">[H0216]</a> of thine arrows <a href="../../dict/hebrew/h2671.html" class="strongs-link" title="H2671">[H2671]</a> they went <a href="../../dict/hebrew/h1980.html" class="strongs-link" title="H1980">[H1980]</a>, <em class="added">and</em> at the shining <a href="../../dict/hebrew/h5051.html" class="strongs-link" title="H5051">[H5051]</a> of thy glittering <a href="../../dict/hebrew/h1300.html" class="strongs-link" title="H1300">[H1300]</a> spear <a href="../../dict/hebrew/h2595.html" class="strongs-link" title="H2595">[H2595]</a>.
     </p>
+    <div class="verse-note" id="note-verse-11"></div>
     <p class="verse" id="verse-12">
       <span class="verse-num">12</span>
+      <button class="note-btn" onclick="openNoteModal('Hab.3.12')" title="Add note">&#9998;</button>
       Thou didst march through <a href="../../dict/hebrew/h6805.html" class="strongs-link" title="H6805">[H6805]</a> the land <a href="../../dict/hebrew/h0776.html" class="strongs-link" title="H0776">[H0776]</a> in indignation <a href="../../dict/hebrew/h2195.html" class="strongs-link" title="H2195">[H2195]</a>, thou didst thresh <a href="../../dict/hebrew/h1758.html" class="strongs-link" title="H1758">[H1758]</a> the heathen <a href="../../dict/hebrew/h1471.html" class="strongs-link" title="H1471">[H1471]</a> in anger <a href="../../dict/hebrew/h0639.html" class="strongs-link" title="H0639">[H0639]</a>.
     </p>
+    <div class="verse-note" id="note-verse-12"></div>
     <p class="verse" id="verse-13">
       <span class="verse-num">13</span>
+      <button class="note-btn" onclick="openNoteModal('Hab.3.13')" title="Add note">&#9998;</button>
       Thou wentest forth <a href="../../dict/hebrew/h3318.html" class="strongs-link" title="H3318">[H3318]</a> for the salvation <a href="../../dict/hebrew/h3468.html" class="strongs-link" title="H3468">[H3468]</a> of thy people <a href="../../dict/hebrew/h5971.html" class="strongs-link" title="H5971">[H5971]</a>, <em class="added">even</em> for salvation <a href="../../dict/hebrew/h3468.html" class="strongs-link" title="H3468">[H3468]</a> with thine anointed <a href="../../dict/hebrew/h4899.html" class="strongs-link" title="H4899">[H4899]</a>; thou woundedst <a href="../../dict/hebrew/h4272.html" class="strongs-link" title="H4272">[H4272]</a> the head <a href="../../dict/hebrew/h7218.html" class="strongs-link" title="H7218">[H7218]</a> out of the house <a href="../../dict/hebrew/h1004.html" class="strongs-link" title="H1004">[H1004]</a> of the wicked <a href="../../dict/hebrew/h7563.html" class="strongs-link" title="H7563">[H7563]</a>, by discovering <a href="../../dict/hebrew/h6168.html" class="strongs-link" title="H6168">[H6168]</a> the foundation <a href="../../dict/hebrew/h3247.html" class="strongs-link" title="H3247">[H3247]</a> unto the neck <a href="../../dict/hebrew/h6677.html" class="strongs-link" title="H6677">[H6677]</a>. Selah <a href="../../dict/hebrew/h5542.html" class="strongs-link" title="H5542">[H5542]</a>.
     </p>
+    <div class="verse-note" id="note-verse-13"></div>
     <p class="verse" id="verse-14">
       <span class="verse-num">14</span>
+      <button class="note-btn" onclick="openNoteModal('Hab.3.14')" title="Add note">&#9998;</button>
       Thou didst strike through <a href="../../dict/hebrew/h5344.html" class="strongs-link" title="H5344">[H5344]</a> with his staves <a href="../../dict/hebrew/h4294.html" class="strongs-link" title="H4294">[H4294]</a> the head <a href="../../dict/hebrew/h7218.html" class="strongs-link" title="H7218">[H7218]</a> of his villages <a href="../../dict/hebrew/h6518.html" class="strongs-link" title="H6518">[H6518]</a>: they came out as a whirlwind <a href="../../dict/hebrew/h5590.html" class="strongs-link" title="H5590">[H5590]</a> to scatter <a href="../../dict/hebrew/h6327.html" class="strongs-link" title="H6327">[H6327]</a> me: their rejoicing <a href="../../dict/hebrew/h5951.html" class="strongs-link" title="H5951">[H5951]</a> <em class="added">was</em> as to devour <a href="../../dict/hebrew/h0398.html" class="strongs-link" title="H0398">[H0398]</a> the poor <a href="../../dict/hebrew/h6041.html" class="strongs-link" title="H6041">[H6041]</a> secretly <a href="../../dict/hebrew/h4565.html" class="strongs-link" title="H4565">[H4565]</a>.
     </p>
+    <div class="verse-note" id="note-verse-14"></div>
     <p class="verse" id="verse-15">
       <span class="verse-num">15</span>
+      <button class="note-btn" onclick="openNoteModal('Hab.3.15')" title="Add note">&#9998;</button>
       Thou didst walk <a href="../../dict/hebrew/h1869.html" class="strongs-link" title="H1869">[H1869]</a> through the sea <a href="../../dict/hebrew/h3220.html" class="strongs-link" title="H3220">[H3220]</a> with thine horses <a href="../../dict/hebrew/h5483.html" class="strongs-link" title="H5483">[H5483]</a>, <em class="added">through</em> the heap <a href="../../dict/hebrew/h2563.html" class="strongs-link" title="H2563">[H2563]</a> of great <a href="../../dict/hebrew/h7227.html" class="strongs-link" title="H7227">[H7227]</a> waters <a href="../../dict/hebrew/h4325.html" class="strongs-link" title="H4325">[H4325]</a>.
     </p>
+    <div class="verse-note" id="note-verse-15"></div>
     <p class="verse" id="verse-16">
       <span class="verse-num">16</span>
+      <button class="note-btn" onclick="openNoteModal('Hab.3.16')" title="Add note">&#9998;</button>
       When I heard <a href="../../dict/hebrew/h8085.html" class="strongs-link" title="H8085">[H8085]</a>, my belly <a href="../../dict/hebrew/h0990.html" class="strongs-link" title="H0990">[H0990]</a> trembled <a href="../../dict/hebrew/h7264.html" class="strongs-link" title="H7264">[H7264]</a>; my lips <a href="../../dict/hebrew/h8193.html" class="strongs-link" title="H8193">[H8193]</a> quivered <a href="../../dict/hebrew/h6750.html" class="strongs-link" title="H6750">[H6750]</a> at the voice <a href="../../dict/hebrew/h6963.html" class="strongs-link" title="H6963">[H6963]</a>: rottenness <a href="../../dict/hebrew/h7538.html" class="strongs-link" title="H7538">[H7538]</a> entered <a href="../../dict/hebrew/h0935.html" class="strongs-link" title="H0935">[H0935]</a> into my bones <a href="../../dict/hebrew/h6106.html" class="strongs-link" title="H6106">[H6106]</a>, and I trembled <a href="../../dict/hebrew/h7264.html" class="strongs-link" title="H7264">[H7264]</a> in myself, that I might rest <a href="../../dict/hebrew/h5117.html" class="strongs-link" title="H5117">[H5117]</a> in the day <a href="../../dict/hebrew/h3117.html" class="strongs-link" title="H3117">[H3117]</a> of trouble <a href="../../dict/hebrew/h6869.html" class="strongs-link" title="H6869">[H6869]</a>: when he cometh up <a href="../../dict/hebrew/h5927.html" class="strongs-link" title="H5927">[H5927]</a> unto the people <a href="../../dict/hebrew/h5971.html" class="strongs-link" title="H5971">[H5971]</a>, he will invade them with his troops <a href="../../dict/hebrew/h1464.html" class="strongs-link" title="H1464">[H1464]</a>.
     </p>
+    <div class="verse-note" id="note-verse-16"></div>
     <p class="verse" id="verse-17">
       <span class="verse-num">17</span>
+      <button class="note-btn" onclick="openNoteModal('Hab.3.17')" title="Add note">&#9998;</button>
       Although the fig tree <a href="../../dict/hebrew/h8384.html" class="strongs-link" title="H8384">[H8384]</a> shall not blossom <a href="../../dict/hebrew/h6524.html" class="strongs-link" title="H6524">[H6524]</a>, neither <em class="added">shall</em> fruit <a href="../../dict/hebrew/h2981.html" class="strongs-link" title="H2981">[H2981]</a> <em class="added">be</em> in the vines <a href="../../dict/hebrew/h1612.html" class="strongs-link" title="H1612">[H1612]</a>; the labour <a href="../../dict/hebrew/h4639.html" class="strongs-link" title="H4639">[H4639]</a> of the olive <a href="../../dict/hebrew/h2132.html" class="strongs-link" title="H2132">[H2132]</a> shall fail <a href="../../dict/hebrew/h3584.html" class="strongs-link" title="H3584">[H3584]</a>, and the fields <a href="../../dict/hebrew/h7709.html" class="strongs-link" title="H7709">[H7709]</a> shall yield <a href="../../dict/hebrew/h6213.html" class="strongs-link" title="H6213">[H6213]</a> no meat <a href="../../dict/hebrew/h0400.html" class="strongs-link" title="H0400">[H0400]</a>; the flock <a href="../../dict/hebrew/h6629.html" class="strongs-link" title="H6629">[H6629]</a> shall be cut off <a href="../../dict/hebrew/h1504.html" class="strongs-link" title="H1504">[H1504]</a> from the fold <a href="../../dict/hebrew/h4356.html" class="strongs-link" title="H4356">[H4356]</a>, and <em class="added">there shall be</em> no herd <a href="../../dict/hebrew/h1241.html" class="strongs-link" title="H1241">[H1241]</a> in the stalls <a href="../../dict/hebrew/h7517.html" class="strongs-link" title="H7517">[H7517]</a>:
     </p>
+    <div class="verse-note" id="note-verse-17"></div>
     <p class="verse" id="verse-18">
       <span class="verse-num">18</span>
+      <button class="note-btn" onclick="openNoteModal('Hab.3.18')" title="Add note">&#9998;</button>
       Yet I will rejoice <a href="../../dict/hebrew/h5937.html" class="strongs-link" title="H5937">[H5937]</a> in the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>, I will joy <a href="../../dict/hebrew/h1523.html" class="strongs-link" title="H1523">[H1523]</a> in the God <a href="../../dict/hebrew/h0430.html" class="strongs-link" title="H0430">[H0430]</a> of my salvation <a href="../../dict/hebrew/h3468.html" class="strongs-link" title="H3468">[H3468]</a>.
     </p>
+    <div class="verse-note" id="note-verse-18"></div>
     <p class="verse" id="verse-19">
       <span class="verse-num">19</span>
+      <button class="note-btn" onclick="openNoteModal('Hab.3.19')" title="Add note">&#9998;</button>
       The Lord <a href="../../dict/hebrew/h3069.html" class="strongs-link" title="H3069">[H3069]</a> God <a href="../../dict/hebrew/h0136.html" class="strongs-link" title="H0136">[H0136]</a> <em class="added">is</em> my strength <a href="../../dict/hebrew/h2428.html" class="strongs-link" title="H2428">[H2428]</a>, and he will make <a href="../../dict/hebrew/h7760.html" class="strongs-link" title="H7760">[H7760]</a> my feet <a href="../../dict/hebrew/h7272.html" class="strongs-link" title="H7272">[H7272]</a> like hinds’ <a href="../../dict/hebrew/h0355.html" class="strongs-link" title="H0355">[H0355]</a> <em class="added">feet</em>, and he will make me to walk <a href="../../dict/hebrew/h1869.html" class="strongs-link" title="H1869">[H1869]</a> upon mine high places <a href="../../dict/hebrew/h1116.html" class="strongs-link" title="H1116">[H1116]</a>. To the chief singer <a href="../../dict/hebrew/h5329.html" class="strongs-link" title="H5329">[H5329]</a> on my stringed instruments <a href="../../dict/hebrew/h5058.html" class="strongs-link" title="H5058">[H5058]</a>.
     </p>
+    <div class="verse-note" id="note-verse-19"></div>
   </main>
 
   <footer class="chapter-footer">

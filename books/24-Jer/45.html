@@ -19,6 +19,7 @@
       <a href="../25-Lam/1.html" class="btn" title="Lamentations">B&#9654;</a>
       <button class="btn" id="font-decrease" onclick="decreaseFontSize()">a&#8595;</button>
 	  <button class="btn" id="font-increase" onclick="increaseFontSize()">A&#8593;</button>
+      <button class="btn sync-btn" id="sync-btn" onclick="syncToKindle()" title="Sync to Kindle">&#9889; K</button>
       <span id="unbaked-indicator"></span>
     </div>
   </nav>
@@ -27,24 +28,34 @@
 	
     <p class="verse" id="verse-1">
       <span class="verse-num">1</span>
+      <button class="note-btn" onclick="openNoteModal('Jer.45.1')" title="Add note">&#9998;</button>
       The word <a href="../../dict/hebrew/h1697.html" class="strongs-link" title="H1697">[H1697]</a> that Jeremiah <a href="../../dict/hebrew/h3414.html" class="strongs-link" title="H3414">[H3414]</a> the prophet <a href="../../dict/hebrew/h5030.html" class="strongs-link" title="H5030">[H5030]</a> spake <a href="../../dict/hebrew/h1696.html" class="strongs-link" title="H1696">[H1696]</a> unto Baruch <a href="../../dict/hebrew/h1263.html" class="strongs-link" title="H1263">[H1263]</a> the son <a href="../../dict/hebrew/h1121.html" class="strongs-link" title="H1121">[H1121]</a> of Neriah <a href="../../dict/hebrew/h5374.html" class="strongs-link" title="H5374">[H5374]</a>, when he had written <a href="../../dict/hebrew/h3789.html" class="strongs-link" title="H3789">[H3789]</a> these words <a href="../../dict/hebrew/h1697.html" class="strongs-link" title="H1697">[H1697]</a> in a book <a href="../../dict/hebrew/h5612.html" class="strongs-link" title="H5612">[H5612]</a> at the mouth <a href="../../dict/hebrew/h6310.html" class="strongs-link" title="H6310">[H6310]</a> of Jeremiah <a href="../../dict/hebrew/h3414.html" class="strongs-link" title="H3414">[H3414]</a>, in the fourth <a href="../../dict/hebrew/h7243.html" class="strongs-link" title="H7243">[H7243]</a> year <a href="../../dict/hebrew/h8141.html" class="strongs-link" title="H8141">[H8141]</a> of Jehoiakim <a href="../../dict/hebrew/h3079.html" class="strongs-link" title="H3079">[H3079]</a> the son <a href="../../dict/hebrew/h1121.html" class="strongs-link" title="H1121">[H1121]</a> of Josiah <a href="../../dict/hebrew/h2977.html" class="strongs-link" title="H2977">[H2977]</a> king <a href="../../dict/hebrew/h4428.html" class="strongs-link" title="H4428">[H4428]</a> of Judah <a href="../../dict/hebrew/h3063.html" class="strongs-link" title="H3063">[H3063]</a>, saying <a href="../../dict/hebrew/h0559.html" class="strongs-link" title="H0559">[H0559]</a>,
     </p>
+    <div class="verse-note" id="note-verse-1"></div>
     <p class="verse" id="verse-2">
       <span class="verse-num">2</span>
+      <button class="note-btn" onclick="openNoteModal('Jer.45.2')" title="Add note">&#9998;</button>
       Thus saith <a href="../../dict/hebrew/h0559.html" class="strongs-link" title="H0559">[H0559]</a> the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>, the God <a href="../../dict/hebrew/h0430.html" class="strongs-link" title="H0430">[H0430]</a> of Israel <a href="../../dict/hebrew/h3478.html" class="strongs-link" title="H3478">[H3478]</a>, unto thee, O Baruch <a href="../../dict/hebrew/h1263.html" class="strongs-link" title="H1263">[H1263]</a>;
     </p>
+    <div class="verse-note" id="note-verse-2"></div>
     <p class="verse" id="verse-3">
       <span class="verse-num">3</span>
+      <button class="note-btn" onclick="openNoteModal('Jer.45.3')" title="Add note">&#9998;</button>
       Thou didst say <a href="../../dict/hebrew/h0559.html" class="strongs-link" title="H0559">[H0559]</a>, Woe <a href="../../dict/hebrew/h0188.html" class="strongs-link" title="H0188">[H0188]</a> is me now! for the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> hath added <a href="../../dict/hebrew/h3254.html" class="strongs-link" title="H3254">[H3254]</a> grief <a href="../../dict/hebrew/h3015.html" class="strongs-link" title="H3015">[H3015]</a> to my sorrow <a href="../../dict/hebrew/h4341.html" class="strongs-link" title="H4341">[H4341]</a>; I fainted <a href="../../dict/hebrew/h3021.html" class="strongs-link" title="H3021">[H3021]</a> in my sighing <a href="../../dict/hebrew/h0585.html" class="strongs-link" title="H0585">[H0585]</a>, and I find <a href="../../dict/hebrew/h4672.html" class="strongs-link" title="H4672">[H4672]</a> no rest <a href="../../dict/hebrew/h4496.html" class="strongs-link" title="H4496">[H4496]</a>.
     </p>
+    <div class="verse-note" id="note-verse-3"></div>
     <p class="verse" id="verse-4">
       <span class="verse-num">4</span>
+      <button class="note-btn" onclick="openNoteModal('Jer.45.4')" title="Add note">&#9998;</button>
       Thus shalt thou say <a href="../../dict/hebrew/h0559.html" class="strongs-link" title="H0559">[H0559]</a> unto him, The Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> saith <a href="../../dict/hebrew/h0559.html" class="strongs-link" title="H0559">[H0559]</a>  thus; Behold, <em class="added">that</em> which I have built <a href="../../dict/hebrew/h1129.html" class="strongs-link" title="H1129">[H1129]</a> will I break down <a href="../../dict/hebrew/h2040.html" class="strongs-link" title="H2040">[H2040]</a>, and that which I have planted <a href="../../dict/hebrew/h5193.html" class="strongs-link" title="H5193">[H5193]</a> I will pluck up <a href="../../dict/hebrew/h5428.html" class="strongs-link" title="H5428">[H5428]</a>, even this whole land <a href="../../dict/hebrew/h0776.html" class="strongs-link" title="H0776">[H0776]</a>.
     </p>
+    <div class="verse-note" id="note-verse-4"></div>
     <p class="verse" id="verse-5">
       <span class="verse-num">5</span>
+      <button class="note-btn" onclick="openNoteModal('Jer.45.5')" title="Add note">&#9998;</button>
       And seekest <a href="../../dict/hebrew/h1245.html" class="strongs-link" title="H1245">[H1245]</a> thou great things <a href="../../dict/hebrew/h1419.html" class="strongs-link" title="H1419">[H1419]</a> for thyself? seek <a href="../../dict/hebrew/h1245.html" class="strongs-link" title="H1245">[H1245]</a> <em class="added">them</em> not: for, behold, I will bring <a href="../../dict/hebrew/h0935.html" class="strongs-link" title="H0935">[H0935]</a> evil <a href="../../dict/hebrew/h7451.html" class="strongs-link" title="H7451">[H7451]</a> upon all flesh <a href="../../dict/hebrew/h1320.html" class="strongs-link" title="H1320">[H1320]</a>, saith <a href="../../dict/hebrew/h5002.html" class="strongs-link" title="H5002">[H5002]</a> the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>: but thy life <a href="../../dict/hebrew/h5315.html" class="strongs-link" title="H5315">[H5315]</a> will I give <a href="../../dict/hebrew/h5414.html" class="strongs-link" title="H5414">[H5414]</a> unto thee for a prey <a href="../../dict/hebrew/h7998.html" class="strongs-link" title="H7998">[H7998]</a> in all places <a href="../../dict/hebrew/h4725.html" class="strongs-link" title="H4725">[H4725]</a> whither thou goest <a href="../../dict/hebrew/h3212.html" class="strongs-link" title="H3212">[H3212]</a>.
     </p>
+    <div class="verse-note" id="note-verse-5"></div>
   </main>
 
   <footer class="chapter-footer">

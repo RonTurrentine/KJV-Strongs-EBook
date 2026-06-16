@@ -428,16 +428,19 @@ foreach ($entry in $FlatChapters) {
 
     $verseBlocks = [System.Text.StringBuilder]::new()
     foreach ($v in $verses) {
+        $verseRef = "$($book.OsisId).$chNum.$($v.Num)"
         $xrefHtml = ''
         if ($v.Xrefs.Count -gt 0) {
-            $xrefFile = "$($book.OsisId).$chNum.$($v.Num).html"
+            $xrefFile = "$verseRef.html"
             $xrefHtml = "  <a href=`"../../xrefs/$xrefFile`" class=`"superscript-link`" title=`"Cross-references for $($book.FullName) $chNum`:$($v.Num)`">&#x271D;</a>"
         }
         [void]$verseBlocks.Append("
     <p class=`"verse`" id=`"verse-$($v.Num)`">
       <span class=`"verse-num`">$($v.Num)</span>
+      <button class=`"note-btn`" onclick=`"openNoteModal('$verseRef')`" title=`"Add note`">&#9998;</button>
       $($v.Html)$xrefHtml
-    </p>")
+    </p>
+    <div class=`"verse-note`" id=`"note-verse-$($v.Num)`"></div>")
     }
 
     $flatIdx  = $FlatChapters.IndexOf($entry)
@@ -509,6 +512,7 @@ foreach ($entry in $FlatChapters) {
       $nextBookHtml
       <button class="btn" id="font-decrease" onclick="decreaseFontSize()">a&#8595;</button>
 	  <button class="btn" id="font-increase" onclick="increaseFontSize()">A&#8593;</button>
+      <button class="btn sync-btn" id="sync-btn" onclick="syncToKindle()" title="Sync to Kindle">&#9889; K</button>
       <span id="unbaked-indicator"></span>
     </div>
   </nav>

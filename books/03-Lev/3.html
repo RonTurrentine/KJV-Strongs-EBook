@@ -19,6 +19,7 @@
       <a href="../04-Num/1.html" class="btn" title="Numbers">B&#9654;</a>
       <button class="btn" id="font-decrease" onclick="decreaseFontSize()">a&#8595;</button>
 	  <button class="btn" id="font-increase" onclick="increaseFontSize()">A&#8593;</button>
+      <button class="btn sync-btn" id="sync-btn" onclick="syncToKindle()" title="Sync to Kindle">&#9889; K</button>
       <span id="unbaked-indicator"></span>
     </div>
   </nav>
@@ -27,72 +28,106 @@
 	
     <p class="verse" id="verse-1">
       <span class="verse-num">1</span>
+      <button class="note-btn" onclick="openNoteModal('Lev.3.1')" title="Add note">&#9998;</button>
       And if his oblation <a href="../../dict/hebrew/h7133.html" class="strongs-link" title="H7133">[H7133]</a> <em class="added">be</em> a sacrifice <a href="../../dict/hebrew/h2077.html" class="strongs-link" title="H2077">[H2077]</a> of peace offering <a href="../../dict/hebrew/h8002.html" class="strongs-link" title="H8002">[H8002]</a>, if he offer <a href="../../dict/hebrew/h7126.html" class="strongs-link" title="H7126">[H7126]</a> <em class="added">it</em> of the herd <a href="../../dict/hebrew/h1241.html" class="strongs-link" title="H1241">[H1241]</a>; whether <em class="added">it be</em> a male <a href="../../dict/hebrew/h2145.html" class="strongs-link" title="H2145">[H2145]</a> or female <a href="../../dict/hebrew/h5347.html" class="strongs-link" title="H5347">[H5347]</a>, he shall offer <a href="../../dict/hebrew/h7126.html" class="strongs-link" title="H7126">[H7126]</a> it without blemish <a href="../../dict/hebrew/h8549.html" class="strongs-link" title="H8549">[H8549]</a> before <a href="../../dict/hebrew/h6440.html" class="strongs-link" title="H6440">[H6440]</a> the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>.
     </p>
+    <div class="verse-note" id="note-verse-1"></div>
     <p class="verse" id="verse-2">
       <span class="verse-num">2</span>
+      <button class="note-btn" onclick="openNoteModal('Lev.3.2')" title="Add note">&#9998;</button>
       And he shall lay <a href="../../dict/hebrew/h5564.html" class="strongs-link" title="H5564">[H5564]</a> his hand <a href="../../dict/hebrew/h3027.html" class="strongs-link" title="H3027">[H3027]</a> upon the head <a href="../../dict/hebrew/h7218.html" class="strongs-link" title="H7218">[H7218]</a> of his offering <a href="../../dict/hebrew/h7133.html" class="strongs-link" title="H7133">[H7133]</a>, and kill <a href="../../dict/hebrew/h7819.html" class="strongs-link" title="H7819">[H7819]</a>  it <em class="added">at</em> the door <a href="../../dict/hebrew/h6607.html" class="strongs-link" title="H6607">[H6607]</a> of the tabernacle <a href="../../dict/hebrew/h0168.html" class="strongs-link" title="H0168">[H0168]</a> of the congregation <a href="../../dict/hebrew/h4150.html" class="strongs-link" title="H4150">[H4150]</a>: and Aaron’s <a href="../../dict/hebrew/h0175.html" class="strongs-link" title="H0175">[H0175]</a> sons <a href="../../dict/hebrew/h1121.html" class="strongs-link" title="H1121">[H1121]</a> the priests <a href="../../dict/hebrew/h3548.html" class="strongs-link" title="H3548">[H3548]</a> shall sprinkle <a href="../../dict/hebrew/h2236.html" class="strongs-link" title="H2236">[H2236]</a> the blood <a href="../../dict/hebrew/h1818.html" class="strongs-link" title="H1818">[H1818]</a> upon the altar <a href="../../dict/hebrew/h4196.html" class="strongs-link" title="H4196">[H4196]</a> round about <a href="../../dict/hebrew/h5439.html" class="strongs-link" title="H5439">[H5439]</a>.
     </p>
+    <div class="verse-note" id="note-verse-2"></div>
     <p class="verse" id="verse-3">
       <span class="verse-num">3</span>
+      <button class="note-btn" onclick="openNoteModal('Lev.3.3')" title="Add note">&#9998;</button>
       And he shall offer <a href="../../dict/hebrew/h7126.html" class="strongs-link" title="H7126">[H7126]</a> of the sacrifice <a href="../../dict/hebrew/h2077.html" class="strongs-link" title="H2077">[H2077]</a> of the peace offering <a href="../../dict/hebrew/h8002.html" class="strongs-link" title="H8002">[H8002]</a> an offering made by fire <a href="../../dict/hebrew/h0801.html" class="strongs-link" title="H0801">[H0801]</a> unto the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>; the fat <a href="../../dict/hebrew/h2459.html" class="strongs-link" title="H2459">[H2459]</a> that covereth <a href="../../dict/hebrew/h3680.html" class="strongs-link" title="H3680">[H3680]</a> the inwards <a href="../../dict/hebrew/h7130.html" class="strongs-link" title="H7130">[H7130]</a>, and all the fat <a href="../../dict/hebrew/h2459.html" class="strongs-link" title="H2459">[H2459]</a>  that <em class="added">is</em> upon the inwards <a href="../../dict/hebrew/h7130.html" class="strongs-link" title="H7130">[H7130]</a>,
     </p>
+    <div class="verse-note" id="note-verse-3"></div>
     <p class="verse" id="verse-4">
       <span class="verse-num">4</span>
+      <button class="note-btn" onclick="openNoteModal('Lev.3.4')" title="Add note">&#9998;</button>
       And the two <a href="../../dict/hebrew/h8147.html" class="strongs-link" title="H8147">[H8147]</a> kidneys <a href="../../dict/hebrew/h3629.html" class="strongs-link" title="H3629">[H3629]</a>, and the fat <a href="../../dict/hebrew/h2459.html" class="strongs-link" title="H2459">[H2459]</a>  that <em class="added">is</em>  on them, which <em class="added">is</em> by the flanks <a href="../../dict/hebrew/h3689.html" class="strongs-link" title="H3689">[H3689]</a>, and the caul <a href="../../dict/hebrew/h3508.html" class="strongs-link" title="H3508">[H3508]</a> above the liver <a href="../../dict/hebrew/h3516.html" class="strongs-link" title="H3516">[H3516]</a>, with the kidneys <a href="../../dict/hebrew/h3629.html" class="strongs-link" title="H3629">[H3629]</a>, it shall he take away <a href="../../dict/hebrew/h5493.html" class="strongs-link" title="H5493">[H5493]</a>.
     </p>
+    <div class="verse-note" id="note-verse-4"></div>
     <p class="verse" id="verse-5">
       <span class="verse-num">5</span>
+      <button class="note-btn" onclick="openNoteModal('Lev.3.5')" title="Add note">&#9998;</button>
       And Aaron’s <a href="../../dict/hebrew/h0175.html" class="strongs-link" title="H0175">[H0175]</a> sons <a href="../../dict/hebrew/h1121.html" class="strongs-link" title="H1121">[H1121]</a> shall burn <a href="../../dict/hebrew/h6999.html" class="strongs-link" title="H6999">[H6999]</a> it on the altar <a href="../../dict/hebrew/h4196.html" class="strongs-link" title="H4196">[H4196]</a> upon the burnt sacrifice <a href="../../dict/hebrew/h5930.html" class="strongs-link" title="H5930">[H5930]</a>, which <em class="added">is</em> upon the wood <a href="../../dict/hebrew/h6086.html" class="strongs-link" title="H6086">[H6086]</a>  that <em class="added">is</em> on the fire <a href="../../dict/hebrew/h0784.html" class="strongs-link" title="H0784">[H0784]</a>: <em class="added">it is</em> an offering made by fire <a href="../../dict/hebrew/h0801.html" class="strongs-link" title="H0801">[H0801]</a>, of a sweet <a href="../../dict/hebrew/h5207.html" class="strongs-link" title="H5207">[H5207]</a> savour <a href="../../dict/hebrew/h7381.html" class="strongs-link" title="H7381">[H7381]</a> unto the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>.
     </p>
+    <div class="verse-note" id="note-verse-5"></div>
     <p class="verse" id="verse-6">
       <span class="verse-num">6</span>
+      <button class="note-btn" onclick="openNoteModal('Lev.3.6')" title="Add note">&#9998;</button>
       And if his offering <a href="../../dict/hebrew/h7133.html" class="strongs-link" title="H7133">[H7133]</a> for a sacrifice <a href="../../dict/hebrew/h2077.html" class="strongs-link" title="H2077">[H2077]</a> of peace offering <a href="../../dict/hebrew/h8002.html" class="strongs-link" title="H8002">[H8002]</a> unto the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> <em class="added">be</em> of the flock <a href="../../dict/hebrew/h6629.html" class="strongs-link" title="H6629">[H6629]</a>; male <a href="../../dict/hebrew/h2145.html" class="strongs-link" title="H2145">[H2145]</a> or female <a href="../../dict/hebrew/h5347.html" class="strongs-link" title="H5347">[H5347]</a>, he shall offer <a href="../../dict/hebrew/h7126.html" class="strongs-link" title="H7126">[H7126]</a> it without blemish <a href="../../dict/hebrew/h8549.html" class="strongs-link" title="H8549">[H8549]</a>.
     </p>
+    <div class="verse-note" id="note-verse-6"></div>
     <p class="verse" id="verse-7">
       <span class="verse-num">7</span>
+      <button class="note-btn" onclick="openNoteModal('Lev.3.7')" title="Add note">&#9998;</button>
       If he offer <a href="../../dict/hebrew/h7126.html" class="strongs-link" title="H7126">[H7126]</a> a lamb <a href="../../dict/hebrew/h3775.html" class="strongs-link" title="H3775">[H3775]</a> for his offering <a href="../../dict/hebrew/h7133.html" class="strongs-link" title="H7133">[H7133]</a>, then shall he offer <a href="../../dict/hebrew/h7126.html" class="strongs-link" title="H7126">[H7126]</a> it before <a href="../../dict/hebrew/h6440.html" class="strongs-link" title="H6440">[H6440]</a> the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>.
     </p>
+    <div class="verse-note" id="note-verse-7"></div>
     <p class="verse" id="verse-8">
       <span class="verse-num">8</span>
+      <button class="note-btn" onclick="openNoteModal('Lev.3.8')" title="Add note">&#9998;</button>
       And he shall lay <a href="../../dict/hebrew/h5564.html" class="strongs-link" title="H5564">[H5564]</a> his hand <a href="../../dict/hebrew/h3027.html" class="strongs-link" title="H3027">[H3027]</a> upon the head <a href="../../dict/hebrew/h7218.html" class="strongs-link" title="H7218">[H7218]</a> of his offering <a href="../../dict/hebrew/h7133.html" class="strongs-link" title="H7133">[H7133]</a>, and kill <a href="../../dict/hebrew/h7819.html" class="strongs-link" title="H7819">[H7819]</a> it before <a href="../../dict/hebrew/h6440.html" class="strongs-link" title="H6440">[H6440]</a> the tabernacle <a href="../../dict/hebrew/h0168.html" class="strongs-link" title="H0168">[H0168]</a> of the congregation <a href="../../dict/hebrew/h4150.html" class="strongs-link" title="H4150">[H4150]</a>: and Aaron’s <a href="../../dict/hebrew/h0175.html" class="strongs-link" title="H0175">[H0175]</a> sons <a href="../../dict/hebrew/h1121.html" class="strongs-link" title="H1121">[H1121]</a> shall sprinkle <a href="../../dict/hebrew/h2236.html" class="strongs-link" title="H2236">[H2236]</a> the blood <a href="../../dict/hebrew/h1818.html" class="strongs-link" title="H1818">[H1818]</a> thereof round about <a href="../../dict/hebrew/h5439.html" class="strongs-link" title="H5439">[H5439]</a> upon the altar <a href="../../dict/hebrew/h4196.html" class="strongs-link" title="H4196">[H4196]</a>.
     </p>
+    <div class="verse-note" id="note-verse-8"></div>
     <p class="verse" id="verse-9">
       <span class="verse-num">9</span>
+      <button class="note-btn" onclick="openNoteModal('Lev.3.9')" title="Add note">&#9998;</button>
       And he shall offer <a href="../../dict/hebrew/h7126.html" class="strongs-link" title="H7126">[H7126]</a> of the sacrifice <a href="../../dict/hebrew/h2077.html" class="strongs-link" title="H2077">[H2077]</a> of the peace offering <a href="../../dict/hebrew/h8002.html" class="strongs-link" title="H8002">[H8002]</a> an offering made by fire <a href="../../dict/hebrew/h0801.html" class="strongs-link" title="H0801">[H0801]</a> unto the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>; the fat <a href="../../dict/hebrew/h2459.html" class="strongs-link" title="H2459">[H2459]</a>  thereof, <em class="added">and</em> the whole <a href="../../dict/hebrew/h8549.html" class="strongs-link" title="H8549">[H8549]</a> rump <a href="../../dict/hebrew/h0451.html" class="strongs-link" title="H0451">[H0451]</a>, it shall he take off <a href="../../dict/hebrew/h5493.html" class="strongs-link" title="H5493">[H5493]</a> hard <a href="../../dict/hebrew/h5980.html" class="strongs-link" title="H5980">[H5980]</a> by the backbone <a href="../../dict/hebrew/h6096.html" class="strongs-link" title="H6096">[H6096]</a>; and the fat <a href="../../dict/hebrew/h2459.html" class="strongs-link" title="H2459">[H2459]</a> that covereth <a href="../../dict/hebrew/h3680.html" class="strongs-link" title="H3680">[H3680]</a> the inwards <a href="../../dict/hebrew/h7130.html" class="strongs-link" title="H7130">[H7130]</a>, and all the fat <a href="../../dict/hebrew/h2459.html" class="strongs-link" title="H2459">[H2459]</a>  that <em class="added">is</em> upon the inwards <a href="../../dict/hebrew/h7130.html" class="strongs-link" title="H7130">[H7130]</a>,
     </p>
+    <div class="verse-note" id="note-verse-9"></div>
     <p class="verse" id="verse-10">
       <span class="verse-num">10</span>
+      <button class="note-btn" onclick="openNoteModal('Lev.3.10')" title="Add note">&#9998;</button>
       And the two <a href="../../dict/hebrew/h8147.html" class="strongs-link" title="H8147">[H8147]</a> kidneys <a href="../../dict/hebrew/h3629.html" class="strongs-link" title="H3629">[H3629]</a>, and the fat <a href="../../dict/hebrew/h2459.html" class="strongs-link" title="H2459">[H2459]</a>  that <em class="added">is</em>  upon them, which <em class="added">is</em> by the flanks <a href="../../dict/hebrew/h3689.html" class="strongs-link" title="H3689">[H3689]</a>, and the caul <a href="../../dict/hebrew/h3508.html" class="strongs-link" title="H3508">[H3508]</a> above the liver <a href="../../dict/hebrew/h3516.html" class="strongs-link" title="H3516">[H3516]</a>, with the kidneys <a href="../../dict/hebrew/h3629.html" class="strongs-link" title="H3629">[H3629]</a>, it shall he take away <a href="../../dict/hebrew/h5493.html" class="strongs-link" title="H5493">[H5493]</a>.
     </p>
+    <div class="verse-note" id="note-verse-10"></div>
     <p class="verse" id="verse-11">
       <span class="verse-num">11</span>
+      <button class="note-btn" onclick="openNoteModal('Lev.3.11')" title="Add note">&#9998;</button>
       And the priest <a href="../../dict/hebrew/h3548.html" class="strongs-link" title="H3548">[H3548]</a> shall burn <a href="../../dict/hebrew/h6999.html" class="strongs-link" title="H6999">[H6999]</a> it upon the altar <a href="../../dict/hebrew/h4196.html" class="strongs-link" title="H4196">[H4196]</a>: <em class="added">it is</em> the food <a href="../../dict/hebrew/h3899.html" class="strongs-link" title="H3899">[H3899]</a> of the offering made by fire <a href="../../dict/hebrew/h0801.html" class="strongs-link" title="H0801">[H0801]</a> unto the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>.
     </p>
+    <div class="verse-note" id="note-verse-11"></div>
     <p class="verse" id="verse-12">
       <span class="verse-num">12</span>
+      <button class="note-btn" onclick="openNoteModal('Lev.3.12')" title="Add note">&#9998;</button>
       And if his offering <a href="../../dict/hebrew/h7133.html" class="strongs-link" title="H7133">[H7133]</a> <em class="added">be</em> a goat <a href="../../dict/hebrew/h5795.html" class="strongs-link" title="H5795">[H5795]</a>, then he shall offer <a href="../../dict/hebrew/h7126.html" class="strongs-link" title="H7126">[H7126]</a> it before <a href="../../dict/hebrew/h6440.html" class="strongs-link" title="H6440">[H6440]</a> the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>.
     </p>
+    <div class="verse-note" id="note-verse-12"></div>
     <p class="verse" id="verse-13">
       <span class="verse-num">13</span>
+      <button class="note-btn" onclick="openNoteModal('Lev.3.13')" title="Add note">&#9998;</button>
       And he shall lay <a href="../../dict/hebrew/h5564.html" class="strongs-link" title="H5564">[H5564]</a> his hand <a href="../../dict/hebrew/h3027.html" class="strongs-link" title="H3027">[H3027]</a> upon the head <a href="../../dict/hebrew/h7218.html" class="strongs-link" title="H7218">[H7218]</a> of it, and kill <a href="../../dict/hebrew/h7819.html" class="strongs-link" title="H7819">[H7819]</a> it before <a href="../../dict/hebrew/h6440.html" class="strongs-link" title="H6440">[H6440]</a> the tabernacle <a href="../../dict/hebrew/h0168.html" class="strongs-link" title="H0168">[H0168]</a> of the congregation <a href="../../dict/hebrew/h4150.html" class="strongs-link" title="H4150">[H4150]</a>: and the sons <a href="../../dict/hebrew/h1121.html" class="strongs-link" title="H1121">[H1121]</a> of Aaron <a href="../../dict/hebrew/h0175.html" class="strongs-link" title="H0175">[H0175]</a> shall sprinkle <a href="../../dict/hebrew/h2236.html" class="strongs-link" title="H2236">[H2236]</a> the blood <a href="../../dict/hebrew/h1818.html" class="strongs-link" title="H1818">[H1818]</a> thereof upon the altar <a href="../../dict/hebrew/h4196.html" class="strongs-link" title="H4196">[H4196]</a> round about <a href="../../dict/hebrew/h5439.html" class="strongs-link" title="H5439">[H5439]</a>.
     </p>
+    <div class="verse-note" id="note-verse-13"></div>
     <p class="verse" id="verse-14">
       <span class="verse-num">14</span>
+      <button class="note-btn" onclick="openNoteModal('Lev.3.14')" title="Add note">&#9998;</button>
       And he shall offer <a href="../../dict/hebrew/h7126.html" class="strongs-link" title="H7126">[H7126]</a> thereof his offering <a href="../../dict/hebrew/h7133.html" class="strongs-link" title="H7133">[H7133]</a>, <em class="added">even</em> an offering made by fire <a href="../../dict/hebrew/h0801.html" class="strongs-link" title="H0801">[H0801]</a> unto the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>; the fat <a href="../../dict/hebrew/h2459.html" class="strongs-link" title="H2459">[H2459]</a> that covereth <a href="../../dict/hebrew/h3680.html" class="strongs-link" title="H3680">[H3680]</a> the inwards <a href="../../dict/hebrew/h7130.html" class="strongs-link" title="H7130">[H7130]</a>, and all the fat <a href="../../dict/hebrew/h2459.html" class="strongs-link" title="H2459">[H2459]</a>  that <em class="added">is</em> upon the inwards <a href="../../dict/hebrew/h7130.html" class="strongs-link" title="H7130">[H7130]</a>,
     </p>
+    <div class="verse-note" id="note-verse-14"></div>
     <p class="verse" id="verse-15">
       <span class="verse-num">15</span>
+      <button class="note-btn" onclick="openNoteModal('Lev.3.15')" title="Add note">&#9998;</button>
       And the two <a href="../../dict/hebrew/h8147.html" class="strongs-link" title="H8147">[H8147]</a> kidneys <a href="../../dict/hebrew/h3629.html" class="strongs-link" title="H3629">[H3629]</a>, and the fat <a href="../../dict/hebrew/h2459.html" class="strongs-link" title="H2459">[H2459]</a>  that <em class="added">is</em>  upon them, which <em class="added">is</em> by the flanks <a href="../../dict/hebrew/h3689.html" class="strongs-link" title="H3689">[H3689]</a>, and the caul <a href="../../dict/hebrew/h3508.html" class="strongs-link" title="H3508">[H3508]</a> above the liver <a href="../../dict/hebrew/h3516.html" class="strongs-link" title="H3516">[H3516]</a>, with the kidneys <a href="../../dict/hebrew/h3629.html" class="strongs-link" title="H3629">[H3629]</a>, it shall he take away <a href="../../dict/hebrew/h5493.html" class="strongs-link" title="H5493">[H5493]</a>.
     </p>
+    <div class="verse-note" id="note-verse-15"></div>
     <p class="verse" id="verse-16">
       <span class="verse-num">16</span>
+      <button class="note-btn" onclick="openNoteModal('Lev.3.16')" title="Add note">&#9998;</button>
       And the priest <a href="../../dict/hebrew/h3548.html" class="strongs-link" title="H3548">[H3548]</a> shall burn <a href="../../dict/hebrew/h6999.html" class="strongs-link" title="H6999">[H6999]</a> them upon the altar <a href="../../dict/hebrew/h4196.html" class="strongs-link" title="H4196">[H4196]</a>: <em class="added">it is</em> the food <a href="../../dict/hebrew/h3899.html" class="strongs-link" title="H3899">[H3899]</a> of the offering made by fire <a href="../../dict/hebrew/h0801.html" class="strongs-link" title="H0801">[H0801]</a> for a sweet <a href="../../dict/hebrew/h5207.html" class="strongs-link" title="H5207">[H5207]</a> savour <a href="../../dict/hebrew/h7381.html" class="strongs-link" title="H7381">[H7381]</a>: all the fat <a href="../../dict/hebrew/h2459.html" class="strongs-link" title="H2459">[H2459]</a> <em class="added">is</em> the Lord’s <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>.
     </p>
+    <div class="verse-note" id="note-verse-16"></div>
     <p class="verse" id="verse-17">
       <span class="verse-num">17</span>
+      <button class="note-btn" onclick="openNoteModal('Lev.3.17')" title="Add note">&#9998;</button>
       <em class="added">It shall be</em> a perpetual <a href="../../dict/hebrew/h5769.html" class="strongs-link" title="H5769">[H5769]</a> statute <a href="../../dict/hebrew/h2708.html" class="strongs-link" title="H2708">[H2708]</a> for your generations <a href="../../dict/hebrew/h1755.html" class="strongs-link" title="H1755">[H1755]</a> throughout all your dwellings <a href="../../dict/hebrew/h4186.html" class="strongs-link" title="H4186">[H4186]</a>, that ye eat <a href="../../dict/hebrew/h0398.html" class="strongs-link" title="H0398">[H0398]</a> neither fat <a href="../../dict/hebrew/h2459.html" class="strongs-link" title="H2459">[H2459]</a> nor blood <a href="../../dict/hebrew/h1818.html" class="strongs-link" title="H1818">[H1818]</a>.
     </p>
+    <div class="verse-note" id="note-verse-17"></div>
   </main>
 
   <footer class="chapter-footer">

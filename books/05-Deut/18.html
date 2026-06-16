@@ -19,6 +19,7 @@
       <a href="../06-Josh/1.html" class="btn" title="Joshua">B&#9654;</a>
       <button class="btn" id="font-decrease" onclick="decreaseFontSize()">a&#8595;</button>
 	  <button class="btn" id="font-increase" onclick="increaseFontSize()">A&#8593;</button>
+      <button class="btn sync-btn" id="sync-btn" onclick="syncToKindle()" title="Sync to Kindle">&#9889; K</button>
       <span id="unbaked-indicator"></span>
     </div>
   </nav>
@@ -27,92 +28,136 @@
 	
     <p class="verse" id="verse-1">
       <span class="verse-num">1</span>
+      <button class="note-btn" onclick="openNoteModal('Deut.18.1')" title="Add note">&#9998;</button>
       The priests <a href="../../dict/hebrew/h3548.html" class="strongs-link" title="H3548">[H3548]</a> the Levites <a href="../../dict/hebrew/h3881.html" class="strongs-link" title="H3881">[H3881]</a>, <em class="added">and</em> all the tribe <a href="../../dict/hebrew/h7626.html" class="strongs-link" title="H7626">[H7626]</a> of Levi <a href="../../dict/hebrew/h3878.html" class="strongs-link" title="H3878">[H3878]</a>, shall have no part <a href="../../dict/hebrew/h2506.html" class="strongs-link" title="H2506">[H2506]</a> nor inheritance <a href="../../dict/hebrew/h5159.html" class="strongs-link" title="H5159">[H5159]</a> with Israel <a href="../../dict/hebrew/h3478.html" class="strongs-link" title="H3478">[H3478]</a>: they shall eat <a href="../../dict/hebrew/h0398.html" class="strongs-link" title="H0398">[H0398]</a> the offerings <a href="../../dict/hebrew/h0801.html" class="strongs-link" title="H0801">[H0801]</a> of the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> made by fire <a href="../../dict/hebrew/h0801.html" class="strongs-link" title="H0801">[H0801]</a>, and his inheritance <a href="../../dict/hebrew/h5159.html" class="strongs-link" title="H5159">[H5159]</a>.
     </p>
+    <div class="verse-note" id="note-verse-1"></div>
     <p class="verse" id="verse-2">
       <span class="verse-num">2</span>
+      <button class="note-btn" onclick="openNoteModal('Deut.18.2')" title="Add note">&#9998;</button>
       Therefore shall they have no inheritance <a href="../../dict/hebrew/h5159.html" class="strongs-link" title="H5159">[H5159]</a> among <a href="../../dict/hebrew/h7130.html" class="strongs-link" title="H7130">[H7130]</a> their brethren <a href="../../dict/hebrew/h0251.html" class="strongs-link" title="H0251">[H0251]</a>: the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> <em class="added">is</em> their inheritance <a href="../../dict/hebrew/h5159.html" class="strongs-link" title="H5159">[H5159]</a>, as he hath said <a href="../../dict/hebrew/h1696.html" class="strongs-link" title="H1696">[H1696]</a>  unto them.
     </p>
+    <div class="verse-note" id="note-verse-2"></div>
     <p class="verse" id="verse-3">
       <span class="verse-num">3</span>
+      <button class="note-btn" onclick="openNoteModal('Deut.18.3')" title="Add note">&#9998;</button>
       And this shall be the priest’s <a href="../../dict/hebrew/h3548.html" class="strongs-link" title="H3548">[H3548]</a> due <a href="../../dict/hebrew/h4941.html" class="strongs-link" title="H4941">[H4941]</a> from the people <a href="../../dict/hebrew/h5971.html" class="strongs-link" title="H5971">[H5971]</a>, from them that offer <a href="../../dict/hebrew/h2076.html" class="strongs-link" title="H2076">[H2076]</a> a sacrifice <a href="../../dict/hebrew/h2077.html" class="strongs-link" title="H2077">[H2077]</a>, whether <em class="added">it be</em> ox <a href="../../dict/hebrew/h7794.html" class="strongs-link" title="H7794">[H7794]</a> or sheep <a href="../../dict/hebrew/h7716.html" class="strongs-link" title="H7716">[H7716]</a>; and they shall give <a href="../../dict/hebrew/h5414.html" class="strongs-link" title="H5414">[H5414]</a> unto the priest <a href="../../dict/hebrew/h3548.html" class="strongs-link" title="H3548">[H3548]</a> the shoulder <a href="../../dict/hebrew/h2220.html" class="strongs-link" title="H2220">[H2220]</a>, and the two cheeks <a href="../../dict/hebrew/h3895.html" class="strongs-link" title="H3895">[H3895]</a>, and the maw <a href="../../dict/hebrew/h6896.html" class="strongs-link" title="H6896">[H6896]</a>.
     </p>
+    <div class="verse-note" id="note-verse-3"></div>
     <p class="verse" id="verse-4">
       <span class="verse-num">4</span>
+      <button class="note-btn" onclick="openNoteModal('Deut.18.4')" title="Add note">&#9998;</button>
       The firstfruit <a href="../../dict/hebrew/h7225.html" class="strongs-link" title="H7225">[H7225]</a> <em class="added">also</em> of thy corn <a href="../../dict/hebrew/h1715.html" class="strongs-link" title="H1715">[H1715]</a>, of thy wine <a href="../../dict/hebrew/h8492.html" class="strongs-link" title="H8492">[H8492]</a>, and of thine oil <a href="../../dict/hebrew/h3323.html" class="strongs-link" title="H3323">[H3323]</a>, and the first <a href="../../dict/hebrew/h7225.html" class="strongs-link" title="H7225">[H7225]</a> of the fleece <a href="../../dict/hebrew/h1488.html" class="strongs-link" title="H1488">[H1488]</a> of thy sheep <a href="../../dict/hebrew/h6629.html" class="strongs-link" title="H6629">[H6629]</a>, shalt thou give <a href="../../dict/hebrew/h5414.html" class="strongs-link" title="H5414">[H5414]</a>  him.
     </p>
+    <div class="verse-note" id="note-verse-4"></div>
     <p class="verse" id="verse-5">
       <span class="verse-num">5</span>
+      <button class="note-btn" onclick="openNoteModal('Deut.18.5')" title="Add note">&#9998;</button>
       For the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> thy God <a href="../../dict/hebrew/h0430.html" class="strongs-link" title="H0430">[H0430]</a> hath chosen <a href="../../dict/hebrew/h0977.html" class="strongs-link" title="H0977">[H0977]</a> him out of all thy tribes <a href="../../dict/hebrew/h7626.html" class="strongs-link" title="H7626">[H7626]</a>, to stand <a href="../../dict/hebrew/h5975.html" class="strongs-link" title="H5975">[H5975]</a> to minister <a href="../../dict/hebrew/h8334.html" class="strongs-link" title="H8334">[H8334]</a> in the name <a href="../../dict/hebrew/h8034.html" class="strongs-link" title="H8034">[H8034]</a> of the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>, him and his sons <a href="../../dict/hebrew/h1121.html" class="strongs-link" title="H1121">[H1121]</a> for ever <a href="../../dict/hebrew/h3117.html" class="strongs-link" title="H3117">[H3117]</a>.
     </p>
+    <div class="verse-note" id="note-verse-5"></div>
     <p class="verse" id="verse-6">
       <span class="verse-num">6</span>
+      <button class="note-btn" onclick="openNoteModal('Deut.18.6')" title="Add note">&#9998;</button>
       And if a Levite <a href="../../dict/hebrew/h3881.html" class="strongs-link" title="H3881">[H3881]</a> come <a href="../../dict/hebrew/h0935.html" class="strongs-link" title="H0935">[H0935]</a> from any <a href="../../dict/hebrew/h0259.html" class="strongs-link" title="H0259">[H0259]</a> of thy gates <a href="../../dict/hebrew/h8179.html" class="strongs-link" title="H8179">[H8179]</a> out of all Israel <a href="../../dict/hebrew/h3478.html" class="strongs-link" title="H3478">[H3478]</a>, where he sojourned <a href="../../dict/hebrew/h1481.html" class="strongs-link" title="H1481">[H1481]</a>, and come <a href="../../dict/hebrew/h0935.html" class="strongs-link" title="H0935">[H0935]</a> with all the desire <a href="../../dict/hebrew/h0185.html" class="strongs-link" title="H0185">[H0185]</a> of his mind <a href="../../dict/hebrew/h5315.html" class="strongs-link" title="H5315">[H5315]</a> unto the place <a href="../../dict/hebrew/h4725.html" class="strongs-link" title="H4725">[H4725]</a> which the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> shall choose <a href="../../dict/hebrew/h0977.html" class="strongs-link" title="H0977">[H0977]</a>;
     </p>
+    <div class="verse-note" id="note-verse-6"></div>
     <p class="verse" id="verse-7">
       <span class="verse-num">7</span>
+      <button class="note-btn" onclick="openNoteModal('Deut.18.7')" title="Add note">&#9998;</button>
       Then he shall minister <a href="../../dict/hebrew/h8334.html" class="strongs-link" title="H8334">[H8334]</a> in the name <a href="../../dict/hebrew/h8034.html" class="strongs-link" title="H8034">[H8034]</a> of the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> his God <a href="../../dict/hebrew/h0430.html" class="strongs-link" title="H0430">[H0430]</a>, as all his brethren <a href="../../dict/hebrew/h0251.html" class="strongs-link" title="H0251">[H0251]</a> the Levites <a href="../../dict/hebrew/h3881.html" class="strongs-link" title="H3881">[H3881]</a> <em class="added">do</em>, which stand <a href="../../dict/hebrew/h5975.html" class="strongs-link" title="H5975">[H5975]</a> there before <a href="../../dict/hebrew/h6440.html" class="strongs-link" title="H6440">[H6440]</a> the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>.
     </p>
+    <div class="verse-note" id="note-verse-7"></div>
     <p class="verse" id="verse-8">
       <span class="verse-num">8</span>
+      <button class="note-btn" onclick="openNoteModal('Deut.18.8')" title="Add note">&#9998;</button>
       They shall have like portions <a href="../../dict/hebrew/h2506.html" class="strongs-link" title="H2506">[H2506]</a> to eat <a href="../../dict/hebrew/h0398.html" class="strongs-link" title="H0398">[H0398]</a>, beside that which cometh of the sale <a href="../../dict/hebrew/h4465.html" class="strongs-link" title="H4465">[H4465]</a> of his patrimony <a href="../../dict/hebrew/h0001.html" class="strongs-link" title="H0001">[H0001]</a>.
     </p>
+    <div class="verse-note" id="note-verse-8"></div>
     <p class="verse" id="verse-9">
       <span class="verse-num">9</span>
+      <button class="note-btn" onclick="openNoteModal('Deut.18.9')" title="Add note">&#9998;</button>
       When thou art come <a href="../../dict/hebrew/h0935.html" class="strongs-link" title="H0935">[H0935]</a> into the land <a href="../../dict/hebrew/h0776.html" class="strongs-link" title="H0776">[H0776]</a> which the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> thy God <a href="../../dict/hebrew/h0430.html" class="strongs-link" title="H0430">[H0430]</a> giveth <a href="../../dict/hebrew/h5414.html" class="strongs-link" title="H5414">[H5414]</a> thee, thou shalt not learn <a href="../../dict/hebrew/h3925.html" class="strongs-link" title="H3925">[H3925]</a> to do <a href="../../dict/hebrew/h6213.html" class="strongs-link" title="H6213">[H6213]</a> after the abominations <a href="../../dict/hebrew/h8441.html" class="strongs-link" title="H8441">[H8441]</a> of those nations <a href="../../dict/hebrew/h1471.html" class="strongs-link" title="H1471">[H1471]</a>.
     </p>
+    <div class="verse-note" id="note-verse-9"></div>
     <p class="verse" id="verse-10">
       <span class="verse-num">10</span>
+      <button class="note-btn" onclick="openNoteModal('Deut.18.10')" title="Add note">&#9998;</button>
       There shall not be found <a href="../../dict/hebrew/h4672.html" class="strongs-link" title="H4672">[H4672]</a>  among you <em class="added">any one</em> that maketh his son <a href="../../dict/hebrew/h1121.html" class="strongs-link" title="H1121">[H1121]</a> or his daughter <a href="../../dict/hebrew/h1323.html" class="strongs-link" title="H1323">[H1323]</a> to pass <a href="../../dict/hebrew/h5674.html" class="strongs-link" title="H5674">[H5674]</a> through the fire <a href="../../dict/hebrew/h0784.html" class="strongs-link" title="H0784">[H0784]</a>, <em class="added">or</em> that useth <a href="../../dict/hebrew/h7080.html" class="strongs-link" title="H7080">[H7080]</a> divination <a href="../../dict/hebrew/h7081.html" class="strongs-link" title="H7081">[H7081]</a>, <em class="added">or</em> an observer of times <a href="../../dict/hebrew/h6049.html" class="strongs-link" title="H6049">[H6049]</a>, or an enchanter <a href="../../dict/hebrew/h5172.html" class="strongs-link" title="H5172">[H5172]</a>, or a witch <a href="../../dict/hebrew/h3784.html" class="strongs-link" title="H3784">[H3784]</a>,
     </p>
+    <div class="verse-note" id="note-verse-10"></div>
     <p class="verse" id="verse-11">
       <span class="verse-num">11</span>
+      <button class="note-btn" onclick="openNoteModal('Deut.18.11')" title="Add note">&#9998;</button>
       Or a charmer <a href="../../dict/hebrew/h2267.html" class="strongs-link" title="H2267">[H2267]</a><a href="../../dict/hebrew/h2266.html" class="strongs-link" title="H2266">[H2266]</a>, or a consulter <a href="../../dict/hebrew/h7592.html" class="strongs-link" title="H7592">[H7592]</a> with familiar spirits <a href="../../dict/hebrew/h0178.html" class="strongs-link" title="H0178">[H0178]</a>, or a wizard <a href="../../dict/hebrew/h3049.html" class="strongs-link" title="H3049">[H3049]</a>, or a necromancer <a href="../../dict/hebrew/h4191.html" class="strongs-link" title="H4191">[H4191]</a><a href="../../dict/hebrew/h1875.html" class="strongs-link" title="H1875">[H1875]</a>.
     </p>
+    <div class="verse-note" id="note-verse-11"></div>
     <p class="verse" id="verse-12">
       <span class="verse-num">12</span>
+      <button class="note-btn" onclick="openNoteModal('Deut.18.12')" title="Add note">&#9998;</button>
       For all that do <a href="../../dict/hebrew/h6213.html" class="strongs-link" title="H6213">[H6213]</a>  these things <em class="added">are</em> an abomination <a href="../../dict/hebrew/h8441.html" class="strongs-link" title="H8441">[H8441]</a> unto the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>: and because <a href="../../dict/hebrew/h1558.html" class="strongs-link" title="H1558">[H1558]</a> of these abominations <a href="../../dict/hebrew/h8441.html" class="strongs-link" title="H8441">[H8441]</a> the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> thy God <a href="../../dict/hebrew/h0430.html" class="strongs-link" title="H0430">[H0430]</a> doth drive them out <a href="../../dict/hebrew/h3423.html" class="strongs-link" title="H3423">[H3423]</a> from before <a href="../../dict/hebrew/h6440.html" class="strongs-link" title="H6440">[H6440]</a>  thee.
     </p>
+    <div class="verse-note" id="note-verse-12"></div>
     <p class="verse" id="verse-13">
       <span class="verse-num">13</span>
+      <button class="note-btn" onclick="openNoteModal('Deut.18.13')" title="Add note">&#9998;</button>
       Thou shalt be perfect <a href="../../dict/hebrew/h8549.html" class="strongs-link" title="H8549">[H8549]</a> with the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> thy God <a href="../../dict/hebrew/h0430.html" class="strongs-link" title="H0430">[H0430]</a>.
     </p>
+    <div class="verse-note" id="note-verse-13"></div>
     <p class="verse" id="verse-14">
       <span class="verse-num">14</span>
+      <button class="note-btn" onclick="openNoteModal('Deut.18.14')" title="Add note">&#9998;</button>
       For these nations <a href="../../dict/hebrew/h1471.html" class="strongs-link" title="H1471">[H1471]</a>, which thou shalt possess <a href="../../dict/hebrew/h3423.html" class="strongs-link" title="H3423">[H3423]</a>, hearkened <a href="../../dict/hebrew/h8085.html" class="strongs-link" title="H8085">[H8085]</a> unto observers of times <a href="../../dict/hebrew/h6049.html" class="strongs-link" title="H6049">[H6049]</a>, and unto diviners <a href="../../dict/hebrew/h7080.html" class="strongs-link" title="H7080">[H7080]</a>: but as for thee, the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> thy God <a href="../../dict/hebrew/h0430.html" class="strongs-link" title="H0430">[H0430]</a> hath not suffered <a href="../../dict/hebrew/h5414.html" class="strongs-link" title="H5414">[H5414]</a>  thee so <em class="added">to do</em>.
     </p>
+    <div class="verse-note" id="note-verse-14"></div>
     <p class="verse" id="verse-15">
       <span class="verse-num">15</span>
+      <button class="note-btn" onclick="openNoteModal('Deut.18.15')" title="Add note">&#9998;</button>
       The Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> thy God <a href="../../dict/hebrew/h0430.html" class="strongs-link" title="H0430">[H0430]</a> will raise up <a href="../../dict/hebrew/h6965.html" class="strongs-link" title="H6965">[H6965]</a> unto thee a Prophet <a href="../../dict/hebrew/h5030.html" class="strongs-link" title="H5030">[H5030]</a> from the midst <a href="../../dict/hebrew/h7130.html" class="strongs-link" title="H7130">[H7130]</a> of thee, of thy brethren <a href="../../dict/hebrew/h0251.html" class="strongs-link" title="H0251">[H0251]</a>, like unto me; unto him ye shall hearken <a href="../../dict/hebrew/h8085.html" class="strongs-link" title="H8085">[H8085]</a>;
     </p>
+    <div class="verse-note" id="note-verse-15"></div>
     <p class="verse" id="verse-16">
       <span class="verse-num">16</span>
+      <button class="note-btn" onclick="openNoteModal('Deut.18.16')" title="Add note">&#9998;</button>
       According to all that thou desiredst <a href="../../dict/hebrew/h7592.html" class="strongs-link" title="H7592">[H7592]</a> of the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> thy God <a href="../../dict/hebrew/h0430.html" class="strongs-link" title="H0430">[H0430]</a> in Horeb <a href="../../dict/hebrew/h2722.html" class="strongs-link" title="H2722">[H2722]</a> in the day <a href="../../dict/hebrew/h3117.html" class="strongs-link" title="H3117">[H3117]</a> of the assembly <a href="../../dict/hebrew/h6951.html" class="strongs-link" title="H6951">[H6951]</a>, saying <a href="../../dict/hebrew/h0559.html" class="strongs-link" title="H0559">[H0559]</a>, Let me not hear <a href="../../dict/hebrew/h8085.html" class="strongs-link" title="H8085">[H8085]</a> again <a href="../../dict/hebrew/h3254.html" class="strongs-link" title="H3254">[H3254]</a> the voice <a href="../../dict/hebrew/h6963.html" class="strongs-link" title="H6963">[H6963]</a> of the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> my God <a href="../../dict/hebrew/h0430.html" class="strongs-link" title="H0430">[H0430]</a>, neither let me see <a href="../../dict/hebrew/h7200.html" class="strongs-link" title="H7200">[H7200]</a> this great <a href="../../dict/hebrew/h1419.html" class="strongs-link" title="H1419">[H1419]</a> fire <a href="../../dict/hebrew/h0784.html" class="strongs-link" title="H0784">[H0784]</a> any more, that I die <a href="../../dict/hebrew/h4191.html" class="strongs-link" title="H4191">[H4191]</a>  not.
     </p>
+    <div class="verse-note" id="note-verse-16"></div>
     <p class="verse" id="verse-17">
       <span class="verse-num">17</span>
+      <button class="note-btn" onclick="openNoteModal('Deut.18.17')" title="Add note">&#9998;</button>
       And the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> said <a href="../../dict/hebrew/h0559.html" class="strongs-link" title="H0559">[H0559]</a> unto me, They have well <a href="../../dict/hebrew/h3190.html" class="strongs-link" title="H3190">[H3190]</a> <em class="added">spoken that</em> which they have spoken <a href="../../dict/hebrew/h1696.html" class="strongs-link" title="H1696">[H1696]</a>.
     </p>
+    <div class="verse-note" id="note-verse-17"></div>
     <p class="verse" id="verse-18">
       <span class="verse-num">18</span>
+      <button class="note-btn" onclick="openNoteModal('Deut.18.18')" title="Add note">&#9998;</button>
       I will raise them up <a href="../../dict/hebrew/h6965.html" class="strongs-link" title="H6965">[H6965]</a> a Prophet <a href="../../dict/hebrew/h5030.html" class="strongs-link" title="H5030">[H5030]</a> from among <a href="../../dict/hebrew/h7130.html" class="strongs-link" title="H7130">[H7130]</a> their brethren <a href="../../dict/hebrew/h0251.html" class="strongs-link" title="H0251">[H0251]</a>, like unto thee, and will put <a href="../../dict/hebrew/h5414.html" class="strongs-link" title="H5414">[H5414]</a> my words <a href="../../dict/hebrew/h1697.html" class="strongs-link" title="H1697">[H1697]</a> in his mouth <a href="../../dict/hebrew/h6310.html" class="strongs-link" title="H6310">[H6310]</a>; and he shall speak <a href="../../dict/hebrew/h1696.html" class="strongs-link" title="H1696">[H1696]</a> unto them all that I shall command <a href="../../dict/hebrew/h6680.html" class="strongs-link" title="H6680">[H6680]</a>  him.
     </p>
+    <div class="verse-note" id="note-verse-18"></div>
     <p class="verse" id="verse-19">
       <span class="verse-num">19</span>
+      <button class="note-btn" onclick="openNoteModal('Deut.18.19')" title="Add note">&#9998;</button>
       And it shall come to pass, <em class="added">that</em> whosoever <a href="../../dict/hebrew/h0376.html" class="strongs-link" title="H0376">[H0376]</a> will not hearken <a href="../../dict/hebrew/h8085.html" class="strongs-link" title="H8085">[H8085]</a> unto my words <a href="../../dict/hebrew/h1697.html" class="strongs-link" title="H1697">[H1697]</a> which he shall speak <a href="../../dict/hebrew/h1696.html" class="strongs-link" title="H1696">[H1696]</a> in my name <a href="../../dict/hebrew/h8034.html" class="strongs-link" title="H8034">[H8034]</a>, I will require <a href="../../dict/hebrew/h1875.html" class="strongs-link" title="H1875">[H1875]</a> <em class="added">it</em>  of him.
     </p>
+    <div class="verse-note" id="note-verse-19"></div>
     <p class="verse" id="verse-20">
       <span class="verse-num">20</span>
+      <button class="note-btn" onclick="openNoteModal('Deut.18.20')" title="Add note">&#9998;</button>
       But the prophet <a href="../../dict/hebrew/h5030.html" class="strongs-link" title="H5030">[H5030]</a>, which shall presume <a href="../../dict/hebrew/h2102.html" class="strongs-link" title="H2102">[H2102]</a> to speak <a href="../../dict/hebrew/h1696.html" class="strongs-link" title="H1696">[H1696]</a> a word <a href="../../dict/hebrew/h1697.html" class="strongs-link" title="H1697">[H1697]</a> in my name <a href="../../dict/hebrew/h8034.html" class="strongs-link" title="H8034">[H8034]</a>, which I have not commanded <a href="../../dict/hebrew/h6680.html" class="strongs-link" title="H6680">[H6680]</a> him to speak <a href="../../dict/hebrew/h1696.html" class="strongs-link" title="H1696">[H1696]</a>, or that shall speak <a href="../../dict/hebrew/h1696.html" class="strongs-link" title="H1696">[H1696]</a> in the name <a href="../../dict/hebrew/h8034.html" class="strongs-link" title="H8034">[H8034]</a> of other <a href="../../dict/hebrew/h0312.html" class="strongs-link" title="H0312">[H0312]</a> gods <a href="../../dict/hebrew/h0430.html" class="strongs-link" title="H0430">[H0430]</a>, even that prophet <a href="../../dict/hebrew/h5030.html" class="strongs-link" title="H5030">[H5030]</a> shall die <a href="../../dict/hebrew/h4191.html" class="strongs-link" title="H4191">[H4191]</a>.
     </p>
+    <div class="verse-note" id="note-verse-20"></div>
     <p class="verse" id="verse-21">
       <span class="verse-num">21</span>
+      <button class="note-btn" onclick="openNoteModal('Deut.18.21')" title="Add note">&#9998;</button>
       And if thou say <a href="../../dict/hebrew/h0559.html" class="strongs-link" title="H0559">[H0559]</a> in thine heart <a href="../../dict/hebrew/h3824.html" class="strongs-link" title="H3824">[H3824]</a>, How shall we know <a href="../../dict/hebrew/h3045.html" class="strongs-link" title="H3045">[H3045]</a> the word <a href="../../dict/hebrew/h1697.html" class="strongs-link" title="H1697">[H1697]</a> which the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> hath not spoken <a href="../../dict/hebrew/h1696.html" class="strongs-link" title="H1696">[H1696]</a>?
     </p>
+    <div class="verse-note" id="note-verse-21"></div>
     <p class="verse" id="verse-22">
       <span class="verse-num">22</span>
+      <button class="note-btn" onclick="openNoteModal('Deut.18.22')" title="Add note">&#9998;</button>
       When a prophet <a href="../../dict/hebrew/h5030.html" class="strongs-link" title="H5030">[H5030]</a> speaketh <a href="../../dict/hebrew/h1696.html" class="strongs-link" title="H1696">[H1696]</a> in the name <a href="../../dict/hebrew/h8034.html" class="strongs-link" title="H8034">[H8034]</a> of the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>, if the thing <a href="../../dict/hebrew/h1697.html" class="strongs-link" title="H1697">[H1697]</a> follow not, nor come to pass <a href="../../dict/hebrew/h0935.html" class="strongs-link" title="H0935">[H0935]</a>, that <em class="added">is</em> the thing <a href="../../dict/hebrew/h1697.html" class="strongs-link" title="H1697">[H1697]</a> which the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> hath not spoken <a href="../../dict/hebrew/h1696.html" class="strongs-link" title="H1696">[H1696]</a>, <em class="added">but</em> the prophet <a href="../../dict/hebrew/h5030.html" class="strongs-link" title="H5030">[H5030]</a> hath spoken <a href="../../dict/hebrew/h1696.html" class="strongs-link" title="H1696">[H1696]</a> it presumptuously <a href="../../dict/hebrew/h2087.html" class="strongs-link" title="H2087">[H2087]</a>: thou shalt not be afraid <a href="../../dict/hebrew/h1481.html" class="strongs-link" title="H1481">[H1481]</a>  of him.
     </p>
+    <div class="verse-note" id="note-verse-22"></div>
   </main>
 
   <footer class="chapter-footer">

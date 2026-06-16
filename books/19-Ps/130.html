@@ -19,6 +19,7 @@
       <a href="../20-Prov/1.html" class="btn" title="Proverbs">B&#9654;</a>
       <button class="btn" id="font-decrease" onclick="decreaseFontSize()">a&#8595;</button>
 	  <button class="btn" id="font-increase" onclick="increaseFontSize()">A&#8593;</button>
+      <button class="btn sync-btn" id="sync-btn" onclick="syncToKindle()" title="Sync to Kindle">&#9889; K</button>
       <span id="unbaked-indicator"></span>
     </div>
   </nav>
@@ -27,36 +28,52 @@
 	
     <p class="verse" id="verse-1">
       <span class="verse-num">1</span>
+      <button class="note-btn" onclick="openNoteModal('Ps.130.1')" title="Add note">&#9998;</button>
       Out of the depths <a href="../../dict/hebrew/h4615.html" class="strongs-link" title="H4615">[H4615]</a> have I cried <a href="../../dict/hebrew/h7121.html" class="strongs-link" title="H7121">[H7121]</a> unto thee, O Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>.
     </p>
+    <div class="verse-note" id="note-verse-1"></div>
     <p class="verse" id="verse-2">
       <span class="verse-num">2</span>
+      <button class="note-btn" onclick="openNoteModal('Ps.130.2')" title="Add note">&#9998;</button>
       Lord <a href="../../dict/hebrew/h0136.html" class="strongs-link" title="H0136">[H0136]</a>, hear <a href="../../dict/hebrew/h8085.html" class="strongs-link" title="H8085">[H8085]</a> my voice <a href="../../dict/hebrew/h6963.html" class="strongs-link" title="H6963">[H6963]</a>: let thine ears <a href="../../dict/hebrew/h0241.html" class="strongs-link" title="H0241">[H0241]</a> be attentive <a href="../../dict/hebrew/h7183.html" class="strongs-link" title="H7183">[H7183]</a> to the voice <a href="../../dict/hebrew/h6963.html" class="strongs-link" title="H6963">[H6963]</a> of my supplications <a href="../../dict/hebrew/h8469.html" class="strongs-link" title="H8469">[H8469]</a>.
     </p>
+    <div class="verse-note" id="note-verse-2"></div>
     <p class="verse" id="verse-3">
       <span class="verse-num">3</span>
+      <button class="note-btn" onclick="openNoteModal('Ps.130.3')" title="Add note">&#9998;</button>
       If thou, Lord <a href="../../dict/hebrew/h3050.html" class="strongs-link" title="H3050">[H3050]</a>, shouldest mark <a href="../../dict/hebrew/h8104.html" class="strongs-link" title="H8104">[H8104]</a> iniquities <a href="../../dict/hebrew/h5771.html" class="strongs-link" title="H5771">[H5771]</a>, O Lord <a href="../../dict/hebrew/h0136.html" class="strongs-link" title="H0136">[H0136]</a>, who shall stand <a href="../../dict/hebrew/h5975.html" class="strongs-link" title="H5975">[H5975]</a>?
     </p>
+    <div class="verse-note" id="note-verse-3"></div>
     <p class="verse" id="verse-4">
       <span class="verse-num">4</span>
+      <button class="note-btn" onclick="openNoteModal('Ps.130.4')" title="Add note">&#9998;</button>
       But <em class="added">there is</em> forgiveness <a href="../../dict/hebrew/h5547.html" class="strongs-link" title="H5547">[H5547]</a> with thee, that thou mayest be feared <a href="../../dict/hebrew/h3372.html" class="strongs-link" title="H3372">[H3372]</a>.
     </p>
+    <div class="verse-note" id="note-verse-4"></div>
     <p class="verse" id="verse-5">
       <span class="verse-num">5</span>
+      <button class="note-btn" onclick="openNoteModal('Ps.130.5')" title="Add note">&#9998;</button>
       I wait <a href="../../dict/hebrew/h6960.html" class="strongs-link" title="H6960">[H6960]</a> for the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>, my soul <a href="../../dict/hebrew/h5315.html" class="strongs-link" title="H5315">[H5315]</a> doth wait <a href="../../dict/hebrew/h6960.html" class="strongs-link" title="H6960">[H6960]</a>, and in his word <a href="../../dict/hebrew/h1697.html" class="strongs-link" title="H1697">[H1697]</a> do I hope <a href="../../dict/hebrew/h3176.html" class="strongs-link" title="H3176">[H3176]</a>.
     </p>
+    <div class="verse-note" id="note-verse-5"></div>
     <p class="verse" id="verse-6">
       <span class="verse-num">6</span>
+      <button class="note-btn" onclick="openNoteModal('Ps.130.6')" title="Add note">&#9998;</button>
       My soul <a href="../../dict/hebrew/h5315.html" class="strongs-link" title="H5315">[H5315]</a> <em class="added">waiteth</em> for the Lord <a href="../../dict/hebrew/h0136.html" class="strongs-link" title="H0136">[H0136]</a> more than they that watch <a href="../../dict/hebrew/h8104.html" class="strongs-link" title="H8104">[H8104]</a> for the morning <a href="../../dict/hebrew/h1242.html" class="strongs-link" title="H1242">[H1242]</a>: <em class="added">I say</em>, <em class="added">more than</em> they that watch <a href="../../dict/hebrew/h8104.html" class="strongs-link" title="H8104">[H8104]</a> for the morning <a href="../../dict/hebrew/h1242.html" class="strongs-link" title="H1242">[H1242]</a>.
     </p>
+    <div class="verse-note" id="note-verse-6"></div>
     <p class="verse" id="verse-7">
       <span class="verse-num">7</span>
+      <button class="note-btn" onclick="openNoteModal('Ps.130.7')" title="Add note">&#9998;</button>
       Let Israel <a href="../../dict/hebrew/h3478.html" class="strongs-link" title="H3478">[H3478]</a> hope <a href="../../dict/hebrew/h3176.html" class="strongs-link" title="H3176">[H3176]</a> in the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>: for with the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> <em class="added">there is</em> mercy <a href="../../dict/hebrew/h2617.html" class="strongs-link" title="H2617">[H2617]</a>, and with him <em class="added">is</em> plenteous <a href="../../dict/hebrew/h7235.html" class="strongs-link" title="H7235">[H7235]</a> redemption <a href="../../dict/hebrew/h6304.html" class="strongs-link" title="H6304">[H6304]</a>.
     </p>
+    <div class="verse-note" id="note-verse-7"></div>
     <p class="verse" id="verse-8">
       <span class="verse-num">8</span>
+      <button class="note-btn" onclick="openNoteModal('Ps.130.8')" title="Add note">&#9998;</button>
       And he shall redeem <a href="../../dict/hebrew/h6299.html" class="strongs-link" title="H6299">[H6299]</a> Israel <a href="../../dict/hebrew/h3478.html" class="strongs-link" title="H3478">[H3478]</a> from all his iniquities <a href="../../dict/hebrew/h5771.html" class="strongs-link" title="H5771">[H5771]</a>.
     </p>
+    <div class="verse-note" id="note-verse-8"></div>
   </main>
 
   <footer class="chapter-footer">

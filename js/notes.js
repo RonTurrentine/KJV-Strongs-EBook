@@ -336,7 +336,7 @@
 
         noteDiv.innerHTML = ""
             + '<p class="verse-note-text">'
-            + escapeHtml(text)
+            + linkifyVerseRefs(escapeHtml(text))
             + "</p>"
             + '<p class="verse-note-meta">Note saved: '
             + dateStr
@@ -363,15 +363,82 @@
             .replace(/\n/g, "<br>");
     }
 
+    var BOOK_FOLDERS = {
+        "Gen":"01-Gen","Exod":"02-Exod","Lev":"03-Lev","Num":"04-Num",
+        "Deut":"05-Deut","Josh":"06-Josh","Judg":"07-Judg","Ruth":"08-Ruth",
+        "1Sam":"09-1Sam","2Sam":"10-2Sam","1Kgs":"11-1Kgs","2Kgs":"12-2Kgs",
+        "1Chr":"13-1Chr","2Chr":"14-2Chr","Ezra":"15-Ezra","Neh":"16-Neh",
+        "Esth":"17-Esth","Job":"18-Job","Ps":"19-Ps","Prov":"20-Prov",
+        "Eccl":"21-Eccl","Song":"22-Song","Isa":"23-Isa","Jer":"24-Jer",
+        "Lam":"25-Lam","Ezek":"26-Ezek","Dan":"27-Dan","Hos":"28-Hos",
+        "Joel":"29-Joel","Amos":"30-Amos","Obad":"31-Obad","Jonah":"32-Jonah",
+        "Mic":"33-Mic","Nah":"34-Nah","Hab":"35-Hab","Zeph":"36-Zeph",
+        "Hag":"37-Hag","Zech":"38-Zech","Mal":"39-Mal","Matt":"40-Matt",
+        "Mark":"41-Mark","Luke":"42-Luke","John":"43-John","Acts":"44-Acts",
+        "Rom":"45-Rom","1Cor":"46-1Cor","2Cor":"47-2Cor","Gal":"48-Gal",
+        "Eph":"49-Eph","Phil":"50-Phil","Col":"51-Col","1Thess":"52-1Thess",
+        "2Thess":"53-2Thess","1Tim":"54-1Tim","2Tim":"55-2Tim","Titus":"56-Titus",
+        "Phlm":"57-Phlm","Heb":"58-Heb","Jas":"59-Jas","1Pet":"60-1Pet",
+        "2Pet":"61-2Pet","1John":"62-1John","2John":"63-2John","3John":"64-3John",
+        "Jude":"65-Jude","Rev":"66-Rev"
+    };
+
+    function linkifyVerseRefs(text) {
+        var result = "";
+        var i = 0;
+        while (i < text.length) {
+            var open = text.indexOf("[[", i);
+            if (open === -1) { result += text.substring(i); break; }
+            result += text.substring(i, open);
+            var close = text.indexOf("]]", open + 2);
+            if (close === -1) { result += text.substring(open); break; }
+            var ref = text.substring(open + 2, close);
+            var parts = ref.split(".");
+            if (parts.length === 3 && /^\d+$/.test(parts[1]) && /^\d+$/.test(parts[2])) {
+                var bookAbbr = parts[0];
+                var ch = parts[1];
+                var vs = parts[2];
+                var folder = BOOK_FOLDERS[bookAbbr];
+                if (folder) {
+                    var href = "../../books/" + folder + "/" + ch + ".html#verse-" + vs;
+                    result += "<a href=\"" + href + "\" class=\"verse-note-link\">" + bookAbbr + " " + ch + ":" + vs + "</a>";
+                } else {
+                    result += bookAbbr + " " + ch + ":" + vs;
+                }
+            } else {
+                result += "[[" + ref + "]]";
+            }
+            i = close + 2;
+        }
+        return result;
+    }
+
     /* ============================================================
        Sync to Kindle
        ============================================================ */
 
     window.syncToKindle = function () {
         if (!isLocalhost) { return; }
-        showToast("Syncing to Kindle...", "");
+
+        /* Show sync wait modal */
+        var syncModal = document.getElementById("sync-modal");
+        if (!syncModal) {
+            syncModal = document.createElement("div");
+            syncModal.id = "sync-modal";
+            syncModal.className = "sync-modal";
+            var syncBox = document.createElement("div");
+            syncBox.className = "sync-modal-box";
+            var syncText = document.createElement("p");
+            syncText.className = "sync-modal-text";
+            syncText.innerHTML = "&#9889; Syncing to Kindle&hellip;<br><br>Please wait until sync is complete.";
+            syncBox.appendChild(syncText);
+            syncModal.appendChild(syncBox);
+            document.body.appendChild(syncModal);
+        }
+        addClass(syncModal, "is-open");
 
         ajax("POST", "/api/sync-kindle", null, function (status, data) {
+            removeClass(syncModal, "is-open");
             if (status === 200 && data) {
                 var msg = "Pushed " + (data.pushed || 0) + " file(s) to Kindle";
                 showToast(msg, "success");
@@ -383,12 +450,45 @@
     };
 
     /* ============================================================
+       Kindle Connection Status Polling
+       ============================================================ */
+
+    function updateSyncButton(connected) {
+        var btn = document.getElementById("sync-btn");
+        if (!btn) { return; }
+        if (connected) {
+            removeClass(btn, "btn-disabled");
+            btn.disabled = false;
+            btn.title = "Sync to Kindle";
+        } else {
+            addClass(btn, "btn-disabled");
+            btn.disabled = true;
+            btn.title = "Kindle not connected";
+        }
+    }
+
+    function pollKindleStatus() {
+        ajax("GET", "/api/kindle-status", null, function (status, data) {
+            if (status === 200 && data) {
+                updateSyncButton(data.connected === true);
+            }
+        });
+    }
+
+    /* ============================================================
        Initialization
        ============================================================ */
 
     if (!isChapterPage) { return; }
 
     if (isLocalhost) {
+        /* Add is-localhost to body — CSS uses this to show pencil buttons and sync btn */
+        addClass(document.body, "is-localhost");
+
+        /* Start Kindle status polling every 5 seconds */
+        pollKindleStatus();
+        setInterval(pollKindleStatus, 5000);
+
         /* PC study mode: pencil buttons are active, show sync button */
 
         /* Mark note buttons that have existing baked notes */

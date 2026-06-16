@@ -19,6 +19,7 @@
       <a href="../02-Exod/1.html" class="btn" title="Exodus">B&#9654;</a>
       <button class="btn" id="font-decrease" onclick="decreaseFontSize()">a&#8595;</button>
 	  <button class="btn" id="font-increase" onclick="increaseFontSize()">A&#8593;</button>
+      <button class="btn sync-btn" id="sync-btn" onclick="syncToKindle()" title="Sync to Kindle">&#9889; K</button>
       <span id="unbaked-indicator"></span>
     </div>
   </nav>
@@ -27,76 +28,112 @@
 	
     <p class="verse" id="verse-1">
       <span class="verse-num">1</span>
+      <button class="note-btn" onclick="openNoteModal('Gen.13.1')" title="Add note">&#9998;</button>
       And Abram <a href="../../dict/hebrew/h0087.html" class="strongs-link" title="H0087">[H0087]</a> went up <a href="../../dict/hebrew/h5927.html" class="strongs-link" title="H5927">[H5927]</a> out of Egypt <a href="../../dict/hebrew/h4714.html" class="strongs-link" title="H4714">[H4714]</a>, he, and his wife <a href="../../dict/hebrew/h0802.html" class="strongs-link" title="H0802">[H0802]</a>, and all that he had, and Lot <a href="../../dict/hebrew/h3876.html" class="strongs-link" title="H3876">[H3876]</a> with him, into the south <a href="../../dict/hebrew/h5045.html" class="strongs-link" title="H5045">[H5045]</a>.
     </p>
+    <div class="verse-note" id="note-verse-1"></div>
     <p class="verse" id="verse-2">
       <span class="verse-num">2</span>
+      <button class="note-btn" onclick="openNoteModal('Gen.13.2')" title="Add note">&#9998;</button>
       And Abram <a href="../../dict/hebrew/h0087.html" class="strongs-link" title="H0087">[H0087]</a> <em class="added">was</em> very <a href="../../dict/hebrew/h3966.html" class="strongs-link" title="H3966">[H3966]</a> rich <a href="../../dict/hebrew/h3513.html" class="strongs-link" title="H3513">[H3513]</a> in cattle <a href="../../dict/hebrew/h4735.html" class="strongs-link" title="H4735">[H4735]</a>, in silver <a href="../../dict/hebrew/h3701.html" class="strongs-link" title="H3701">[H3701]</a>, and in gold <a href="../../dict/hebrew/h2091.html" class="strongs-link" title="H2091">[H2091]</a>.
     </p>
+    <div class="verse-note" id="note-verse-2"></div>
     <p class="verse" id="verse-3">
       <span class="verse-num">3</span>
+      <button class="note-btn" onclick="openNoteModal('Gen.13.3')" title="Add note">&#9998;</button>
       And he went <a href="../../dict/hebrew/h3212.html" class="strongs-link" title="H3212">[H3212]</a> on his journeys <a href="../../dict/hebrew/h4550.html" class="strongs-link" title="H4550">[H4550]</a> from the south <a href="../../dict/hebrew/h5045.html" class="strongs-link" title="H5045">[H5045]</a> even to Beth–el <a href="../../dict/hebrew/h1008.html" class="strongs-link" title="H1008">[H1008]</a>, unto the place <a href="../../dict/hebrew/h4725.html" class="strongs-link" title="H4725">[H4725]</a> where his tent <a href="../../dict/hebrew/h0168.html" class="strongs-link" title="H0168">[H0168]</a> had been <a href="../../dict/hebrew/h1961.html" class="strongs-link" title="H1961">[H1961]</a> at the beginning <a href="../../dict/hebrew/h8462.html" class="strongs-link" title="H8462">[H8462]</a>, between Beth–el <a href="../../dict/hebrew/h1008.html" class="strongs-link" title="H1008">[H1008]</a> and Hai <a href="../../dict/hebrew/h5857.html" class="strongs-link" title="H5857">[H5857]</a>;
     </p>
+    <div class="verse-note" id="note-verse-3"></div>
     <p class="verse" id="verse-4">
       <span class="verse-num">4</span>
+      <button class="note-btn" onclick="openNoteModal('Gen.13.4')" title="Add note">&#9998;</button>
       Unto the place <a href="../../dict/hebrew/h4725.html" class="strongs-link" title="H4725">[H4725]</a> of the altar <a href="../../dict/hebrew/h4196.html" class="strongs-link" title="H4196">[H4196]</a>, which he had made <a href="../../dict/hebrew/h6213.html" class="strongs-link" title="H6213">[H6213]</a> there at the first <a href="../../dict/hebrew/h7223.html" class="strongs-link" title="H7223">[H7223]</a>: and there Abram <a href="../../dict/hebrew/h0087.html" class="strongs-link" title="H0087">[H0087]</a> called <a href="../../dict/hebrew/h7121.html" class="strongs-link" title="H7121">[H7121]</a> on the name <a href="../../dict/hebrew/h8034.html" class="strongs-link" title="H8034">[H8034]</a> of the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>.
     </p>
+    <div class="verse-note" id="note-verse-4"></div>
     <p class="verse" id="verse-5">
       <span class="verse-num">5</span>
+      <button class="note-btn" onclick="openNoteModal('Gen.13.5')" title="Add note">&#9998;</button>
       And Lot <a href="../../dict/hebrew/h3876.html" class="strongs-link" title="H3876">[H3876]</a> also, which went <a href="../../dict/hebrew/h1980.html" class="strongs-link" title="H1980">[H1980]</a> with <a href="../../dict/hebrew/h0854.html" class="strongs-link" title="H0854">[H0854]</a> Abram <a href="../../dict/hebrew/h0087.html" class="strongs-link" title="H0087">[H0087]</a>, had flocks <a href="../../dict/hebrew/h6629.html" class="strongs-link" title="H6629">[H6629]</a>, and herds <a href="../../dict/hebrew/h1241.html" class="strongs-link" title="H1241">[H1241]</a>, and tents <a href="../../dict/hebrew/h0168.html" class="strongs-link" title="H0168">[H0168]</a>.
     </p>
+    <div class="verse-note" id="note-verse-5"></div>
     <p class="verse" id="verse-6">
       <span class="verse-num">6</span>
+      <button class="note-btn" onclick="openNoteModal('Gen.13.6')" title="Add note">&#9998;</button>
       And the land <a href="../../dict/hebrew/h0776.html" class="strongs-link" title="H0776">[H0776]</a> was not able to bear <a href="../../dict/hebrew/h5375.html" class="strongs-link" title="H5375">[H5375]</a> them, that they might dwell <a href="../../dict/hebrew/h3427.html" class="strongs-link" title="H3427">[H3427]</a> together <a href="../../dict/hebrew/h3162.html" class="strongs-link" title="H3162">[H3162]</a>: for their substance <a href="../../dict/hebrew/h7399.html" class="strongs-link" title="H7399">[H7399]</a> was great <a href="../../dict/hebrew/h7227.html" class="strongs-link" title="H7227">[H7227]</a>, so that they could <a href="../../dict/hebrew/h3201.html" class="strongs-link" title="H3201">[H3201]</a> not dwell <a href="../../dict/hebrew/h3427.html" class="strongs-link" title="H3427">[H3427]</a> together <a href="../../dict/hebrew/h3162.html" class="strongs-link" title="H3162">[H3162]</a>.
     </p>
+    <div class="verse-note" id="note-verse-6"></div>
     <p class="verse" id="verse-7">
       <span class="verse-num">7</span>
+      <button class="note-btn" onclick="openNoteModal('Gen.13.7')" title="Add note">&#9998;</button>
       And there was a strife <a href="../../dict/hebrew/h7379.html" class="strongs-link" title="H7379">[H7379]</a> between the herdmen <a href="../../dict/hebrew/h7462.html" class="strongs-link" title="H7462">[H7462]</a> of Abram’s <a href="../../dict/hebrew/h0087.html" class="strongs-link" title="H0087">[H0087]</a> cattle <a href="../../dict/hebrew/h4735.html" class="strongs-link" title="H4735">[H4735]</a> and the herdmen <a href="../../dict/hebrew/h7462.html" class="strongs-link" title="H7462">[H7462]</a> of Lot’s <a href="../../dict/hebrew/h3876.html" class="strongs-link" title="H3876">[H3876]</a> cattle <a href="../../dict/hebrew/h4735.html" class="strongs-link" title="H4735">[H4735]</a>: and the Canaanite <a href="../../dict/hebrew/h3669.html" class="strongs-link" title="H3669">[H3669]</a> and the Perizzite <a href="../../dict/hebrew/h6522.html" class="strongs-link" title="H6522">[H6522]</a> dwelled <a href="../../dict/hebrew/h3427.html" class="strongs-link" title="H3427">[H3427]</a> then in the land <a href="../../dict/hebrew/h0776.html" class="strongs-link" title="H0776">[H0776]</a>.
     </p>
+    <div class="verse-note" id="note-verse-7"></div>
     <p class="verse" id="verse-8">
       <span class="verse-num">8</span>
+      <button class="note-btn" onclick="openNoteModal('Gen.13.8')" title="Add note">&#9998;</button>
       And Abram <a href="../../dict/hebrew/h0087.html" class="strongs-link" title="H0087">[H0087]</a> said <a href="../../dict/hebrew/h0559.html" class="strongs-link" title="H0559">[H0559]</a> unto Lot <a href="../../dict/hebrew/h3876.html" class="strongs-link" title="H3876">[H3876]</a>, Let there be <a href="../../dict/hebrew/h1961.html" class="strongs-link" title="H1961">[H1961]</a> no <a href="../../dict/hebrew/h0408.html" class="strongs-link" title="H0408">[H0408]</a> strife <a href="../../dict/hebrew/h4808.html" class="strongs-link" title="H4808">[H4808]</a>, I pray thee, between me and thee, and between my herdmen <a href="../../dict/hebrew/h7462.html" class="strongs-link" title="H7462">[H7462]</a> and thy herdmen <a href="../../dict/hebrew/h7462.html" class="strongs-link" title="H7462">[H7462]</a>; for we <a href="../../dict/hebrew/h0582.html" class="strongs-link" title="H0582">[H0582]</a> <em class="added">be</em> brethren <a href="../../dict/hebrew/h0251.html" class="strongs-link" title="H0251">[H0251]</a>.
     </p>
+    <div class="verse-note" id="note-verse-8"></div>
     <p class="verse" id="verse-9">
       <span class="verse-num">9</span>
+      <button class="note-btn" onclick="openNoteModal('Gen.13.9')" title="Add note">&#9998;</button>
       <em class="added">Is</em> not the whole land <a href="../../dict/hebrew/h0776.html" class="strongs-link" title="H0776">[H0776]</a> before thee <a href="../../dict/hebrew/h6440.html" class="strongs-link" title="H6440">[H6440]</a>? separate thyself <a href="../../dict/hebrew/h6504.html" class="strongs-link" title="H6504">[H6504]</a>, I pray thee, from me: if <em class="added">thou wilt take</em> the left hand <a href="../../dict/hebrew/h8040.html" class="strongs-link" title="H8040">[H8040]</a>, then I will go to the right <a href="../../dict/hebrew/h3231.html" class="strongs-link" title="H3231">[H3231]</a>; or if <em class="added">thou depart</em> to the right hand <a href="../../dict/hebrew/h3225.html" class="strongs-link" title="H3225">[H3225]</a>, then I will go to the left <a href="../../dict/hebrew/h8041.html" class="strongs-link" title="H8041">[H8041]</a>.
     </p>
+    <div class="verse-note" id="note-verse-9"></div>
     <p class="verse" id="verse-10">
       <span class="verse-num">10</span>
+      <button class="note-btn" onclick="openNoteModal('Gen.13.10')" title="Add note">&#9998;</button>
       And Lot <a href="../../dict/hebrew/h3876.html" class="strongs-link" title="H3876">[H3876]</a> lifted up <a href="../../dict/hebrew/h5375.html" class="strongs-link" title="H5375">[H5375]</a> his eyes <a href="../../dict/hebrew/h5869.html" class="strongs-link" title="H5869">[H5869]</a>, and beheld <a href="../../dict/hebrew/h7200.html" class="strongs-link" title="H7200">[H7200]</a> all the plain <a href="../../dict/hebrew/h3603.html" class="strongs-link" title="H3603">[H3603]</a> of Jordan <a href="../../dict/hebrew/h3383.html" class="strongs-link" title="H3383">[H3383]</a>, that it <em class="added">was</em> well watered <a href="../../dict/hebrew/h4945.html" class="strongs-link" title="H4945">[H4945]</a> every where, before <a href="../../dict/hebrew/h6440.html" class="strongs-link" title="H6440">[H6440]</a> the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> destroyed <a href="../../dict/hebrew/h7843.html" class="strongs-link" title="H7843">[H7843]</a> Sodom <a href="../../dict/hebrew/h5467.html" class="strongs-link" title="H5467">[H5467]</a> and Gomorrah <a href="../../dict/hebrew/h6017.html" class="strongs-link" title="H6017">[H6017]</a>, <em class="added">even</em> as the garden <a href="../../dict/hebrew/h1588.html" class="strongs-link" title="H1588">[H1588]</a> of the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>, like the land <a href="../../dict/hebrew/h0776.html" class="strongs-link" title="H0776">[H0776]</a> of Egypt <a href="../../dict/hebrew/h4714.html" class="strongs-link" title="H4714">[H4714]</a>, as thou comest <a href="../../dict/hebrew/h0935.html" class="strongs-link" title="H0935">[H0935]</a> unto Zoar <a href="../../dict/hebrew/h6820.html" class="strongs-link" title="H6820">[H6820]</a>.
     </p>
+    <div class="verse-note" id="note-verse-10"></div>
     <p class="verse" id="verse-11">
       <span class="verse-num">11</span>
+      <button class="note-btn" onclick="openNoteModal('Gen.13.11')" title="Add note">&#9998;</button>
       Then Lot <a href="../../dict/hebrew/h3876.html" class="strongs-link" title="H3876">[H3876]</a> chose <a href="../../dict/hebrew/h0977.html" class="strongs-link" title="H0977">[H0977]</a> him all the plain <a href="../../dict/hebrew/h3603.html" class="strongs-link" title="H3603">[H3603]</a> of Jordan <a href="../../dict/hebrew/h3383.html" class="strongs-link" title="H3383">[H3383]</a>; and Lot <a href="../../dict/hebrew/h3876.html" class="strongs-link" title="H3876">[H3876]</a> journeyed <a href="../../dict/hebrew/h5265.html" class="strongs-link" title="H5265">[H5265]</a> east <a href="../../dict/hebrew/h6924.html" class="strongs-link" title="H6924">[H6924]</a>: and they separated themselves <a href="../../dict/hebrew/h6504.html" class="strongs-link" title="H6504">[H6504]</a> the one <a href="../../dict/hebrew/h0376.html" class="strongs-link" title="H0376">[H0376]</a> from the other <a href="../../dict/hebrew/h0251.html" class="strongs-link" title="H0251">[H0251]</a>.
     </p>
+    <div class="verse-note" id="note-verse-11"></div>
     <p class="verse" id="verse-12">
       <span class="verse-num">12</span>
+      <button class="note-btn" onclick="openNoteModal('Gen.13.12')" title="Add note">&#9998;</button>
       Abram <a href="../../dict/hebrew/h0087.html" class="strongs-link" title="H0087">[H0087]</a> dwelled <a href="../../dict/hebrew/h3427.html" class="strongs-link" title="H3427">[H3427]</a> in the land <a href="../../dict/hebrew/h0776.html" class="strongs-link" title="H0776">[H0776]</a> of Canaan <a href="../../dict/hebrew/h3667.html" class="strongs-link" title="H3667">[H3667]</a>, and Lot <a href="../../dict/hebrew/h3876.html" class="strongs-link" title="H3876">[H3876]</a> dwelled <a href="../../dict/hebrew/h3427.html" class="strongs-link" title="H3427">[H3427]</a> in the cities <a href="../../dict/hebrew/h5892.html" class="strongs-link" title="H5892">[H5892]</a> of the plain <a href="../../dict/hebrew/h3603.html" class="strongs-link" title="H3603">[H3603]</a>, and pitched <em class="added">his</em> tent <a href="../../dict/hebrew/h0167.html" class="strongs-link" title="H0167">[H0167]</a> toward <a href="../../dict/hebrew/h5704.html" class="strongs-link" title="H5704">[H5704]</a> Sodom <a href="../../dict/hebrew/h5467.html" class="strongs-link" title="H5467">[H5467]</a>.
     </p>
+    <div class="verse-note" id="note-verse-12"></div>
     <p class="verse" id="verse-13">
       <span class="verse-num">13</span>
+      <button class="note-btn" onclick="openNoteModal('Gen.13.13')" title="Add note">&#9998;</button>
       But the men <a href="../../dict/hebrew/h0582.html" class="strongs-link" title="H0582">[H0582]</a> of Sodom <a href="../../dict/hebrew/h5467.html" class="strongs-link" title="H5467">[H5467]</a> <em class="added">were</em> wicked <a href="../../dict/hebrew/h7451.html" class="strongs-link" title="H7451">[H7451]</a> and sinners <a href="../../dict/hebrew/h2400.html" class="strongs-link" title="H2400">[H2400]</a> before the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> exceedingly <a href="../../dict/hebrew/h3966.html" class="strongs-link" title="H3966">[H3966]</a>.
     </p>
+    <div class="verse-note" id="note-verse-13"></div>
     <p class="verse" id="verse-14">
       <span class="verse-num">14</span>
+      <button class="note-btn" onclick="openNoteModal('Gen.13.14')" title="Add note">&#9998;</button>
       And the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> said <a href="../../dict/hebrew/h0559.html" class="strongs-link" title="H0559">[H0559]</a> unto Abram <a href="../../dict/hebrew/h0087.html" class="strongs-link" title="H0087">[H0087]</a>, after <a href="../../dict/hebrew/h0310.html" class="strongs-link" title="H0310">[H0310]</a> that Lot <a href="../../dict/hebrew/h3876.html" class="strongs-link" title="H3876">[H3876]</a> was separated <a href="../../dict/hebrew/h6504.html" class="strongs-link" title="H6504">[H6504]</a> from him, Lift up <a href="../../dict/hebrew/h5375.html" class="strongs-link" title="H5375">[H5375]</a> now thine eyes <a href="../../dict/hebrew/h5869.html" class="strongs-link" title="H5869">[H5869]</a>, and look <a href="../../dict/hebrew/h7200.html" class="strongs-link" title="H7200">[H7200]</a> from the place <a href="../../dict/hebrew/h4725.html" class="strongs-link" title="H4725">[H4725]</a> where thou art northward <a href="../../dict/hebrew/h6828.html" class="strongs-link" title="H6828">[H6828]</a>, and southward <a href="../../dict/hebrew/h5045.html" class="strongs-link" title="H5045">[H5045]</a>, and eastward <a href="../../dict/hebrew/h6924.html" class="strongs-link" title="H6924">[H6924]</a>, and westward <a href="../../dict/hebrew/h3220.html" class="strongs-link" title="H3220">[H3220]</a>:
     </p>
+    <div class="verse-note" id="note-verse-14"></div>
     <p class="verse" id="verse-15">
       <span class="verse-num">15</span>
+      <button class="note-btn" onclick="openNoteModal('Gen.13.15')" title="Add note">&#9998;</button>
       For all the land <a href="../../dict/hebrew/h0776.html" class="strongs-link" title="H0776">[H0776]</a> which thou seest <a href="../../dict/hebrew/h7200.html" class="strongs-link" title="H7200">[H7200]</a>, to thee will I give it <a href="../../dict/hebrew/h5414.html" class="strongs-link" title="H5414">[H5414]</a>, and to thy seed <a href="../../dict/hebrew/h2233.html" class="strongs-link" title="H2233">[H2233]</a> for <a href="../../dict/hebrew/h5704.html" class="strongs-link" title="H5704">[H5704]</a> ever <a href="../../dict/hebrew/h5769.html" class="strongs-link" title="H5769">[H5769]</a>.
     </p>
+    <div class="verse-note" id="note-verse-15"></div>
     <p class="verse" id="verse-16">
       <span class="verse-num">16</span>
+      <button class="note-btn" onclick="openNoteModal('Gen.13.16')" title="Add note">&#9998;</button>
       And I will make <a href="../../dict/hebrew/h7760.html" class="strongs-link" title="H7760">[H7760]</a> thy seed <a href="../../dict/hebrew/h2233.html" class="strongs-link" title="H2233">[H2233]</a> as the dust <a href="../../dict/hebrew/h6083.html" class="strongs-link" title="H6083">[H6083]</a> of the earth <a href="../../dict/hebrew/h0776.html" class="strongs-link" title="H0776">[H0776]</a>: so that <a href="../../dict/hebrew/h0834.html" class="strongs-link" title="H0834">[H0834]</a> if a man <a href="../../dict/hebrew/h0376.html" class="strongs-link" title="H0376">[H0376]</a> can <a href="../../dict/hebrew/h3201.html" class="strongs-link" title="H3201">[H3201]</a> number <a href="../../dict/hebrew/h4487.html" class="strongs-link" title="H4487">[H4487]</a> the dust <a href="../../dict/hebrew/h6083.html" class="strongs-link" title="H6083">[H6083]</a> of the earth <a href="../../dict/hebrew/h0776.html" class="strongs-link" title="H0776">[H0776]</a>, <em class="added">then</em> shall thy seed <a href="../../dict/hebrew/h2233.html" class="strongs-link" title="H2233">[H2233]</a> also be numbered <a href="../../dict/hebrew/h4487.html" class="strongs-link" title="H4487">[H4487]</a>.
     </p>
+    <div class="verse-note" id="note-verse-16"></div>
     <p class="verse" id="verse-17">
       <span class="verse-num">17</span>
+      <button class="note-btn" onclick="openNoteModal('Gen.13.17')" title="Add note">&#9998;</button>
       Arise <a href="../../dict/hebrew/h6965.html" class="strongs-link" title="H6965">[H6965]</a>, walk <a href="../../dict/hebrew/h1980.html" class="strongs-link" title="H1980">[H1980]</a> through the land <a href="../../dict/hebrew/h0776.html" class="strongs-link" title="H0776">[H0776]</a> in the length <a href="../../dict/hebrew/h0753.html" class="strongs-link" title="H0753">[H0753]</a> of it and in the breadth <a href="../../dict/hebrew/h7341.html" class="strongs-link" title="H7341">[H7341]</a> of it; for I will give <a href="../../dict/hebrew/h5414.html" class="strongs-link" title="H5414">[H5414]</a>  it unto thee.
     </p>
+    <div class="verse-note" id="note-verse-17"></div>
     <p class="verse" id="verse-18">
       <span class="verse-num">18</span>
+      <button class="note-btn" onclick="openNoteModal('Gen.13.18')" title="Add note">&#9998;</button>
       Then Abram <a href="../../dict/hebrew/h0087.html" class="strongs-link" title="H0087">[H0087]</a>  removed <em class="added">his</em> tent <a href="../../dict/hebrew/h0167.html" class="strongs-link" title="H0167">[H0167]</a>, and came <a href="../../dict/hebrew/h0935.html" class="strongs-link" title="H0935">[H0935]</a> and dwelt <a href="../../dict/hebrew/h3427.html" class="strongs-link" title="H3427">[H3427]</a> in the plain <a href="../../dict/hebrew/h0436.html" class="strongs-link" title="H0436">[H0436]</a> of Mamre <a href="../../dict/hebrew/h4471.html" class="strongs-link" title="H4471">[H4471]</a>, which <em class="added">is</em> in Hebron <a href="../../dict/hebrew/h2275.html" class="strongs-link" title="H2275">[H2275]</a>, and built <a href="../../dict/hebrew/h1129.html" class="strongs-link" title="H1129">[H1129]</a> there an altar <a href="../../dict/hebrew/h4196.html" class="strongs-link" title="H4196">[H4196]</a> unto the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>.
     </p>
+    <div class="verse-note" id="note-verse-18"></div>
   </main>
 
   <footer class="chapter-footer">

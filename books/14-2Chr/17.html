@@ -19,6 +19,7 @@
       <a href="../15-Ezra/1.html" class="btn" title="Ezra">B&#9654;</a>
       <button class="btn" id="font-decrease" onclick="decreaseFontSize()">a&#8595;</button>
 	  <button class="btn" id="font-increase" onclick="increaseFontSize()">A&#8593;</button>
+      <button class="btn sync-btn" id="sync-btn" onclick="syncToKindle()" title="Sync to Kindle">&#9889; K</button>
       <span id="unbaked-indicator"></span>
     </div>
   </nav>
@@ -27,80 +28,118 @@
 	
     <p class="verse" id="verse-1">
       <span class="verse-num">1</span>
+      <button class="note-btn" onclick="openNoteModal('2Chr.17.1')" title="Add note">&#9998;</button>
       And Jehoshaphat <a href="../../dict/hebrew/h3092.html" class="strongs-link" title="H3092">[H3092]</a> his son <a href="../../dict/hebrew/h1121.html" class="strongs-link" title="H1121">[H1121]</a> reigned <a href="../../dict/hebrew/h4427.html" class="strongs-link" title="H4427">[H4427]</a> in his stead, and strengthened <a href="../../dict/hebrew/h2388.html" class="strongs-link" title="H2388">[H2388]</a> himself against Israel <a href="../../dict/hebrew/h3478.html" class="strongs-link" title="H3478">[H3478]</a>.
     </p>
+    <div class="verse-note" id="note-verse-1"></div>
     <p class="verse" id="verse-2">
       <span class="verse-num">2</span>
+      <button class="note-btn" onclick="openNoteModal('2Chr.17.2')" title="Add note">&#9998;</button>
       And he placed <a href="../../dict/hebrew/h5414.html" class="strongs-link" title="H5414">[H5414]</a> forces <a href="../../dict/hebrew/h2428.html" class="strongs-link" title="H2428">[H2428]</a> in all the fenced <a href="../../dict/hebrew/h1219.html" class="strongs-link" title="H1219">[H1219]</a> cities <a href="../../dict/hebrew/h5892.html" class="strongs-link" title="H5892">[H5892]</a> of Judah <a href="../../dict/hebrew/h3063.html" class="strongs-link" title="H3063">[H3063]</a>, and set <a href="../../dict/hebrew/h5414.html" class="strongs-link" title="H5414">[H5414]</a> garrisons <a href="../../dict/hebrew/h5333.html" class="strongs-link" title="H5333">[H5333]</a> in the land <a href="../../dict/hebrew/h0776.html" class="strongs-link" title="H0776">[H0776]</a> of Judah <a href="../../dict/hebrew/h3063.html" class="strongs-link" title="H3063">[H3063]</a>, and in the cities <a href="../../dict/hebrew/h5892.html" class="strongs-link" title="H5892">[H5892]</a> of Ephraim <a href="../../dict/hebrew/h0669.html" class="strongs-link" title="H0669">[H0669]</a>, which Asa <a href="../../dict/hebrew/h0609.html" class="strongs-link" title="H0609">[H0609]</a> his father <a href="../../dict/hebrew/h0001.html" class="strongs-link" title="H0001">[H0001]</a> had taken <a href="../../dict/hebrew/h3920.html" class="strongs-link" title="H3920">[H3920]</a>.
     </p>
+    <div class="verse-note" id="note-verse-2"></div>
     <p class="verse" id="verse-3">
       <span class="verse-num">3</span>
+      <button class="note-btn" onclick="openNoteModal('2Chr.17.3')" title="Add note">&#9998;</button>
       And the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> was with Jehoshaphat <a href="../../dict/hebrew/h3092.html" class="strongs-link" title="H3092">[H3092]</a>, because he walked <a href="../../dict/hebrew/h1980.html" class="strongs-link" title="H1980">[H1980]</a> in the first <a href="../../dict/hebrew/h7223.html" class="strongs-link" title="H7223">[H7223]</a> ways <a href="../../dict/hebrew/h1870.html" class="strongs-link" title="H1870">[H1870]</a> of his father <a href="../../dict/hebrew/h0001.html" class="strongs-link" title="H0001">[H0001]</a> David <a href="../../dict/hebrew/h1732.html" class="strongs-link" title="H1732">[H1732]</a>, and sought <a href="../../dict/hebrew/h1875.html" class="strongs-link" title="H1875">[H1875]</a> not unto Baalim <a href="../../dict/hebrew/h1168.html" class="strongs-link" title="H1168">[H1168]</a>;
     </p>
+    <div class="verse-note" id="note-verse-3"></div>
     <p class="verse" id="verse-4">
       <span class="verse-num">4</span>
+      <button class="note-btn" onclick="openNoteModal('2Chr.17.4')" title="Add note">&#9998;</button>
       But sought <a href="../../dict/hebrew/h1875.html" class="strongs-link" title="H1875">[H1875]</a>  to the <em class="added">Lord</em> God <a href="../../dict/hebrew/h0430.html" class="strongs-link" title="H0430">[H0430]</a> of his father <a href="../../dict/hebrew/h0001.html" class="strongs-link" title="H0001">[H0001]</a>, and walked <a href="../../dict/hebrew/h1980.html" class="strongs-link" title="H1980">[H1980]</a> in his commandments <a href="../../dict/hebrew/h4687.html" class="strongs-link" title="H4687">[H4687]</a>, and not after the doings <a href="../../dict/hebrew/h4639.html" class="strongs-link" title="H4639">[H4639]</a> of Israel <a href="../../dict/hebrew/h3478.html" class="strongs-link" title="H3478">[H3478]</a>.
     </p>
+    <div class="verse-note" id="note-verse-4"></div>
     <p class="verse" id="verse-5">
       <span class="verse-num">5</span>
+      <button class="note-btn" onclick="openNoteModal('2Chr.17.5')" title="Add note">&#9998;</button>
       Therefore the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> stablished <a href="../../dict/hebrew/h3559.html" class="strongs-link" title="H3559">[H3559]</a> the kingdom <a href="../../dict/hebrew/h4467.html" class="strongs-link" title="H4467">[H4467]</a> in his hand <a href="../../dict/hebrew/h3027.html" class="strongs-link" title="H3027">[H3027]</a>; and all Judah <a href="../../dict/hebrew/h3063.html" class="strongs-link" title="H3063">[H3063]</a> brought <a href="../../dict/hebrew/h5414.html" class="strongs-link" title="H5414">[H5414]</a> to Jehoshaphat <a href="../../dict/hebrew/h3092.html" class="strongs-link" title="H3092">[H3092]</a> presents <a href="../../dict/hebrew/h4503.html" class="strongs-link" title="H4503">[H4503]</a>; and he had riches <a href="../../dict/hebrew/h6239.html" class="strongs-link" title="H6239">[H6239]</a> and honour <a href="../../dict/hebrew/h3519.html" class="strongs-link" title="H3519">[H3519]</a> in abundance <a href="../../dict/hebrew/h7230.html" class="strongs-link" title="H7230">[H7230]</a>.
     </p>
+    <div class="verse-note" id="note-verse-5"></div>
     <p class="verse" id="verse-6">
       <span class="verse-num">6</span>
+      <button class="note-btn" onclick="openNoteModal('2Chr.17.6')" title="Add note">&#9998;</button>
       And his heart <a href="../../dict/hebrew/h3820.html" class="strongs-link" title="H3820">[H3820]</a> was lifted up <a href="../../dict/hebrew/h1361.html" class="strongs-link" title="H1361">[H1361]</a> in the ways <a href="../../dict/hebrew/h1870.html" class="strongs-link" title="H1870">[H1870]</a> of the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>: moreover he took away <a href="../../dict/hebrew/h5493.html" class="strongs-link" title="H5493">[H5493]</a> the high places <a href="../../dict/hebrew/h1116.html" class="strongs-link" title="H1116">[H1116]</a> and groves <a href="../../dict/hebrew/h0842.html" class="strongs-link" title="H0842">[H0842]</a> out of Judah <a href="../../dict/hebrew/h3063.html" class="strongs-link" title="H3063">[H3063]</a>.
     </p>
+    <div class="verse-note" id="note-verse-6"></div>
     <p class="verse" id="verse-7">
       <span class="verse-num">7</span>
+      <button class="note-btn" onclick="openNoteModal('2Chr.17.7')" title="Add note">&#9998;</button>
       Also in the third <a href="../../dict/hebrew/h7969.html" class="strongs-link" title="H7969">[H7969]</a> year <a href="../../dict/hebrew/h8141.html" class="strongs-link" title="H8141">[H8141]</a> of his reign <a href="../../dict/hebrew/h4427.html" class="strongs-link" title="H4427">[H4427]</a> he sent <a href="../../dict/hebrew/h7971.html" class="strongs-link" title="H7971">[H7971]</a> to his princes <a href="../../dict/hebrew/h8269.html" class="strongs-link" title="H8269">[H8269]</a>, <em class="added">even</em> to Ben–hail <a href="../../dict/hebrew/h1134.html" class="strongs-link" title="H1134">[H1134]</a>, and to Obadiah <a href="../../dict/hebrew/h5662.html" class="strongs-link" title="H5662">[H5662]</a>, and to Zechariah <a href="../../dict/hebrew/h2148.html" class="strongs-link" title="H2148">[H2148]</a>, and to Nethaneel <a href="../../dict/hebrew/h5417.html" class="strongs-link" title="H5417">[H5417]</a>, and to Michaiah <a href="../../dict/hebrew/h4322.html" class="strongs-link" title="H4322">[H4322]</a>, to teach <a href="../../dict/hebrew/h3925.html" class="strongs-link" title="H3925">[H3925]</a> in the cities <a href="../../dict/hebrew/h5892.html" class="strongs-link" title="H5892">[H5892]</a> of Judah <a href="../../dict/hebrew/h3063.html" class="strongs-link" title="H3063">[H3063]</a>.
     </p>
+    <div class="verse-note" id="note-verse-7"></div>
     <p class="verse" id="verse-8">
       <span class="verse-num">8</span>
+      <button class="note-btn" onclick="openNoteModal('2Chr.17.8')" title="Add note">&#9998;</button>
       And with them <em class="added">he sent</em> Levites <a href="../../dict/hebrew/h3881.html" class="strongs-link" title="H3881">[H3881]</a>, <em class="added">even</em> Shemaiah <a href="../../dict/hebrew/h8098.html" class="strongs-link" title="H8098">[H8098]</a>, and Nethaniah <a href="../../dict/hebrew/h5418.html" class="strongs-link" title="H5418">[H5418]</a>, and Zebadiah <a href="../../dict/hebrew/h2069.html" class="strongs-link" title="H2069">[H2069]</a>, and Asahel <a href="../../dict/hebrew/h6214.html" class="strongs-link" title="H6214">[H6214]</a>, and Shemiramoth <a href="../../dict/hebrew/h8070.html" class="strongs-link" title="H8070">[H8070]</a>, and Jehonathan <a href="../../dict/hebrew/h3083.html" class="strongs-link" title="H3083">[H3083]</a>, and Adonijah <a href="../../dict/hebrew/h0138.html" class="strongs-link" title="H0138">[H0138]</a>, and Tobijah <a href="../../dict/hebrew/h2900.html" class="strongs-link" title="H2900">[H2900]</a>, and Tob–adonijah <a href="../../dict/hebrew/h2899.html" class="strongs-link" title="H2899">[H2899]</a>, Levites <a href="../../dict/hebrew/h3881.html" class="strongs-link" title="H3881">[H3881]</a>; and with them Elishama <a href="../../dict/hebrew/h0476.html" class="strongs-link" title="H0476">[H0476]</a> and Jehoram <a href="../../dict/hebrew/h3088.html" class="strongs-link" title="H3088">[H3088]</a>, priests <a href="../../dict/hebrew/h3548.html" class="strongs-link" title="H3548">[H3548]</a>.
     </p>
+    <div class="verse-note" id="note-verse-8"></div>
     <p class="verse" id="verse-9">
       <span class="verse-num">9</span>
+      <button class="note-btn" onclick="openNoteModal('2Chr.17.9')" title="Add note">&#9998;</button>
       And they taught <a href="../../dict/hebrew/h3925.html" class="strongs-link" title="H3925">[H3925]</a> in Judah <a href="../../dict/hebrew/h3063.html" class="strongs-link" title="H3063">[H3063]</a>, and <em class="added">had</em> the book <a href="../../dict/hebrew/h5612.html" class="strongs-link" title="H5612">[H5612]</a> of the law <a href="../../dict/hebrew/h8451.html" class="strongs-link" title="H8451">[H8451]</a> of the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> with them, and went about <a href="../../dict/hebrew/h5437.html" class="strongs-link" title="H5437">[H5437]</a> throughout all the cities <a href="../../dict/hebrew/h5892.html" class="strongs-link" title="H5892">[H5892]</a> of Judah <a href="../../dict/hebrew/h3063.html" class="strongs-link" title="H3063">[H3063]</a>, and taught <a href="../../dict/hebrew/h3925.html" class="strongs-link" title="H3925">[H3925]</a> the people <a href="../../dict/hebrew/h5971.html" class="strongs-link" title="H5971">[H5971]</a>.
     </p>
+    <div class="verse-note" id="note-verse-9"></div>
     <p class="verse" id="verse-10">
       <span class="verse-num">10</span>
+      <button class="note-btn" onclick="openNoteModal('2Chr.17.10')" title="Add note">&#9998;</button>
       And the fear <a href="../../dict/hebrew/h6343.html" class="strongs-link" title="H6343">[H6343]</a> of the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> fell upon all the kingdoms <a href="../../dict/hebrew/h4467.html" class="strongs-link" title="H4467">[H4467]</a> of the lands <a href="../../dict/hebrew/h0776.html" class="strongs-link" title="H0776">[H0776]</a>  that <em class="added">were</em> round about <a href="../../dict/hebrew/h5439.html" class="strongs-link" title="H5439">[H5439]</a> Judah <a href="../../dict/hebrew/h3063.html" class="strongs-link" title="H3063">[H3063]</a>, so that they made no war <a href="../../dict/hebrew/h3898.html" class="strongs-link" title="H3898">[H3898]</a> against Jehoshaphat <a href="../../dict/hebrew/h3092.html" class="strongs-link" title="H3092">[H3092]</a>.
     </p>
+    <div class="verse-note" id="note-verse-10"></div>
     <p class="verse" id="verse-11">
       <span class="verse-num">11</span>
+      <button class="note-btn" onclick="openNoteModal('2Chr.17.11')" title="Add note">&#9998;</button>
       Also <em class="added">some</em> of the Philistines <a href="../../dict/hebrew/h6430.html" class="strongs-link" title="H6430">[H6430]</a> brought <a href="../../dict/hebrew/h0935.html" class="strongs-link" title="H0935">[H0935]</a> Jehoshaphat <a href="../../dict/hebrew/h3092.html" class="strongs-link" title="H3092">[H3092]</a> presents <a href="../../dict/hebrew/h4503.html" class="strongs-link" title="H4503">[H4503]</a>, and tribute <a href="../../dict/hebrew/h4853.html" class="strongs-link" title="H4853">[H4853]</a> silver <a href="../../dict/hebrew/h3701.html" class="strongs-link" title="H3701">[H3701]</a>; and the Arabians <a href="../../dict/hebrew/h6163.html" class="strongs-link" title="H6163">[H6163]</a> brought <a href="../../dict/hebrew/h0935.html" class="strongs-link" title="H0935">[H0935]</a> him flocks <a href="../../dict/hebrew/h6629.html" class="strongs-link" title="H6629">[H6629]</a>, seven <a href="../../dict/hebrew/h7651.html" class="strongs-link" title="H7651">[H7651]</a> thousand <a href="../../dict/hebrew/h0505.html" class="strongs-link" title="H0505">[H0505]</a> and seven <a href="../../dict/hebrew/h7651.html" class="strongs-link" title="H7651">[H7651]</a> hundred <a href="../../dict/hebrew/h3967.html" class="strongs-link" title="H3967">[H3967]</a> rams <a href="../../dict/hebrew/h0352.html" class="strongs-link" title="H0352">[H0352]</a>, and seven <a href="../../dict/hebrew/h7651.html" class="strongs-link" title="H7651">[H7651]</a> thousand <a href="../../dict/hebrew/h0505.html" class="strongs-link" title="H0505">[H0505]</a> and seven <a href="../../dict/hebrew/h7651.html" class="strongs-link" title="H7651">[H7651]</a> hundred <a href="../../dict/hebrew/h3967.html" class="strongs-link" title="H3967">[H3967]</a> he goats <a href="../../dict/hebrew/h8495.html" class="strongs-link" title="H8495">[H8495]</a>.
     </p>
+    <div class="verse-note" id="note-verse-11"></div>
     <p class="verse" id="verse-12">
       <span class="verse-num">12</span>
+      <button class="note-btn" onclick="openNoteModal('2Chr.17.12')" title="Add note">&#9998;</button>
       And Jehoshaphat <a href="../../dict/hebrew/h3092.html" class="strongs-link" title="H3092">[H3092]</a> waxed <a href="../../dict/hebrew/h1980.html" class="strongs-link" title="H1980">[H1980]</a> great <a href="../../dict/hebrew/h1432.html" class="strongs-link" title="H1432">[H1432]</a> exceedingly <a href="../../dict/hebrew/h4605.html" class="strongs-link" title="H4605">[H4605]</a>; and he built <a href="../../dict/hebrew/h1129.html" class="strongs-link" title="H1129">[H1129]</a> in Judah <a href="../../dict/hebrew/h3063.html" class="strongs-link" title="H3063">[H3063]</a> castles <a href="../../dict/hebrew/h1003.html" class="strongs-link" title="H1003">[H1003]</a>, and cities <a href="../../dict/hebrew/h5892.html" class="strongs-link" title="H5892">[H5892]</a> of store <a href="../../dict/hebrew/h4543.html" class="strongs-link" title="H4543">[H4543]</a>.
     </p>
+    <div class="verse-note" id="note-verse-12"></div>
     <p class="verse" id="verse-13">
       <span class="verse-num">13</span>
+      <button class="note-btn" onclick="openNoteModal('2Chr.17.13')" title="Add note">&#9998;</button>
       And he had much <a href="../../dict/hebrew/h7227.html" class="strongs-link" title="H7227">[H7227]</a> business <a href="../../dict/hebrew/h4399.html" class="strongs-link" title="H4399">[H4399]</a> in the cities <a href="../../dict/hebrew/h5892.html" class="strongs-link" title="H5892">[H5892]</a> of Judah <a href="../../dict/hebrew/h3063.html" class="strongs-link" title="H3063">[H3063]</a>: and the men <a href="../../dict/hebrew/h0582.html" class="strongs-link" title="H0582">[H0582]</a> of war <a href="../../dict/hebrew/h4421.html" class="strongs-link" title="H4421">[H4421]</a>, mighty men <a href="../../dict/hebrew/h1368.html" class="strongs-link" title="H1368">[H1368]</a> of valour <a href="../../dict/hebrew/h2428.html" class="strongs-link" title="H2428">[H2428]</a>, <em class="added">were</em> in Jerusalem <a href="../../dict/hebrew/h3389.html" class="strongs-link" title="H3389">[H3389]</a>.
     </p>
+    <div class="verse-note" id="note-verse-13"></div>
     <p class="verse" id="verse-14">
       <span class="verse-num">14</span>
+      <button class="note-btn" onclick="openNoteModal('2Chr.17.14')" title="Add note">&#9998;</button>
       And these <em class="added">are</em> the numbers <a href="../../dict/hebrew/h6486.html" class="strongs-link" title="H6486">[H6486]</a> of them according to the house <a href="../../dict/hebrew/h1004.html" class="strongs-link" title="H1004">[H1004]</a> of their fathers <a href="../../dict/hebrew/h0001.html" class="strongs-link" title="H0001">[H0001]</a>: Of Judah <a href="../../dict/hebrew/h3063.html" class="strongs-link" title="H3063">[H3063]</a>, the captains <a href="../../dict/hebrew/h8269.html" class="strongs-link" title="H8269">[H8269]</a> of thousands <a href="../../dict/hebrew/h0505.html" class="strongs-link" title="H0505">[H0505]</a>; Adnah <a href="../../dict/hebrew/h5734.html" class="strongs-link" title="H5734">[H5734]</a> the chief <a href="../../dict/hebrew/h8269.html" class="strongs-link" title="H8269">[H8269]</a>, and with him mighty men <a href="../../dict/hebrew/h1368.html" class="strongs-link" title="H1368">[H1368]</a> of valour <a href="../../dict/hebrew/h2428.html" class="strongs-link" title="H2428">[H2428]</a> three <a href="../../dict/hebrew/h7969.html" class="strongs-link" title="H7969">[H7969]</a> hundred <a href="../../dict/hebrew/h3967.html" class="strongs-link" title="H3967">[H3967]</a> thousand <a href="../../dict/hebrew/h0505.html" class="strongs-link" title="H0505">[H0505]</a>.
     </p>
+    <div class="verse-note" id="note-verse-14"></div>
     <p class="verse" id="verse-15">
       <span class="verse-num">15</span>
+      <button class="note-btn" onclick="openNoteModal('2Chr.17.15')" title="Add note">&#9998;</button>
       And next <a href="../../dict/hebrew/h3027.html" class="strongs-link" title="H3027">[H3027]</a>  to him <em class="added">was</em> Jehohanan <a href="../../dict/hebrew/h3076.html" class="strongs-link" title="H3076">[H3076]</a> the captain <a href="../../dict/hebrew/h8269.html" class="strongs-link" title="H8269">[H8269]</a>, and with him two hundred <a href="../../dict/hebrew/h3967.html" class="strongs-link" title="H3967">[H3967]</a> and fourscore <a href="../../dict/hebrew/h8084.html" class="strongs-link" title="H8084">[H8084]</a> thousand <a href="../../dict/hebrew/h0505.html" class="strongs-link" title="H0505">[H0505]</a>.
     </p>
+    <div class="verse-note" id="note-verse-15"></div>
     <p class="verse" id="verse-16">
       <span class="verse-num">16</span>
+      <button class="note-btn" onclick="openNoteModal('2Chr.17.16')" title="Add note">&#9998;</button>
       And next <a href="../../dict/hebrew/h3027.html" class="strongs-link" title="H3027">[H3027]</a>  him <em class="added">was</em> Amasiah <a href="../../dict/hebrew/h6007.html" class="strongs-link" title="H6007">[H6007]</a> the son <a href="../../dict/hebrew/h1121.html" class="strongs-link" title="H1121">[H1121]</a> of Zichri <a href="../../dict/hebrew/h2147.html" class="strongs-link" title="H2147">[H2147]</a>, who willingly offered <a href="../../dict/hebrew/h5068.html" class="strongs-link" title="H5068">[H5068]</a> himself unto the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>; and with him two hundred <a href="../../dict/hebrew/h3967.html" class="strongs-link" title="H3967">[H3967]</a> thousand <a href="../../dict/hebrew/h0505.html" class="strongs-link" title="H0505">[H0505]</a> mighty men <a href="../../dict/hebrew/h1368.html" class="strongs-link" title="H1368">[H1368]</a> of valour <a href="../../dict/hebrew/h2428.html" class="strongs-link" title="H2428">[H2428]</a>.
     </p>
+    <div class="verse-note" id="note-verse-16"></div>
     <p class="verse" id="verse-17">
       <span class="verse-num">17</span>
+      <button class="note-btn" onclick="openNoteModal('2Chr.17.17')" title="Add note">&#9998;</button>
       And of Benjamin <a href="../../dict/hebrew/h1144.html" class="strongs-link" title="H1144">[H1144]</a>; Eliada <a href="../../dict/hebrew/h0450.html" class="strongs-link" title="H0450">[H0450]</a> a mighty man <a href="../../dict/hebrew/h1368.html" class="strongs-link" title="H1368">[H1368]</a> of valour <a href="../../dict/hebrew/h2428.html" class="strongs-link" title="H2428">[H2428]</a>, and with him armed men <a href="../../dict/hebrew/h5401.html" class="strongs-link" title="H5401">[H5401]</a> with bow <a href="../../dict/hebrew/h7198.html" class="strongs-link" title="H7198">[H7198]</a> and shield <a href="../../dict/hebrew/h4043.html" class="strongs-link" title="H4043">[H4043]</a> two hundred <a href="../../dict/hebrew/h3967.html" class="strongs-link" title="H3967">[H3967]</a> thousand <a href="../../dict/hebrew/h0505.html" class="strongs-link" title="H0505">[H0505]</a>.
     </p>
+    <div class="verse-note" id="note-verse-17"></div>
     <p class="verse" id="verse-18">
       <span class="verse-num">18</span>
+      <button class="note-btn" onclick="openNoteModal('2Chr.17.18')" title="Add note">&#9998;</button>
       And next <a href="../../dict/hebrew/h3027.html" class="strongs-link" title="H3027">[H3027]</a>  him <em class="added">was</em> Jehozabad <a href="../../dict/hebrew/h3075.html" class="strongs-link" title="H3075">[H3075]</a>, and with him an hundred <a href="../../dict/hebrew/h3967.html" class="strongs-link" title="H3967">[H3967]</a> and fourscore <a href="../../dict/hebrew/h8084.html" class="strongs-link" title="H8084">[H8084]</a> thousand <a href="../../dict/hebrew/h0505.html" class="strongs-link" title="H0505">[H0505]</a> ready prepared <a href="../../dict/hebrew/h2502.html" class="strongs-link" title="H2502">[H2502]</a> for the war <a href="../../dict/hebrew/h6635.html" class="strongs-link" title="H6635">[H6635]</a>.
     </p>
+    <div class="verse-note" id="note-verse-18"></div>
     <p class="verse" id="verse-19">
       <span class="verse-num">19</span>
+      <button class="note-btn" onclick="openNoteModal('2Chr.17.19')" title="Add note">&#9998;</button>
       These waited <a href="../../dict/hebrew/h8334.html" class="strongs-link" title="H8334">[H8334]</a> on the king <a href="../../dict/hebrew/h4428.html" class="strongs-link" title="H4428">[H4428]</a>, beside <em class="added">those</em> whom the king <a href="../../dict/hebrew/h4428.html" class="strongs-link" title="H4428">[H4428]</a> put <a href="../../dict/hebrew/h5414.html" class="strongs-link" title="H5414">[H5414]</a> in the fenced <a href="../../dict/hebrew/h4013.html" class="strongs-link" title="H4013">[H4013]</a> cities <a href="../../dict/hebrew/h5892.html" class="strongs-link" title="H5892">[H5892]</a> throughout all Judah <a href="../../dict/hebrew/h3063.html" class="strongs-link" title="H3063">[H3063]</a>.
     </p>
+    <div class="verse-note" id="note-verse-19"></div>
   </main>
 
   <footer class="chapter-footer">

@@ -594,3 +594,368 @@ body.font-xlarge .chapter-content { font-size: 26px; }
 .book-col-clear {
   clear: both;
 }
+
+/* ── Strong's Index Pages ──────────────────────────────────────── */
+
+.index-controls {
+  margin: 12px 0;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-gray);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.index-status {
+  color: #aaaaaa;
+  font-size: 0.9em;
+  margin-right: 10px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.index-perpage-label {
+  color: #888888;
+  font-size: 0.85em;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.index-nav {
+  margin: 10px 0;
+  min-height: 10px;
+}
+
+.btn-active {
+  background-color: #005f5f;
+  border-color: var(--link-blue);
+  color: #ffffff;
+}
+
+.dict-index-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+
+.dict-index-table th {
+  text-align: left;
+  padding: 8px 10px;
+  background-color: #111111;
+  color: var(--link-blue);
+  border-bottom: 2px solid var(--border-gray);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dict-index-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid #222222;
+  vertical-align: top;
+}
+
+.dict-index-table tr:hover td {
+  background-color: #1e1e1e;
+}
+
+.dict-index-link {
+  color: var(--link-blue);
+  text-decoration: none;
+  font-weight: bold;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.dict-index-link:hover {
+  text-decoration: underline;
+}
+
+.dict-index-orig {
+  font-size: 1.1em;
+  color: #ffffff;
+}
+
+.dict-index-xlit {
+  color: #aaaaaa;
+  font-style: italic;
+}
+
+.dict-index-def {
+  color: #cccccc;
+  max-width: 400px;
+}
+
+/* ── Notes System ──────────────────────────────────────────────── */
+
+/* Pencil button hidden by default — shown only on localhost via JS */
+.note-btn {
+  display: none;
+  vertical-align: super;
+  font-size: 0.65em;
+  line-height: 1;
+  margin: 0 3px 0 1px;
+  padding: 2px 4px;
+  color: #b8860b;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: Arial, Helvetica, sans-serif;
+  -webkit-appearance: none;
+}
+
+/* Shown only on localhost (JS adds is-localhost to body) */
+body.is-localhost .note-btn {
+  display: inline;
+}
+
+body.is-localhost .note-btn:hover {
+  color: #ffd700;
+}
+
+body.is-localhost .note-btn.has-note {
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.verse-note {
+  /* empty placeholder */
+}
+
+.verse-note-text {
+  margin: 4px 0 2px 20px;
+  padding: 8px 12px;
+  font-size: 0.9em;
+  line-height: 1.5;
+  color: #c5e1a5;
+  background-color: #1b2e00;
+  border-left: 3px solid #689f38;
+  border-radius: 0 4px 4px 0;
+  font-style: italic;
+}
+
+.verse-note-meta {
+  margin: 0 0 8px 20px;
+  padding: 0 12px 2px 12px;
+  font-size: 0.7em;
+  color: #666666;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.verse-note-link {
+  color: #81c784;
+  text-decoration: underline;
+}
+
+.verse-note-link:hover {
+  color: #a5d6a7;
+}
+
+.note-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5000;
+  background-color: rgba(0, 0, 0, 0.75);
+  overflow-y: auto;
+}
+
+.note-modal.is-open {
+  display: block;
+}
+
+.note-modal-box {
+  position: relative;
+  width: 90%;
+  max-width: 560px;
+  margin: 60px auto 40px auto;
+  padding: 20px;
+  background-color: #252525;
+  border: 1px solid #555555;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.note-modal-title {
+  font-size: 1.1em;
+  color: #ffd700;
+  margin: 0 0 12px 0;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.note-modal-verse {
+  margin: 0 0 14px 0;
+  padding: 10px 14px;
+  font-size: 0.9em;
+  line-height: 1.6;
+  color: #b0b0b0;
+  background-color: #1a1a1a;
+  border-left: 3px solid #555555;
+  border-radius: 0 6px 6px 0;
+  max-height: 120px;
+  overflow-y: auto;
+  font-style: italic;
+}
+
+.note-modal-hint {
+  font-size: 0.78em;
+  color: #888888;
+  margin: 0 0 8px 0;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.note-modal-textarea {
+  display: block;
+  width: 100%;
+  min-height: 250px;
+  padding: 10px;
+  margin: 0 0 14px 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #e0e0e0;
+  background-color: #1a1a1a;
+  border: 1px solid #555555;
+  border-radius: 6px;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.note-modal-textarea:focus {
+  border-color: #ffd700;
+  outline: none;
+}
+
+.note-modal-buttons {
+  text-align: right;
+}
+
+.note-modal-buttons .btn {
+  margin-left: 6px;
+  min-width: 80px;
+}
+
+.btn-danger {
+  background-color: #7f0000;
+  border-color: #b71c1c;
+  color: #ffcdd2;
+}
+
+.btn-danger:hover {
+  background-color: #b71c1c;
+}
+
+.btn-primary {
+  background-color: #00695c;
+  border-color: #00897b;
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background-color: #00897b;
+}
+
+/* Sync wait modal */
+.sync-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 7000;
+  background-color: rgba(0, 0, 0, 0.75);
+}
+
+.sync-modal.is-open {
+  display: block;
+}
+
+.sync-modal-box {
+  position: relative;
+  width: 90%;
+  max-width: 360px;
+  margin: 120px auto 0 auto;
+  padding: 30px 20px;
+  background-color: #252525;
+  border: 1px solid #1976d2;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.sync-modal-text {
+  color: #81d4fa;
+  font-size: 1.1em;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.toast {
+  display: none;
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  margin-left: -140px;
+  width: 280px;
+  padding: 12px 20px;
+  text-align: center;
+  font-size: 14px;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #ffffff;
+  background-color: #333333;
+  border: 1px solid #555555;
+  border-radius: 8px;
+  z-index: 6000;
+}
+
+.toast.is-visible {
+  display: block;
+}
+
+.toast.toast-success {
+  background-color: #2e7d32;
+  border-color: #4caf50;
+}
+
+.toast.toast-error {
+  background-color: #7f0000;
+  border-color: #b71c1c;
+}
+
+.sync-btn {
+  display: none;
+  vertical-align: middle;
+  margin: 2px;
+  padding: 6px 10px;
+  min-height: 44px;
+  height: 44px;
+  line-height: 28px;
+  font-size: 12px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: bold;
+  color: #81d4fa;
+  background-color: #0d3b66;
+  border: 1px solid #1976d2;
+  border-radius: 6px;
+  text-align: center;
+  cursor: pointer;
+  -webkit-appearance: none;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+body.is-localhost .sync-btn {
+  display: inline-block;
+}
+
+.sync-btn:hover {
+  background-color: #1565c0;
+}
+
+/* ── Verse anchor offset (fixes verse hidden under fixed header) ── */
+
+.verse {
+  scroll-margin-top: 100px;
+}

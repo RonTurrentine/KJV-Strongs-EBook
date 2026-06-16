@@ -19,6 +19,7 @@
       <a href="../20-Prov/1.html" class="btn" title="Proverbs">B&#9654;</a>
       <button class="btn" id="font-decrease" onclick="decreaseFontSize()">a&#8595;</button>
 	  <button class="btn" id="font-increase" onclick="increaseFontSize()">A&#8593;</button>
+      <button class="btn sync-btn" id="sync-btn" onclick="syncToKindle()" title="Sync to Kindle">&#9889; K</button>
       <span id="unbaked-indicator"></span>
     </div>
   </nav>
@@ -27,12 +28,16 @@
 	
     <p class="verse" id="verse-1">
       <span class="verse-num">1</span>
+      <button class="note-btn" onclick="openNoteModal('Ps.117.1')" title="Add note">&#9998;</button>
       O praise <a href="../../dict/hebrew/h1984.html" class="strongs-link" title="H1984">[H1984]</a> the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a>, all ye nations <a href="../../dict/hebrew/h1471.html" class="strongs-link" title="H1471">[H1471]</a>: praise <a href="../../dict/hebrew/h7623.html" class="strongs-link" title="H7623">[H7623]</a> him, all ye people <a href="../../dict/hebrew/h0523.html" class="strongs-link" title="H0523">[H0523]</a>.
     </p>
+    <div class="verse-note" id="note-verse-1"></div>
     <p class="verse" id="verse-2">
       <span class="verse-num">2</span>
+      <button class="note-btn" onclick="openNoteModal('Ps.117.2')" title="Add note">&#9998;</button>
       For his merciful <a href="../../dict/hebrew/h2617.html" class="strongs-link" title="H2617">[H2617]</a> kindness <a href="../../dict/hebrew/h2617.html" class="strongs-link" title="H2617">[H2617]</a> is great <a href="../../dict/hebrew/h1396.html" class="strongs-link" title="H1396">[H1396]</a> toward us: and the truth <a href="../../dict/hebrew/h0571.html" class="strongs-link" title="H0571">[H0571]</a> of the Lord <a href="../../dict/hebrew/h3068.html" class="strongs-link" title="H3068">[H3068]</a> <em class="added">endureth</em> for ever <a href="../../dict/hebrew/h5769.html" class="strongs-link" title="H5769">[H5769]</a>. Praise <a href="../../dict/hebrew/h1984.html" class="strongs-link" title="H1984">[H1984]</a> ye the Lord <a href="../../dict/hebrew/h3050.html" class="strongs-link" title="H3050">[H3050]</a>.
     </p>
+    <div class="verse-note" id="note-verse-2"></div>
   </main>
 
   <footer class="chapter-footer">

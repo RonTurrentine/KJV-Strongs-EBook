@@ -117,3 +117,38 @@
     poll();
 
 })();
+
+/* ── Anchor offset fix ─────────────────────────────────────────
+   When navigating to #verse-N, the browser scrolls that element
+   to the top of the viewport, but the header covers the top.
+   This adjusts the scroll position after hash navigation.     */
+
+(function () {
+    function fixAnchorOffset() {
+        var hash = window.location.hash;
+        if (!hash) { return; }
+        var el = document.getElementById(hash.replace('#', ''));
+        if (!el) { return; }
+        var headerEl = document.getElementsByTagName('nav')[0];
+        var headerH = headerEl ? (headerEl.offsetHeight || 90) : 90;
+        var elTop = el.getBoundingClientRect
+            ? el.getBoundingClientRect().top + (document.documentElement.scrollTop || document.body.scrollTop)
+            : el.offsetTop;
+        var scrollTo = elTop - headerH - 8;
+        if (document.documentElement.scrollTop !== undefined) {
+            document.documentElement.scrollTop = scrollTo;
+        } else {
+            document.body.scrollTop = scrollTo;
+        }
+    }
+
+    /* Run on load (handles direct navigation with hash) */
+    setTimeout(fixAnchorOffset, 150);
+
+    /* Run when hash changes (handles in-page anchor clicks) */
+    if (window.addEventListener) {
+        window.addEventListener('hashchange', function () {
+            setTimeout(fixAnchorOffset, 50);
+        }, false);
+    }
+})();

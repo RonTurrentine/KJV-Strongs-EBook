@@ -715,3 +715,132 @@ Would require:
 
 ---
 
+
+---
+
+### Session 10
+- **Date:** 2026-06-15 (continued same day as Session 9)
+- **Model:** Claude Sonnet 4.6 (claude.ai)
+- **Work Done:**
+
+  **Two-row Kindle header**
+  - Changed `.chapter-nav` from fixed `height: 90px` to auto-height with `padding: 4px 0 2px 0`
+  - Changed `.book-chapter`/`h1` from `float: left` to `display: block; text-align: center` — title centers on row 1
+  - Changed `.nav-buttons` from `float: right` to `display: block; text-align: center` — buttons center on row 2
+  - Reduced button size: `padding: 4px 7px`, `font-size: 12px`, `margin: 1px`, `height: 36px`
+  - Fixes ALL book name overflow issues (Deuteronomy, Ecclesiastes, 1 Thessalonians etc.)
+
+  **Two-column book index**
+  - Added `.book-columns`, `.book-col`, `.book-col-clear` CSS to both stylesheets
+  - Updated `generate_bible.ps1` index.html template to use two-column float layout
+  - OT books (left column), NT books (right column), `width: 49%` float-based
+  - Added `sticky-header.js` to `index.html` template (was missing)
+
+  **Go To Passage fixes**
+  - Added `sticky-header.js` to `navigate.html` template
+  - `navigate.html` padded to ~9.9KB (was 4.4KB — below Silk's CSS threshold)
+  - Hash-based book auto-select (`navigate.html#Gen`) — works on `file://` URLs
+  - Uses `BIBLE_DATA[i].abbr` field for matching
+  - Auto-selects chapter 1 and verse 1 when book pre-selected
+  - `onGo()` defaults to chapter 1 if no chapter selected
+
+  **Navigation button improvements**
+  - `[<B][<V][V>][B>]` replace old `[◀ Prev][Next ▶]`
+  - `$allBooks` pre-computed outside chapter loop
+  - "Go To" link passes book as URL hash: `navigate.html#Gen`
+  - Removed stray "powershell" text from nav button (recurring issue — fixed multiple times)
+
+  **Bug fixes / cleanup**
+  - 58 test/sample/debug files deleted from project root via `cleanup.ps1`
+  - `style-kindle.css` restored from GitHub multiple times due to corruption during session
+  - Two-column CSS was missing from `style-kindle.css` — appended correctly at end of session
+  - `adb-push-all.ps1` created for full Kindle push (15-30 min, all 15,000+ files)
+  - QA test updated for new V/B button label patterns
+  - `generate_dict.ps1` index title shortened to `"$Language Index"`
+
+  **Persistent issues encountered this session**
+  - Silk CSS caching: changes to `style.css` on Kindle don't apply until new filename used
+  - Workaround: push as `style3.css`, create test HTML referencing it, then push back as `style.css`
+  - `generate_bible.ps1` changes not persisting across downloads — always verify with `findstr` after regenerating
+  - Small pages (<5KB) don't get CSS applied on Silk — fixed for `navigate.html` with invisible padding comment block
+
+  **QA: 119/119 passing**
+  **All changes committed to GitHub**
+  **PC and Kindle styles now aligned**
+
+---
+
+
+---
+
+### Session 11
+- **Date:** 2026-06-15 (continued same day as Sessions 9 & 10)
+- **Model:** Claude Sonnet 4.6 (claude.ai)
+- **Work Done:**
+
+  **Notes System — fully working end-to-end**
+  - `generate_bible.ps1` updated with pencil buttons (`note-btn`) and note placeholder divs (`verse-note`) on every verse
+  - `rebake-notes.ps1` created — re-bakes all notes from `notes.json` after regeneration
+  - Must always run `rebake-notes.ps1` after any full `generate_bible.ps1` regeneration
+  - 6 notes successfully baked: Rom.3.23, Rom.6.23, Rom.10.10, 1John.1.9, John.3.16, Rom.8.1
+
+  **Pencil buttons fix**
+  - `.note-btn { display: none }` by default in CSS
+  - `body.is-localhost .note-btn { display: inline }` shows them only on localhost
+  - `notes.js` adds `is-localhost` class to `<body>` on localhost detection
+  - Kindle never sees pencil buttons (always `file://`)
+
+  **Verse reference links in notes**
+  - Syntax: `[[Book.Ch.Vs]]` e.g. `[[Rom.6.23]]`, `[[1John.1.9]]`
+  - `notes.js` — `linkifyVerseRefs()` function with built-in `BOOK_FOLDERS` table (no BIBLE_DATA dependency)
+  - `start-study.ps1` — `ConvertTo-VerseLinks` PowerShell function with `$BookTable`
+  - Links convert at save time in both live DOM and baked HTML
+  - Hint text shown in modal: "Tip: Use [[Book.Ch.Vs]] to link to a verse"
+  - `bible-data.js` NOT included in chapter pages — built-in table used instead
+
+  **Sync wait modal**
+  - Clicking ⚡ K button shows "Syncing to Kindle… please wait" modal
+  - Modal closes automatically when sync completes
+  - Toast notification shows number of files pushed
+
+  **Kindle status polling**
+  - `GET /api/kindle-status` endpoint in `start-study.ps1` — runs `adb devices`
+  - `notes.js` polls every 5 seconds, disables ⚡ K button when Kindle not connected
+  - Button re-enables automatically when Kindle plugged in
+
+  **Sync button label**
+  - Changed from "⚡ Sync" to "⚡ K" to save header space
+
+  **Note textarea size**
+  - Increased from `min-height: 120px` to `min-height: 250px`
+
+  **Verse anchor offset fix**
+  - PC: `scroll-margin-top: 100px` on `.verse` in `style.css`
+  - Kindle: JS anchor offset fix in `sticky-header.js`
+
+  **Kindle note styling**
+  - `.verse-note-text` in `style-kindle.css` now styled with green background, italic, indented
+  - Slightly smaller font than PC version
+
+  **Key bugs encountered & fixed this session**
+  - `BIBLE_DATA` undefined on chapter pages (not loaded) → switched to built-in `BOOK_FOLDERS` table
+  - `ConvertTo-VerseLinks` missing from `start-study.ps1` → added with `$BookTable`
+  - `linkifyVerseRefs` missing from `notes.js` → added
+  - Notes disappeared after regeneration → `rebake-notes.ps1` created as fix
+  - Pencil buttons not showing → `is-localhost` class on body via CSS approach
+  - `start-study.ps1` parse error (missing closing brace) → fixed
+  - `generate_bible.ps1` verse-note placeholders missing → re-applied multiple times
+
+  **Book abbreviation reference for [[]] syntax:**
+  Gen, Exod, Lev, Num, Deut, Josh, Judg, Ruth, 1Sam, 2Sam, 1Kgs, 2Kgs,
+  1Chr, 2Chr, Ezra, Neh, Esth, Job, Ps, Prov, Eccl, Song, Isa, Jer,
+  Lam, Ezek, Dan, Hos, Joel, Amos, Obad, Jonah, Mic, Nah, Hab, Zeph,
+  Hag, Zech, Mal, Matt, Mark, Luke, John, Acts, Rom, 1Cor, 2Cor, Gal,
+  Eph, Phil, Col, 1Thess, 2Thess, 1Tim, 2Tim, Titus, Phlm, Heb, Jas,
+  1Pet, 2Pet, 1John, 2John, 3John, Jude, Rev
+
+  **QA: 119/119 passing**
+  **All changes committed to GitHub**
+
+---
+
