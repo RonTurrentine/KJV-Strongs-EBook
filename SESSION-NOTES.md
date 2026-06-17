@@ -916,3 +916,68 @@ Would require:
 
 ---
 
+
+---
+
+### Session 13
+- **Date:** 2026-06-17
+- **Model:** Claude Sonnet 4.6 (claude.ai)
+- **Work Done:**
+
+  **Kindle fixes verified (all working)**
+  - Sync button hidden on Kindle (`display: none !important` in style-kindle.css)
+  - Dictionary page titles correctly padded (G0026 not G26)
+  - Origin references padded and linked
+  - Concordance sections visible on Kindle dictionary pages
+  - Notes green italic styling working on Kindle
+  - Two-column book index working on Kindle
+
+  **Sync modal confirmed working**
+  - Added `/api/test-sync` endpoint to start-study.ps1 (5 second fake delay)
+  - Added `testSyncModal()` function to notes.js
+  - Test via browser console: `testSyncModal()`
+  - Modal grays out background, prevents interaction during sync
+
+  **ADB push progress improved**
+  - `adb-push-all.ps1` now reports every 250 files (was 1000) for Hebrew/Greek dict
+
+  **Phase 3 EPUB Packager complete**
+  - `scripts/package_epub.ps1` builds valid EPUB 2.0 container
+  - 15,497 files staged, 15,501 EPUB entries, 29.9MB compressed
+  - PC elements stripped from chapter pages (pencil buttons, sync button, notes.js)
+  - style-kindle.css included as style.css
+  - content.opf with 15,497 manifest entries
+  - toc.ncx with 1,256 navigation points (66 books + 1,189 chapters + TOC)
+  - Phase 6: extracts EPUB and pushes to Kindle via ADB (replaces adb-push-all.ps1)
+  - `-SkipAdb` switch for build-only mode
+  - FBReader experiment: too large for D01E, Silk browser remains best experience
+  - Decision: keep adb-push-all.ps1 for personal use, EPUB for future distribution
+
+  **BDB/Thayer Lexicon Integration (in progress)**
+  - Downloaded `bdb-thayer.dct.mybible` from MyBible site
+  - Confirmed SQLite database format
+  - Schema: `dictionary` table with `word` (TEXT), `data` (TEXT) columns
+  - 14,197 entries (Hebrew H1-H8674, Greek G1-G5624)
+  - Keys are unpadded: `H1121` not `H0001`
+  - Data is rich HTML with hierarchical BDB definitions, nested lists
+  - `scripts/export-bdb.ps1` exports database to `bdb-thayer.json`
+  - UTF-8 encoding issue resolved using `.mode json` with piped stdin
+  - `bdb-thayer.json` = 4.8MB, valid JSON array, Hebrew/Greek chars correct
+  - Added to .gitignore: bdb-thayer.json, bdb-thayer.csv, bdb-thayer.db,
+    bdb-thayer.dct.mybible, sqlite-nuget.zip, reorganize.ps1
+
+  **Git conflict resolved**
+  - File manually added to GitHub caused push failure
+  - Fixed with: `git stash` → `git pull --rebase` → `git stash pop` → `git push`
+
+  **Pending — Next Session:**
+  - Integrate bdb-thayer.json into generate_dict.ps1
+  - Display BDB/Thayer hierarchical definitions on dictionary pages
+  - Convert `<a class='dict' href='#dH1'>H1</a>` links to our dict page links
+  - Decision needed: replace or supplement existing Strong's definition
+
+  **QA: 151/152 passing**
+  **All changes committed to GitHub**
+
+---
+

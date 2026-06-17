@@ -19,3 +19,10 @@ $RECYCLE.BIN/
 concordance.json
 
 KJV-Strongs.epub
+
+bdb-thayer.json
+bdb-thayer.csv
+bdb-thayer.db
+bdb-thayer.dct.mybible
+sqlite-nuget.zip
+reorganize.ps1
