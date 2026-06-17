@@ -13,6 +13,25 @@ param(
     [string]$IndexDir    = 'indexes'
 )
 
+# Load Concordance Index
+$ConcordancePath = Join-Path $PSScriptRoot "..\concordance.json"
+$ConcordanceData = @{}
+if (Test-Path $ConcordancePath) {
+    Write-Host "Loading concordance index..." -ForegroundColor Cyan
+    $raw = Get-Content -Path $ConcordancePath -Raw -Encoding UTF8
+    $parsed = $raw | ConvertFrom-Json
+    $parsed.PSObject.Properties | ForEach-Object {
+        $refs = @()
+        foreach ($r in $_.Value) {
+            $refs += @{ book=$r.book; folder=$r.folder; ch=[int]$r.ch; vs=[int]$r.vs; word=$r.word }
+        }
+        $ConcordanceData[$_.Name] = $refs
+    }
+    Write-Host "  Loaded $($ConcordanceData.Keys.Count) Strong's entries" -ForegroundColor Green
+} else {
+    Write-Host "WARNING: concordance.json not found. Run generate_bible.ps1 first." -ForegroundColor Yellow
+}
+
 # Part of Speech expansion table (Hebrew OSIS morph codes)
 $posMap = @{
     'n'         = 'Noun'
@@ -74,6 +93,271 @@ function Expand-POS([string]$code) {
     return $expanded -join ' / '
 }
 
+function Format-ConcordanceLink {
+    param(
+        [string]$Abbr,       # Book abbreviation (e.g. "Gen")
+        [string]$Folder,     # Book folder (e.g. "01-Gen")
+        $Ref                 # Reference object with ch, vs, word
+    )
+    
+    $ch = if ($Ref -is [hashtable]) { $Ref.ch } else { $Ref.ch }
+    $vs = if ($Ref -is [hashtable]) { $Ref.vs } else { $Ref.vs }
+    $href = "../../books/$Folder/$ch.html#verse-$vs"
+    
+    # Build word display
+    $wordHtml = ""
+    $rawWord = if ($Ref -is [hashtable]) { $Ref.word } else { $Ref.word }
+    if ($rawWord) {
+        $w = [string]$rawWord
+        if ($w.Length -gt 15) {
+            $w = $w.Substring(0, 14) + [char]0x2026  # ellipsis
+        }
+        $w = $w -replace "&", "&amp;"
+        $w = $w -replace "<", "&lt;"
+        $w = $w -replace ">", "&gt;"
+        $wordHtml = " <span class=`"conc-word`">&ldquo;$w&rdquo;</span>"
+    }
+    
+    return "      <a href=`"$href`" class=`"conc-link`">$Abbr $ch`:$vs$wordHtml</a>"
+}
+
+
+# Book canonical order for display (same table as generate_bible.ps1)
+$BookDisplayOrder = @(
+    @{ Abbr = "Gen";    Name = "Genesis";         Folder = "01-Gen" }
+    @{ Abbr = "Exod";   Name = "Exodus";          Folder = "02-Exod" }
+    @{ Abbr = "Lev";    Name = "Leviticus";       Folder = "03-Lev" }
+    @{ Abbr = "Num";    Name = "Numbers";         Folder = "04-Num" }
+    @{ Abbr = "Deut";   Name = "Deuteronomy";     Folder = "05-Deut" }
+    @{ Abbr = "Josh";   Name = "Joshua";          Folder = "06-Josh" }
+    @{ Abbr = "Judg";   Name = "Judges";          Folder = "07-Judg" }
+    @{ Abbr = "Ruth";   Name = "Ruth";            Folder = "08-Ruth" }
+    @{ Abbr = "1Sam";   Name = "1 Samuel";        Folder = "09-1Sam" }
+    @{ Abbr = "2Sam";   Name = "2 Samuel";        Folder = "10-2Sam" }
+    @{ Abbr = "1Kgs";   Name = "1 Kings";         Folder = "11-1Kgs" }
+    @{ Abbr = "2Kgs";   Name = "2 Kings";         Folder = "12-2Kgs" }
+    @{ Abbr = "1Chr";   Name = "1 Chronicles";    Folder = "13-1Chr" }
+    @{ Abbr = "2Chr";   Name = "2 Chronicles";    Folder = "14-2Chr" }
+    @{ Abbr = "Ezra";   Name = "Ezra";            Folder = "15-Ezra" }
+    @{ Abbr = "Neh";    Name = "Nehemiah";        Folder = "16-Neh" }
+    @{ Abbr = "Esth";   Name = "Esther";          Folder = "17-Esth" }
+    @{ Abbr = "Job";    Name = "Job";             Folder = "18-Job" }
+    @{ Abbr = "Ps";     Name = "Psalms";          Folder = "19-Ps" }
+    @{ Abbr = "Prov";   Name = "Proverbs";        Folder = "20-Prov" }
+    @{ Abbr = "Eccl";   Name = "Ecclesiastes";    Folder = "21-Eccl" }
+    @{ Abbr = "Song";   Name = "Song of Solomon"; Folder = "22-Song" }
+    @{ Abbr = "Isa";    Name = "Isaiah";          Folder = "23-Isa" }
+    @{ Abbr = "Jer";    Name = "Jeremiah";        Folder = "24-Jer" }
+    @{ Abbr = "Lam";    Name = "Lamentations";    Folder = "25-Lam" }
+    @{ Abbr = "Ezek";   Name = "Ezekiel";         Folder = "26-Ezek" }
+    @{ Abbr = "Dan";    Name = "Daniel";           Folder = "27-Dan" }
+    @{ Abbr = "Hos";    Name = "Hosea";            Folder = "28-Hos" }
+    @{ Abbr = "Joel";   Name = "Joel";             Folder = "29-Joel" }
+    @{ Abbr = "Amos";   Name = "Amos";             Folder = "30-Amos" }
+    @{ Abbr = "Obad";   Name = "Obadiah";          Folder = "31-Obad" }
+    @{ Abbr = "Jonah";  Name = "Jonah";            Folder = "32-Jonah" }
+    @{ Abbr = "Mic";    Name = "Micah";            Folder = "33-Mic" }
+    @{ Abbr = "Nah";    Name = "Nahum";            Folder = "34-Nah" }
+    @{ Abbr = "Hab";    Name = "Habakkuk";         Folder = "35-Hab" }
+    @{ Abbr = "Zeph";   Name = "Zephaniah";        Folder = "36-Zeph" }
+    @{ Abbr = "Hag";    Name = "Haggai";           Folder = "37-Hag" }
+    @{ Abbr = "Zech";   Name = "Zechariah";        Folder = "38-Zech" }
+    @{ Abbr = "Mal";    Name = "Malachi";           Folder = "39-Mal" }
+    @{ Abbr = "Matt";   Name = "Matthew";           Folder = "40-Matt" }
+    @{ Abbr = "Mark";   Name = "Mark";              Folder = "41-Mark" }
+    @{ Abbr = "Luke";   Name = "Luke";              Folder = "42-Luke" }
+    @{ Abbr = "John";   Name = "John";              Folder = "43-John" }
+    @{ Abbr = "Acts";   Name = "Acts";              Folder = "44-Acts" }
+    @{ Abbr = "Rom";    Name = "Romans";             Folder = "45-Rom" }
+    @{ Abbr = "1Cor";   Name = "1 Corinthians";     Folder = "46-1Cor" }
+    @{ Abbr = "2Cor";   Name = "2 Corinthians";     Folder = "47-2Cor" }
+    @{ Abbr = "Gal";    Name = "Galatians";          Folder = "48-Gal" }
+    @{ Abbr = "Eph";    Name = "Ephesians";          Folder = "49-Eph" }
+    @{ Abbr = "Phil";   Name = "Philippians";        Folder = "50-Phil" }
+    @{ Abbr = "Col";    Name = "Colossians";         Folder = "51-Col" }
+    @{ Abbr = "1Thess"; Name = "1 Thessalonians";   Folder = "52-1Thess" }
+    @{ Abbr = "2Thess"; Name = "2 Thessalonians";   Folder = "53-2Thess" }
+    @{ Abbr = "1Tim";   Name = "1 Timothy";          Folder = "54-1Tim" }
+    @{ Abbr = "2Tim";   Name = "2 Timothy";          Folder = "55-2Tim" }
+    @{ Abbr = "Titus";  Name = "Titus";              Folder = "56-Titus" }
+    @{ Abbr = "Phlm";   Name = "Philemon";           Folder = "57-Phlm" }
+    @{ Abbr = "Heb";    Name = "Hebrews";            Folder = "58-Heb" }
+    @{ Abbr = "Jas";    Name = "James";              Folder = "59-Jas" }
+    @{ Abbr = "1Pet";   Name = "1 Peter";            Folder = "60-1Pet" }
+    @{ Abbr = "2Pet";   Name = "2 Peter";            Folder = "61-2Pet" }
+    @{ Abbr = "1John";  Name = "1 John";             Folder = "62-1John" }
+    @{ Abbr = "2John";  Name = "2 John";             Folder = "63-2John" }
+    @{ Abbr = "3John";  Name = "3 John";             Folder = "64-3John" }
+    @{ Abbr = "Jude";   Name = "Jude";               Folder = "65-Jude" }
+    @{ Abbr = "Rev";    Name = "Revelation";         Folder = "66-Rev" }
+)
+
+$PAGE_SIZE = 50
+$SMALL_THRESHOLD = 20
+
+
+function Get-ConcordanceHtml {
+    param(
+        [Parameter(Mandatory)]
+        [string]$StrongsId        # e.g. "H0430" or "G3056"
+    )
+
+    # Look up in concordance data
+    if (-not $ConcordanceData.ContainsKey($StrongsId)) {
+        return ""  # No occurrences found
+    }
+
+    $allRefs = $ConcordanceData[$StrongsId]
+    if ($allRefs.Count -eq 0) { return "" }
+
+    # Determine testament for heading
+    $letter = $StrongsId.Substring(0, 1)
+    $testament = if ($letter -eq "H") { "Old Testament" } else { "New Testament" }
+    $totalCount = $allRefs.Count
+
+    # Group references by book (preserving canonical order)
+    $bookGroups = [ordered]@{}
+    foreach ($ref in $allRefs) {
+        $bookAbbr = if ($ref -is [hashtable]) { $ref.book } else { $ref.book }
+        if (-not $bookGroups.Contains($bookAbbr)) {
+            $bookGroups[$bookAbbr] = [System.Collections.Generic.List[object]]::new()
+        }
+        $bookGroups[$bookAbbr].Add($ref)
+    }
+
+    # Build HTML
+    $html = [System.Text.StringBuilder]::new()
+
+    [void]$html.AppendLine("")
+    [void]$html.AppendLine('<div class="conc-section">')
+    [void]$html.AppendLine("  <h2 class=`"conc-heading`">Occurrences in $testament <span class=`"conc-total`">($totalCount total)</span></h2>")
+
+    $bookIdx = 0
+
+    # Iterate books in canonical order
+    foreach ($bookInfo in $BookDisplayOrder) {
+        $abbr = $bookInfo.Abbr
+        if (-not $bookGroups.Contains($abbr)) { continue }
+
+        $refs = $bookGroups[$abbr]
+        $count = $refs.Count
+        $bookName = $bookInfo.Name
+        $folder = $bookInfo.Folder
+
+        [void]$html.AppendLine("")
+        [void]$html.AppendLine("  <div class=`"conc-book`" id=`"conc-book-$bookIdx`">")
+
+        # Book toggle button
+        [void]$html.AppendLine("    <button class=`"conc-book-toggle`" id=`"conc-toggle-$bookIdx`" onclick=`"toggleBook($bookIdx)`">")
+        [void]$html.AppendLine("      &#9654; $bookName <span class=`"conc-count`">($count)</span>")
+        [void]$html.AppendLine("    </button>")
+
+        # Collapsible verse section (hidden by default)
+        [void]$html.AppendLine("    <div class=`"conc-verses`" id=`"conc-verses-$bookIdx`" style=`"display:none`">")
+
+        if ($count -le $SMALL_THRESHOLD) {
+            # ── Small: show all links directly, no pagination ──
+            foreach ($ref in $refs) {
+                $ch = if ($ref -is [hashtable]) { $ref.ch } else { $ref.ch }
+                $vs = if ($ref -is [hashtable]) { $ref.vs } else { $ref.vs }
+                $href = "../../books/$folder/$ch.html#verse-$vs"
+                $linkHtml = Format-ConcordanceLink -Abbr $abbr -Folder $folder -Ref $ref
+            [void]$html.AppendLine($linkHtml)
+            }
+        }
+        else {
+            # ── Large: paginate at $PAGE_SIZE per page ──
+            $pageCount = [Math]::Ceiling($count / $PAGE_SIZE)
+
+            for ($p = 0; $p -lt $pageCount; $p++) {
+                $start = $p * $PAGE_SIZE
+                $end = [Math]::Min($start + $PAGE_SIZE, $count) - 1
+                $display = if ($p -eq 0) { "block" } else { "none" }
+
+                [void]$html.AppendLine("      <div class=`"conc-page`" id=`"conc-page-$bookIdx-$p`" style=`"display:$display`">")
+
+                for ($i = $start; $i -le $end; $i++) {
+                    $ref = $refs[$i]
+                    $ch = if ($ref -is [hashtable]) { $ref.ch } else { $ref.ch }
+                    $vs = if ($ref -is [hashtable]) { $ref.vs } else { $ref.vs }
+                    $href = "../../books/$folder/$ch.html#verse-$vs"
+                    $linkHtml = Format-ConcordanceLink -Abbr $abbr -Folder $folder -Ref $refs[$i]
+                    [void]$html.AppendLine($linkHtml)
+                }
+
+                [void]$html.AppendLine("      </div>")
+            }
+
+            # Pagination nav
+            if ($pageCount -gt 1) {
+                [void]$html.AppendLine("      <div class=`"conc-nav`" id=`"conc-nav-$bookIdx`">")
+                [void]$html.AppendLine("        <button class=`"btn conc-nav-btn`" onclick=`"concPage($bookIdx,-1)`">&#9664; Prev</button>")
+                [void]$html.AppendLine("        <span class=`"conc-pg-label`" id=`"conc-pg-$bookIdx`">Page 1 of $pageCount</span>")
+                [void]$html.AppendLine("        <button class=`"btn conc-nav-btn`" onclick=`"concPage($bookIdx,1)`">Next &#9654;</button>")
+                [void]$html.AppendLine("      </div>")
+            }
+        }
+
+        [void]$html.AppendLine("    </div>")  # close conc-verses
+        [void]$html.AppendLine("  </div>")    # close conc-book
+
+        $bookIdx++
+    }
+
+    [void]$html.AppendLine("</div>")  # close conc-section
+
+    return $html.ToString()
+}
+
+
+# ================================================================
+# STEP 3: Inline JS to embed in each dictionary page
+# ================================================================
+# This JS is added ONCE per dictionary page inside a <script> tag.
+# It handles expand/collapse and pagination. ES3 compatible.
+
+$ConcordanceInlineJs = @'
+<script>
+var concPages = {};
+function toggleBook(idx) {
+  var el = document.getElementById("conc-verses-" + idx);
+  var btn = document.getElementById("conc-toggle-" + idx);
+  if (!el || !btn) return;
+  if (el.style.display === "none") {
+    el.style.display = "block";
+    var t = btn.innerHTML;
+    btn.innerHTML = t.replace("\u25B6", "\u25BC");
+  } else {
+    el.style.display = "none";
+    var t2 = btn.innerHTML;
+    btn.innerHTML = t2.replace("\u25BC", "\u25B6");
+  }
+}
+function concPage(bookIdx, delta) {
+  if (!concPages[bookIdx]) concPages[bookIdx] = 0;
+  var cur = concPages[bookIdx];
+  var next = cur + delta;
+  var curEl = document.getElementById("conc-page-" + bookIdx + "-" + cur);
+  var nextEl = document.getElementById("conc-page-" + bookIdx + "-" + next);
+  if (!nextEl) return;
+  if (curEl) curEl.style.display = "none";
+  nextEl.style.display = "block";
+  concPages[bookIdx] = next;
+  var total = 0;
+  for (var i = 0; i < 200; i++) {
+    if (document.getElementById("conc-page-" + bookIdx + "-" + i)) {
+      total++;
+    } else {
+      break;
+    }
+  }
+  var label = document.getElementById("conc-pg-" + bookIdx);
+  if (label) label.innerHTML = "Page " + (next + 1) + " of " + total;
+}
+</script>
+'@
+
+
 function HtmlEscape([string]$t) {
     return $t -replace '&','&amp;' -replace '<','&lt;' -replace '>','&gt;' -replace '"','&quot;'
 }
@@ -93,7 +377,8 @@ function Resolve-StrongsRefs {
             $lang   = $child.GetAttribute('language')
             $num    = $child.GetAttribute('strongs')
             $prefix = if ($lang -eq 'HEBREW') { 'H' } else { 'G' }
-            [void]$sb.Append("$prefix$([int]$num)")
+            $paddedNum = ([int]$num).ToString().PadLeft(4, '0')
+            [void]$sb.Append("$prefix$paddedNum")
         } elseif ($child.LocalName -eq 'greek') {
             [void]$sb.Append($child.GetAttribute('unicode'))
         } elseif ($child.LocalName -eq 'pronunciation') {
@@ -127,7 +412,8 @@ function Write-DictPage {
         [string]$Definition,
         [string]$KjvDef,
         [string]$Origin,
-        [string]$Language
+        [string]$Language,
+        [string]$ConcordanceHtml = ''
     )
 
     $lang      = $Language.ToLower()
@@ -147,8 +433,26 @@ function Write-DictPage {
         '          <tr><th>Part of Speech</th><td>' + $posHtml + '</td></tr>'
     } else { '' }
 
-    $originRow = if ($orgHtml) {
-        '          <tr><th>Origin</th><td>' + $orgHtml + '</td></tr>'
+    # Linkify H/G number references in origin text e.g. "from H1234" -> clickable link
+    $orgLinked = if ($orgHtml) {
+        [System.Text.RegularExpressions.Regex]::Replace(
+            $orgHtml,
+            '([HG])(\d+)',
+            {
+                param($m)
+                $prefix = $m.Groups[1].Value
+                $num    = [int]$m.Groups[2].Value
+                $lang   = if ($prefix -eq 'H') { 'hebrew' } else { 'greek' }
+                $padded = $prefix.ToLower() + $num.ToString().PadLeft(4, '0')
+                $href   = "../../dict/$lang/$padded.html"
+                $paddedDisplay = $prefix + $num.ToString().PadLeft(4, '0')
+                return "<a href=`"$href`" class=`"strongs-link`">$paddedDisplay</a>"
+            }
+        )
+    } else { '' }
+
+    $originRow = if ($orgLinked) {
+        '          <tr><th>Origin</th><td>' + $orgLinked + '</td></tr>'
     } else { '' }
 
     $kjvBlock = if ($kjvHtml) {
@@ -161,6 +465,7 @@ function Write-DictPage {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="../../BiblePencil.ico">
   <title>$titleText</title>
   <link rel="stylesheet" href="$cssPath">
 </head>
@@ -202,6 +507,8 @@ $kjvBlock
     </div>
 
   </div>
+$ConcordanceHtml
+$ConcordanceInlineJs
 </body>
 </html>
 "@
@@ -250,6 +557,7 @@ function Write-IndexPage {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="../BiblePencil.ico">
   <title>$titleEsc</title>
   <link rel="stylesheet" href="$cssPath">
 </head>
@@ -389,6 +697,8 @@ render();
 </script>
 
   <script src="../js/sticky-header.js"></script>
+$ConcordanceHtml
+$ConcordanceInlineJs
 </body>
 </html>
 "@
@@ -438,17 +748,19 @@ foreach ($entry in $entries) {
     $origin  = if ($srcNode) { 'See H' + ($srcNode.GetAttribute('src') -replace 'H', '') } else { '' }
 
     $outPath = Join-Path $OutDir "hebrew\$padded.html"
+    $concHtml = Get-ConcordanceHtml -StrongsId ("H" + $num.ToString().PadLeft(4,'0'))
     Write-DictPage `
-        -FilePath     $outPath `
-        -StrongsId    "H$num" `
-        -OriginalWord $origWord `
-        -Translit     $xlit `
-        -Phonetic     $phon `
-        -PartOfSpeech $morph `
-        -Definition   $def `
-        -KjvDef       $kjv `
-        -Origin       $origin `
-        -Language     'Hebrew'
+        -FilePath        $outPath `
+        -StrongsId       ("H" + $num.ToString().PadLeft(4,'0')) `
+        -OriginalWord    $origWord `
+        -Translit        $xlit `
+        -Phonetic        $phon `
+        -PartOfSpeech    $morph `
+        -Definition      $def `
+        -KjvDef          $kjv `
+        -Origin          $origin `
+        -Language        'Hebrew' `
+        -ConcordanceHtml $concHtml
 
     $shortDef = if ($def) { Get-ShortDef $def } elseif ($kjv) { Get-ShortDef $kjv } else { '' }
     [void]$hebIndexEntries.Add(@{
@@ -504,17 +816,19 @@ foreach ($entry in $gEntries) {
     $kjv     = $kjv -replace '^\s*:--\s*', ''
 
     $outPath = Join-Path $OutDir "greek\$padded.html"
+    $concHtml = Get-ConcordanceHtml -StrongsId ("G" + $num.ToString().PadLeft(4,'0'))
     Write-DictPage `
-        -FilePath     $outPath `
-        -StrongsId    "G$num" `
-        -OriginalWord $origWord `
-        -Translit     $xlit `
-        -Phonetic     $phon `
-        -PartOfSpeech '' `
-        -Definition   $def `
-        -KjvDef       $kjv `
-        -Origin       $origin `
-        -Language     'Greek'
+        -FilePath        $outPath `
+        -StrongsId       ("G" + $num.ToString().PadLeft(4,'0')) `
+        -OriginalWord    $origWord `
+        -Translit        $xlit `
+        -Phonetic        $phon `
+        -PartOfSpeech    '' `
+        -Definition      $def `
+        -KjvDef          $kjv `
+        -Origin          $origin `
+        -Language        'Greek' `
+        -ConcordanceHtml $concHtml
 
     $shortDef = if ($def) { Get-ShortDef $def } elseif ($kjv) { Get-ShortDef $kjv } else { '' }
     [void]$grkIndexEntries.Add(@{

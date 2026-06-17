@@ -513,6 +513,171 @@ if (Test-Path $navFile) {
     }
 }
 
+# ── TEST 12: Favicon ─────────────────────────────────────────────────────────
+Section "TEST 12: Favicon"
+
+if (Test-Path (Join-Path $OutputRoot 'BiblePencil.ico')) {
+    Pass "BiblePencil.ico exists in project root"
+} else {
+    Fail "BiblePencil.ico MISSING from project root"
+}
+
+$idxFile = Join-Path $OutputRoot 'index.html'
+if (Test-Path $idxFile) {
+    $idxContent = Get-Content -Raw $idxFile
+    if ($idxContent -match 'BiblePencil\.ico') { Pass "index.html: favicon link present" }
+    else                                        { Fail "index.html: favicon link MISSING" }
+}
+
+$genFile = Join-Path $OutputRoot 'books/01-Gen/1.html'
+if (Test-Path $genFile) {
+    $genContent = Get-Content -Raw $genFile
+    if ($genContent -match 'BiblePencil\.ico') { Pass "Genesis 1: favicon link present" }
+    else                                        { Fail "Genesis 1: favicon link MISSING" }
+}
+
+$hebFile = Join-Path $OutputRoot 'dict/hebrew/h0430.html'
+if (Test-Path $hebFile) {
+    $hebContent = Get-Content -Raw $hebFile
+    if ($hebContent -match 'BiblePencil\.ico') { Pass "h0430.html: favicon link present" }
+    else                                        { Fail "h0430.html: favicon link MISSING" }
+}
+
+# ── TEST 13: Notes System ─────────────────────────────────────────────────────
+Section "TEST 13: Notes System"
+
+$genChFile = Join-Path $OutputRoot 'books/01-Gen/1.html'
+if (Test-Path $genChFile) {
+    $genChContent = Get-Content -Raw $genChFile
+    if ($genChContent -match 'class="note-btn"')  { Pass "Genesis 1: pencil buttons present" }
+    else                                           { Fail "Genesis 1: pencil buttons MISSING" }
+    if ($genChContent -match 'class="verse-note"') { Pass "Genesis 1: verse-note placeholders present" }
+    else                                           { Fail "Genesis 1: verse-note placeholders MISSING" }
+    if ($genChContent -match 'class="sync-btn"')   { Pass "Genesis 1: sync button present" }
+    else                                           { Fail "Genesis 1: sync button MISSING" }
+    if ($genChContent -match 'openNoteModal')      { Pass "Genesis 1: openNoteModal calls present" }
+    else                                           { Fail "Genesis 1: openNoteModal calls MISSING" }
+    if ($genChContent -match 'notes\.js')          { Pass "Genesis 1: notes.js script tag present" }
+    else                                           { Fail "Genesis 1: notes.js script tag MISSING" }
+}
+
+$notesJsFile = Join-Path $OutputRoot 'js/notes.js'
+if (Test-Path $notesJsFile) {
+    Pass "js/notes.js exists"
+    $njContent = Get-Content -Raw $notesJsFile
+    if ($njContent -match 'linkifyVerseRefs') { Pass "notes.js: linkifyVerseRefs present" }
+    else                                      { Fail "notes.js: linkifyVerseRefs MISSING" }
+    if ($njContent -match 'BOOK_FOLDERS')     { Pass "notes.js: BOOK_FOLDERS table present" }
+    else                                      { Fail "notes.js: BOOK_FOLDERS table MISSING" }
+    if ($njContent -match 'syncToKindle')     { Pass "notes.js: syncToKindle present" }
+    else                                      { Fail "notes.js: syncToKindle MISSING" }
+} else {
+    Fail "js/notes.js MISSING"
+}
+
+# ── TEST 14: Concordance ──────────────────────────────────────────────────────
+Section "TEST 14: Concordance"
+
+$concordancePath = Join-Path $OutputRoot 'concordance.json'
+if (Test-Path $concordancePath) {
+    Pass "concordance.json exists"
+    $concRaw = Get-Content -Raw $concordancePath
+    $conc = $concRaw | ConvertFrom-Json
+
+    $entryCount = @($conc.PSObject.Properties).Count
+    if ($entryCount -gt 5000) { Pass "concordance.json: $entryCount Strong's entries (expected >5000)" }
+    else                      { Fail "concordance.json: only $entryCount entries (expected >5000)" }
+
+    if ($conc.'H0430') {
+        $h430refs = @($conc.'H0430')
+        if ($h430refs.Count -gt 100) { Pass "concordance.json: H0430 has $($h430refs.Count) occurrences (expected >100)" }
+        else                         { Fail "concordance.json: H0430 has only $($h430refs.Count) occurrences" }
+        if ($h430refs[0].word)       { Pass "concordance.json: H0430 entries have 'word' field" }
+        else                         { Fail "concordance.json: H0430 entries missing 'word' field" }
+    } else {
+        Fail "concordance.json: H0430 (God/Elohim) not found"
+    }
+
+    if ($conc.'H6531') {
+        $h6531refs = @($conc.'H6531')
+        if ($h6531refs.Count -ge 5) { Pass "concordance.json: H6531 has $($h6531refs.Count) occurrences (padding fix verified)" }
+        else                        { Fail "concordance.json: H6531 has only $($h6531refs.Count) occurrences" }
+    } else {
+        Fail "concordance.json: H6531 (rigour) not found -- padding bug may have returned"
+    }
+
+    $badKeys = @($conc.PSObject.Properties.Name | Where-Object { $_ -match '^[HG]\d{5}$' })
+    if ($badKeys.Count -eq 0) { Pass "concordance.json: no over-padded keys (5 digit)" }
+    else                      { Fail "concordance.json: $($badKeys.Count) over-padded keys (e.g. $($badKeys[0]))" }
+
+    if ($conc.'G3056') {
+        $g3056refs = @($conc.'G3056')
+        Pass "concordance.json: G3056 (Logos) present with $($g3056refs.Count) occurrences"
+    } else {
+        Fail "concordance.json: G3056 (Logos) not found"
+    }
+
+} else {
+    Fail "concordance.json MISSING -- run generate_bible.ps1 first"
+}
+
+$h0430File = Join-Path $OutputRoot 'dict/hebrew/h0430.html'
+if (Test-Path $h0430File) {
+    $h0430Content = Get-Content -Raw $h0430File
+    if ($h0430Content -match 'conc-section') { Pass "h0430.html: concordance section present" }
+    else                                     { Fail "h0430.html: concordance section MISSING" }
+    if ($h0430Content -match 'conc-word')    { Pass "h0430.html: English word display present" }
+    else                                     { Fail "h0430.html: English word display MISSING" }
+    if ($h0430Content -match 'toggleBook')   { Pass "h0430.html: concordance JS present" }
+    else                                     { Fail "h0430.html: concordance JS MISSING" }
+}
+
+$g3056File = Join-Path $OutputRoot 'dict/greek/g3056.html'
+if (Test-Path $g3056File) {
+    $g3056Content = Get-Content -Raw $g3056File
+    if ($g3056Content -match 'conc-section') { Pass "g3056.html: concordance section present" }
+    else                                     { Fail "g3056.html: concordance section MISSING" }
+}
+
+$g0026File = Join-Path $OutputRoot 'dict/greek/g0026.html'
+if (Test-Path $g0026File) {
+    $g0026Content = Get-Content -Raw $g0026File
+    if ($g0026Content -match 'G0026')        { Pass "g0026.html: padded ID G0026 correct" }
+    else                                     { Fail "g0026.html: padded ID wrong -- shows G26 instead of G0026" }
+}
+
+# ── TEST 15: Navigation & Go To ───────────────────────────────────────────────
+Section "TEST 15: Navigation & Go To"
+
+$ruthFile = Join-Path $OutputRoot 'books/08-Ruth/1.html'
+if (Test-Path $ruthFile) {
+    $ruthContent = Get-Content -Raw $ruthFile
+    if ($ruthContent -match '&#9664;V')            { Pass "Ruth 1: prev chapter button present" }
+    else                                           { Fail "Ruth 1: prev chapter button MISSING" }
+    if ($ruthContent -match 'V&#9654;')            { Pass "Ruth 1: next chapter button present" }
+    else                                           { Fail "Ruth 1: next chapter button MISSING" }
+    if ($ruthContent -match '&#9664;B')            { Pass "Ruth 1: prev book button present" }
+    else                                           { Fail "Ruth 1: prev book button MISSING" }
+    if ($ruthContent -match 'B&#9654;')            { Pass "Ruth 1: next book button present" }
+    else                                           { Fail "Ruth 1: next book button MISSING" }
+    if ($ruthContent -match 'navigate\.html#Ruth') { Pass "Ruth 1: Go To link includes book hash" }
+    else                                           { Fail "Ruth 1: Go To link missing book hash" }
+}
+
+$navFile2 = Join-Path $OutputRoot 'navigate.html'
+if (Test-Path $navFile2) {
+    $navContent2 = Get-Content -Raw $navFile2
+    if ($navContent2 -match 'sticky-header\.js')   { Pass "navigate.html: sticky-header.js present" }
+    else                                           { Fail "navigate.html: sticky-header.js MISSING" }
+    if ($navContent2 -match 'location\.hash')      { Pass "navigate.html: hash-based book auto-select present" }
+    else                                           { Fail "navigate.html: hash-based book auto-select MISSING" }
+    if ($navContent2 -match '\.abbr') {
+        Pass "navigate.html: uses abbr field for hash lookup"
+    } else {
+        Warn "navigate.html: abbr field not detected in hash lookup"
+    }
+}
+
 # ── FINAL REPORT ──────────────────────────────────────────────────────────────
 Write-Host ""
 Write-Host "============================================" -ForegroundColor White

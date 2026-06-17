@@ -1,6 +1,6 @@
 # git-push.ps1
 # Stages all project files and pushes to GitHub.
-# Usage: pwsh -NoProfile -File .\git-push.ps1 -Message "Your commit message"
+# Usage: pwsh -NoProfile -File .\scripts\git-push.ps1 -Message "Your commit message"
 
 param(
     [string]$Message = "Update project files"
@@ -16,15 +16,17 @@ git add books/
 git add dict/
 git add xrefs/
 git add indexes/
-git add generate_bible.ps1
-git add generate_dict.ps1
-git add generate_genesis1.ps1
-git add qa-test.ps1
-git add scan_morph_codes.ps1
+git add scripts/
+git add .github/
 git add index.html
 git add navigate.html
+git add start-study.ps1
+git add start-study.bat
+git add BiblePencil.ico
 git add SESSION-NOTES.md
 git add DESIGN-PROPOSAL.md
+git add README.md
+git add .gitignore
 
 Write-Host "Committing with message: $Message" -ForegroundColor Cyan
 git commit -m $Message

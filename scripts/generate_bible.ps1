@@ -238,6 +238,7 @@ function ConvertTo-VerseHtml {
     $currentVerseNum = 0
     $verseHtml       = [System.Text.StringBuilder]::new()
     $verseXrefs      = [System.Collections.Generic.List[string]]::new()
+    $verseWords      = [System.Collections.Generic.List[hashtable]]::new()
 
     foreach ($node in $flatNodes) {
 
@@ -271,6 +272,7 @@ function ConvertTo-VerseHtml {
                     $inVerse         = $true
                     [void]$verseHtml.Clear()
                     $verseXrefs.Clear()
+                    $verseWords = [System.Collections.Generic.List[hashtable]]::new()
                 } else {
                     $inVerse = $false
                 }
@@ -282,6 +284,7 @@ function ConvertTo-VerseHtml {
                         Num   = $currentVerseNum
                         Html  = $finalHtml
                         Xrefs = @($verseXrefs)
+                        Words = @($verseWords)
                     })
                 }
                 $inVerse = $false
@@ -298,6 +301,20 @@ function ConvertTo-VerseHtml {
 				if ($word -or $lemma) {
 					$linkHtml = Get-StrongLinkHtml -Word $word -Lemma $lemma -DictRelPath $DictRelPath
 					if ($linkHtml) { [void]$verseHtml.Append($linkHtml + ' ') }
+				}
+				# Concordance word extraction
+				if ($lemma -and $word) {
+					$sm = [regex]::Matches($lemma, 'strong:([HG])(\d+[a-z]?)')
+					foreach ($m in $sm) {
+						$letter  = $m.Groups[1].Value.ToUpper()
+						$digits  = $m.Groups[2].Value
+						# Strip trailing letter, remove ALL leading zeros, re-pad to exactly 4
+						$numStr  = ($digits -replace '[a-z]$', '').TrimStart('0')
+						if (-not $numStr) { $numStr = '0' }
+						$numPart = $numStr.PadLeft(4, '0')
+						$sid     = $letter + $numPart
+						[void]$verseWords.Add(@{ strongs = $sid; word = $word.Trim() })
+					}
 				}
 			}
 			'transChange' {
@@ -347,6 +364,7 @@ function ConvertTo-VerseHtml {
             Num   = $currentVerseNum
             Html  = $verseHtml.ToString().Trim()
             Xrefs = @($verseXrefs)
+            Words = @($verseWords)
         })
     }
 
@@ -397,7 +415,11 @@ Ensure-Dir (Join-Path $OutputRoot 'js')
 Ensure-Dir (Join-Path $OutputRoot 'indexes')
 
 # Phase 3: Generate chapter HTML files and xref pages
-Write-Host "Generating chapter pages..." -ForegroundColor Cyan
+Write-Host "Generating chapter pages (with concordance)..." -ForegroundColor Cyan
+
+# Concordance accumulator
+$concordance = @{}
+$concordanceRefCount = 0
 
 $totalChapters = $FlatChapters.Count
 $doneChapters  = 0
@@ -425,6 +447,38 @@ foreach ($entry in $FlatChapters) {
     }
 
     $VerseCountData[$book.OsisId][$chNum - 1] = $verses.Count
+
+    # Populate concordance from this chapter
+    $bookAbbr2   = $book.OsisId
+    $bookFolder2 = $book.Folder
+    foreach ($v in $verses) {
+        if ($v.Words -and $v.Words.Count -gt 0) {
+            foreach ($wEntry in $v.Words) {
+                $sid = $wEntry.strongs
+                $wrd = $wEntry.word
+                if (-not $sid -or -not $wrd) { continue }
+                if (-not $concordance.ContainsKey($sid)) {
+                    $concordance[$sid] = [System.Collections.Generic.List[hashtable]]::new()
+                }
+                $isDup = $false
+                foreach ($ex in $concordance[$sid]) {
+                    if ($ex.book -eq $bookAbbr2 -and $ex.ch -eq $chNum -and $ex.vs -eq $v.Num) {
+                        $isDup = $true; break
+                    }
+                }
+                if (-not $isDup) {
+                    $concordance[$sid].Add(@{
+                        book   = $bookAbbr2
+                        folder = $bookFolder2
+                        ch     = $chNum
+                        vs     = $v.Num
+                        word   = $wrd
+                    })
+                    $concordanceRefCount++
+                }
+            }
+        }
+    }
 
     $verseBlocks = [System.Text.StringBuilder]::new()
     foreach ($v in $verses) {
@@ -496,6 +550,7 @@ foreach ($entry in $FlatChapters) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="../../BiblePencil.ico">
   <title>$($book.FullName) $chNum -- KJV</title>
   <link rel="stylesheet" href="../../css/style.css">
 </head>
@@ -564,6 +619,7 @@ foreach ($entry in $FlatChapters) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="../../BiblePencil.ico">
   <title>Cross-References: $pageTitle -- KJV</title>
   <link rel="stylesheet" href="../css/style.css">
 </head>
@@ -627,6 +683,7 @@ foreach ($book in $BookTable) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="BiblePencil.ico">
   <title>KJV Bible with Strong's Concordance</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -669,6 +726,7 @@ Write-Host "Generating navigate.html..." -ForegroundColor Cyan
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="BiblePencil.ico">
   <title>Go To Passage -- KJV</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -882,6 +940,22 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 </html>
 '@ | Set-Content -Path (Join-Path $OutputRoot 'navigate.html') -Encoding UTF8
 Write-Host "navigate.html written." -ForegroundColor Green
+
+# Write concordance.json
+Write-Host ""
+Write-Host "=== Writing Concordance Index ===" -ForegroundColor Cyan
+$concordancePath = Join-Path $OutputRoot "concordance.json"
+$output = @{}
+foreach ($key in $concordance.Keys) { $output[$key] = @($concordance[$key]) }
+$json = $output | ConvertTo-Json -Depth 4 -Compress
+Set-Content -Path $concordancePath -Value $json -Encoding UTF8
+Write-Host "  Strong's entries : $($concordance.Keys.Count)" -ForegroundColor Green
+Write-Host "  Total references : $concordanceRefCount" -ForegroundColor Green
+$gitignorePath = Join-Path $OutputRoot ".gitignore"
+$gitignoreContent = if (Test-Path $gitignorePath) { Get-Content $gitignorePath -Raw } else { "" }
+if ($gitignoreContent -notmatch "concordance") {
+    Add-Content -Path $gitignorePath -Value "`nconcordance.json"
+}
 
 # Done
 Write-Host ""

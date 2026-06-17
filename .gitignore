@@ -15,3 +15,5 @@ $RECYCLE.BIN/
 *.bak
 *.swp
 *~
+
+concordance.json
