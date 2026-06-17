@@ -26,3 +26,15 @@ bdb-thayer.db
 bdb-thayer.dct.mybible
 sqlite-nuget.zip
 reorganize.ps1
+
+bdbthayer.LZMA
+
+bdb-line.txt
+bdb-quoted.txt
+bdb-thayer-raw.txt
+bdb-thayer.csv
+bdb-thayer.db
+bdb-thayer.dct.mybible
+bdb-thayer.json
+bdbthayer.LZMA
+sqlite-nuget.zip
