@@ -106,7 +106,7 @@ $count = 0
 foreach ($f in $hebFiles) {
     AdbPush "dict/hebrew/$($f.Name)" "dict/hebrew/$($f.Name)"
     $count++
-    if ($count % 1000 -eq 0) {
+    if ($count % 250 -eq 0) {
         Write-Host "  Hebrew: $count files pushed..." -ForegroundColor Gray
     }
 }
@@ -120,7 +120,7 @@ $count = 0
 foreach ($f in $grkFiles) {
     AdbPush "dict/greek/$($f.Name)" "dict/greek/$($f.Name)"
     $count++
-    if ($count % 1000 -eq 0) {
+    if ($count % 250 -eq 0) {
         Write-Host "  Greek: $count files pushed..." -ForegroundColor Gray
     }
 }

@@ -1,3 +1,19 @@
+# ── POST /api/test-sync ────────────────────────────────────────
+# Simulates a slow sync for testing the modal UI (5 second delay)
+
+function Handle-TestSync {
+    param([System.Net.HttpListenerResponse]$Response)
+    Write-Host "[TEST-SYNC] Simulating sync (5 second delay)..." -ForegroundColor Yellow
+    Start-Sleep -Seconds 5
+    $result = @{
+        ok     = $true
+        pushed = 42
+        files  = @("books/01-Gen/1.html", "books/43-John/3.html", "css/style.css")
+    }
+    Write-Host "[TEST-SYNC] Done." -ForegroundColor Yellow
+    Send-Json -Response $Response -Data $result
+}
+
 # ================================================================
 # start-study.ps1 — KJV Strong's Bible PC Study Server
 # ================================================================
@@ -585,6 +601,9 @@ try {
             }
             elseif ($path -eq "/api/sync-kindle" -and $method -eq "POST") {
                 Handle-SyncKindle -Response $response
+            }
+            elseif ($path -eq "/api/test-sync" -and $method -eq "POST") {
+                Handle-TestSync -Response $response
             }
             # ── Serve static files ────────────────────────────────
             else {

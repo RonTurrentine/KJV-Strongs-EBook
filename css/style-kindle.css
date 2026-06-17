@@ -945,3 +945,9 @@ em.added,
     color: #81c784;
     text-decoration: underline;
 }
+
+/* ── Sync Button (hidden on Kindle file://) ────────────────────── */
+
+.sync-btn {
+    display: none !important;
+}

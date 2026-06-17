@@ -522,6 +522,34 @@
         });
     };
 
+    /* Test sync modal — calls /api/test-sync (5 second fake delay) */
+    window.testSyncModal = function () {
+        if (!isLocalhost) { return; }
+        var syncModal = document.getElementById("sync-modal");
+        if (!syncModal) {
+            syncModal = document.createElement("div");
+            syncModal.id = "sync-modal";
+            syncModal.className = "sync-modal";
+            var syncBox = document.createElement("div");
+            syncBox.className = "sync-modal-box";
+            var syncText = document.createElement("p");
+            syncText.className = "sync-modal-text";
+            syncText.innerHTML = "&#9889; Syncing to Kindle&hellip;<br><br>Please wait until sync is complete.";
+            syncBox.appendChild(syncText);
+            syncModal.appendChild(syncBox);
+            document.body.appendChild(syncModal);
+        }
+        addClass(syncModal, "is-open");
+        ajax("POST", "/api/test-sync", null, function (status, data) {
+            removeClass(syncModal, "is-open");
+            if (status === 200 && data) {
+                showToast("TEST: Pushed " + (data.pushed || 0) + " file(s)", "success");
+            } else {
+                showToast("TEST: Sync failed", "error");
+            }
+        });
+    };
+
     /* ============================================================
        Kindle Connection Status Polling
        ============================================================ */
