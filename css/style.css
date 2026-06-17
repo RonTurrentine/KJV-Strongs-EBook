@@ -1018,166 +1018,254 @@ body.is-localhost .sync-btn {
   color: #ffffff;
 }
 
+/* ── BDB / Thayer Definition Block ────────────────────────────── */
+
+.dict-bdb {
+  margin: 0 0 20px 0;
+  padding: 16px;
+  background-color: #111111;
+  border-left: 3px solid #7e57c2;
+  border-radius: 4px;
+}
+
+.dict-bdb ol {
+  margin: 8px 0 0 0;
+  padding-left: 24px;
+  color: #e0e0e0;
+  line-height: 1.7;
+}
+
+.dict-bdb ol li {
+  margin-bottom: 4px;
+}
+
+.dict-bdb ol ol {
+  margin-top: 4px;
+  list-style-type: lower-alpha;
+  color: #cccccc;
+}
+
+.dict-bdb p {
+  margin: 4px 0;
+  color: #e0e0e0;
+  line-height: 1.6;
+}
+
+/* ── Strong's Index Pages ──────────────────────────────────────── */
+
+.index-controls {
+  margin: 12px 0;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-gray);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.index-status {
+  color: #aaaaaa;
+  font-size: 0.9em;
+  margin-right: 10px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.index-perpage-label {
+  color: #888888;
+  font-size: 0.85em;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.index-nav {
+  margin: 10px 0;
+  min-height: 10px;
+}
+
+.btn-active {
+  background-color: #005f5f;
+  border-color: var(--link-blue);
+  color: #ffffff;
+}
+
+.dict-index-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+
+.dict-index-table th {
+  text-align: left;
+  padding: 8px 10px;
+  background-color: #111111;
+  color: var(--link-blue);
+  border-bottom: 2px solid var(--border-gray);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dict-index-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid #222222;
+  vertical-align: top;
+}
+
+.dict-index-table tr:hover td {
+  background-color: #1e1e1e;
+}
+
+.dict-index-link {
+  color: var(--link-blue);
+  text-decoration: none;
+  font-weight: bold;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.dict-index-link:hover {
+  text-decoration: underline;
+}
+
+.dict-index-orig {
+  font-size: 1.1em;
+  color: #ffffff;
+}
+
+.dict-index-xlit {
+  color: #aaaaaa;
+  font-style: italic;
+}
+
+.dict-index-def {
+  color: #cccccc;
+  max-width: 400px;
+}
+
+/* ── Concordance Section ───────────────────────────────────────── */
+
 .conc-section {
-    margin-top: 30px;
-    padding-top: 20px;
-    border-top: 2px solid #333333;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 2px solid #333333;
 }
 
 .conc-heading {
-    font-size: 1.1em;
-    font-weight: bold;
-    color: #00bcd4;
-    margin: 0 0 14px 0;
-    padding: 0;
-    font-family: Arial, Helvetica, sans-serif;
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #00bcd4;
+  margin: 0 0 14px 0;
+  padding: 0;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .conc-total {
-    font-weight: normal;
-    font-size: 0.85em;
-    color: #888888;
+  font-weight: normal;
+  font-size: 0.85em;
+  color: #888888;
 }
-
-
-/* ── Individual Book Section ───────────────────────────────────── */
 
 .conc-book {
-    margin: 0 0 2px 0;
+  margin: 0 0 2px 0;
 }
-
-
-/* ── Book Toggle Button ────────────────────────────────────────── */
-/* Full-width clickable header, left-aligned text                   */
 
 .conc-book-toggle {
-    display: block;
-    width: 100%;
-    padding: 10px 12px;
-    min-height: 44px;
-    margin: 0;
-    text-align: left;
-    font-size: 0.95em;
-    font-family: Arial, Helvetica, sans-serif;
-    font-weight: bold;
-    color: #e0e0e0;
-    background-color: #222222;
-    border: none;
-    border-bottom: 1px solid #2a2a2a;
-    cursor: pointer;
-    -webkit-appearance: none;
-    -webkit-box-sizing: border-box;
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: rgba(0, 188, 212, 0.2);
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  min-height: 44px;
+  margin: 0;
+  text-align: left;
+  font-size: 0.95em;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: bold;
+  color: #e0e0e0;
+  background-color: #222222;
+  border: none;
+  border-bottom: 1px solid #2a2a2a;
+  cursor: pointer;
+  box-sizing: border-box;
 }
 
-.conc-book-toggle:active {
-    background-color: #2a2a2a;
-    color: #ffffff;
+.conc-book-toggle:hover {
+  background-color: #2a2a2a;
 }
 
 .conc-count {
-    font-weight: normal;
-    color: #888888;
-    font-size: 0.85em;
+  font-weight: normal;
+  color: #888888;
+  font-size: 0.85em;
 }
-
-
-/* ── Collapsible Verse List ────────────────────────────────────── */
 
 .conc-verses {
-    padding: 8px 12px 12px 12px;
-    background-color: #1a1a1a;
-    border-bottom: 1px solid #2a2a2a;
+  padding: 8px 12px 12px 12px;
+  background-color: #1a1a1a;
+  border-bottom: 1px solid #2a2a2a;
 }
-
-
-/* ── Individual Verse Reference Link ───────────────────────────── */
-/* Compact inline links that flow like text                         */
 
 .conc-link {
-    display: inline-block;
-    padding: 4px 8px;
-    margin: 2px;
-    min-height: 32px;
-    line-height: 24px;
-    font-size: 0.8em;
-    font-family: Arial, Helvetica, sans-serif;
-    color: #64b5f6;
-    background-color: #252525;
-    border: 1px solid #333333;
-    -webkit-border-radius: 4px;
-    border-radius: 4px;
-    text-decoration: none;
-    white-space: nowrap;
+  display: inline-block;
+  padding: 4px 8px;
+  margin: 2px;
+  min-height: 32px;
+  line-height: 24px;
+  font-size: 0.8em;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #64b5f6;
+  background-color: #252525;
+  border: 1px solid #333333;
+  border-radius: 4px;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
-.conc-link:active {
-    background-color: #333333;
-    border-color: #00bcd4;
-    color: #ffffff;
+.conc-link:hover {
+  background-color: #333333;
+  border-color: #00bcd4;
+  color: #ffffff;
 }
 
-
-/* ── Pagination Page Container ─────────────────────────────────── */
-
-.conc-page {
-    /* Pages shown/hidden by JS */
+.conc-word {
+  font-style: italic;
+  font-size: 0.85em;
+  color: #a5d6a7;
+  margin-left: 2px;
 }
-
-
-/* ── Pagination Navigation ─────────────────────────────────────── */
 
 .conc-nav {
-    margin-top: 10px;
-    padding-top: 8px;
-    border-top: 1px solid #333333;
-    text-align: center;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #333333;
+  text-align: center;
 }
 
 .conc-nav-btn {
-    display: inline-block;
-    vertical-align: middle;
-    padding: 6px 14px;
-    min-height: 38px;
-    min-width: 70px;
-    font-size: 13px;
-    font-family: Arial, Helvetica, sans-serif;
-    font-weight: bold;
-    color: #e0e0e0;
-    background-color: #333333;
-    border: 1px solid #555555;
-    -webkit-border-radius: 6px;
-    border-radius: 6px;
-    cursor: pointer;
-    -webkit-appearance: none;
+  display: inline-block;
+  vertical-align: middle;
+  padding: 6px 14px;
+  min-height: 38px;
+  min-width: 70px;
+  font-size: 13px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: bold;
+  color: #e0e0e0;
+  background-color: #333333;
+  border: 1px solid #555555;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
-.conc-nav-btn:active {
-    background-color: #444444;
-    border-color: #00bcd4;
+.conc-nav-btn:hover {
+  background-color: #444444;
+  border-color: #00bcd4;
 }
 
 .conc-pg-label {
-    display: inline-block;
-    vertical-align: middle;
-    padding: 0 12px;
-    font-size: 0.85em;
-    color: #888888;
-    font-family: Arial, Helvetica, sans-serif;
-}
-   ================================================================ */
-
-.conc-word {
-    font-style: italic;
-    font-size: 0.85em;
-    color: #a5d6a7;                /* light green — distinct from the blue reference */
-    margin-left: 2px;
-}
-
-/* Inside active/tapped state, word inherits the link highlight */
-.conc-link:active .conc-word {
-    color: #c8e6c9;
+  display: inline-block;
+  vertical-align: middle;
+  padding: 0 12px;
+  font-size: 0.85em;
+  color: #888888;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 /* ── Note Book Picker ──────────────────────────────────────────── */

@@ -74,6 +74,7 @@ function renderNav(id) {
   var tp = totalPages();
   var html = "";
   if (currentPage > 1) {
+    html += "<button class=\"btn\" onclick=\"goPage(1)\">[BEG]</button> ";
     html += "<button class=\"btn\" onclick=\"goPage(" + (currentPage - 1) + ")\">&laquo; Prev</button> ";
   }
   var pageStart = Math.max(1, currentPage - 3);
@@ -88,6 +89,7 @@ function renderNav(id) {
   }
   if (currentPage < tp) {
     html += " <button class=\"btn\" onclick=\"goPage(" + (currentPage + 1) + ")\">Next &raquo;</button>";
+    html += " <button class=\"btn\" onclick=\"goPage(" + tp + ")\">[END]</button>";
   }
   el.innerHTML = html;
 }

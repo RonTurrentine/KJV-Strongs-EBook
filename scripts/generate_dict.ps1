@@ -32,6 +32,54 @@ if (Test-Path $ConcordancePath) {
     Write-Host "WARNING: concordance.json not found. Run generate_bible.ps1 first." -ForegroundColor Yellow
 }
 
+# ── Load BDB/Thayer Lexicon ─────────────────────────────────────
+$BdbPath = Join-Path (Get-Location) "bdb-thayer.json"
+if (-not (Test-Path $BdbPath) -and $PSScriptRoot) {
+    $BdbPath = Join-Path $PSScriptRoot "..db-thayer.json"
+}
+$BdbData = @{}
+if (Test-Path $BdbPath) {
+    Write-Host "Loading BDB/Thayer lexicon..." -ForegroundColor Cyan
+    $bdbRaw = [System.IO.File]::ReadAllText($BdbPath, [System.Text.Encoding]::UTF8)
+    # Use System.Text.Json (built into .NET 5+, available in PowerShell 7)
+    $jsonDoc = [System.Text.Json.JsonDocument]::Parse($bdbRaw)
+    foreach ($element in $jsonDoc.RootElement.EnumerateArray()) {
+        $w = $element.GetProperty("word").GetString()
+        $d = $element.GetProperty("data").GetString()
+        $BdbData[$w] = $d
+    }
+    $jsonDoc.Dispose()
+    Write-Host "  Loaded $($BdbData.Keys.Count) BDB/Thayer entries" -ForegroundColor Green
+} else {
+    Write-Host "WARNING: bdb-thayer.json not found. Run scripts/export-bdb.ps1 first." -ForegroundColor Yellow
+}
+
+function Convert-BdbLinks {
+    param([string]$Html)
+    return [System.Text.RegularExpressions.Regex]::Replace(
+        $Html,
+        "<a class='dict' href='#d([HG])(\d+)'>([^<]+)</a>",
+        {
+            param($m)
+            $prefix  = $m.Groups[1].Value
+            $num     = [int]$m.Groups[2].Value
+            $lang2   = if ($prefix -eq 'H') { 'hebrew' } else { 'greek' }
+            $padded  = $prefix.ToLower() + $num.ToString().PadLeft(4, '0')
+            $paddedDisplay = $prefix + $num.ToString().PadLeft(4, '0')
+            $href    = "../../dict/$lang2/$padded.html"
+            return "<a href=`"$href`" class=`"strongs-link`">$paddedDisplay</a>"
+        }
+    )
+}
+
+function Get-BdbHtml {
+    param([string]$StrongsId)
+    $unpaddedId = $StrongsId -replace '^([HG])0+', '$1'
+    if (-not $BdbData.ContainsKey($unpaddedId)) { return '' }
+    $raw = Convert-BdbLinks -Html $BdbData[$unpaddedId]
+    return "<div class=`"dict-bdb`"><p class=`"dict-label`">BDB / Thayer Definition</p>$raw</div>"
+}
+
 # Part of Speech expansion table (Hebrew OSIS morph codes)
 $posMap = @{
     'n'         = 'Noun'
@@ -413,7 +461,8 @@ function Write-DictPage {
         [string]$KjvDef,
         [string]$Origin,
         [string]$Language,
-        [string]$ConcordanceHtml = ''
+        [string]$ConcordanceHtml = '',
+        [string]$BdbHtml = ''
     )
 
     $lang      = $Language.ToLower()
@@ -499,6 +548,8 @@ $originRow
       </div>
 
 $kjvBlock
+
+$BdbHtml
 
     </div>
 
@@ -628,6 +679,7 @@ function renderNav(id) {
   var tp = totalPages();
   var html = "";
   if (currentPage > 1) {
+    html += "<button class=\"btn\" onclick=\"goPage(1)\">[BEG]</button> ";
     html += "<button class=\"btn\" onclick=\"goPage(" + (currentPage - 1) + ")\">&laquo; Prev</button> ";
   }
   var pageStart = Math.max(1, currentPage - 3);
@@ -642,6 +694,7 @@ function renderNav(id) {
   }
   if (currentPage < tp) {
     html += " <button class=\"btn\" onclick=\"goPage(" + (currentPage + 1) + ")\">Next &raquo;</button>";
+    html += " <button class=\"btn\" onclick=\"goPage(" + tp + ")\">[END]</button>";
   }
   el.innerHTML = html;
 }
@@ -748,10 +801,12 @@ foreach ($entry in $entries) {
     $origin  = if ($srcNode) { 'See H' + ($srcNode.GetAttribute('src') -replace 'H', '') } else { '' }
 
     $outPath = Join-Path $OutDir "hebrew\$padded.html"
-    $concHtml = Get-ConcordanceHtml -StrongsId ("H" + $num.ToString().PadLeft(4,'0'))
+    $paddedHeb = "H" + $num.ToString().PadLeft(4,'0')
+    $concHtml  = Get-ConcordanceHtml -StrongsId $paddedHeb
+    $bdbHtml   = Get-BdbHtml -StrongsId $paddedHeb
     Write-DictPage `
         -FilePath        $outPath `
-        -StrongsId       ("H" + $num.ToString().PadLeft(4,'0')) `
+        -StrongsId       $paddedHeb `
         -OriginalWord    $origWord `
         -Translit        $xlit `
         -Phonetic        $phon `
@@ -760,7 +815,8 @@ foreach ($entry in $entries) {
         -KjvDef          $kjv `
         -Origin          $origin `
         -Language        'Hebrew' `
-        -ConcordanceHtml $concHtml
+        -ConcordanceHtml $concHtml `
+        -BdbHtml         $bdbHtml
 
     $shortDef = if ($def) { Get-ShortDef $def } elseif ($kjv) { Get-ShortDef $kjv } else { '' }
     [void]$hebIndexEntries.Add(@{
@@ -816,10 +872,12 @@ foreach ($entry in $gEntries) {
     $kjv     = $kjv -replace '^\s*:--\s*', ''
 
     $outPath = Join-Path $OutDir "greek\$padded.html"
-    $concHtml = Get-ConcordanceHtml -StrongsId ("G" + $num.ToString().PadLeft(4,'0'))
+    $paddedGrk = "G" + $num.ToString().PadLeft(4,'0')
+    $concHtml  = Get-ConcordanceHtml -StrongsId $paddedGrk
+    $bdbHtml   = Get-BdbHtml -StrongsId $paddedGrk
     Write-DictPage `
         -FilePath        $outPath `
-        -StrongsId       ("G" + $num.ToString().PadLeft(4,'0')) `
+        -StrongsId       $paddedGrk `
         -OriginalWord    $origWord `
         -Translit        $xlit `
         -Phonetic        $phon `
@@ -828,7 +886,8 @@ foreach ($entry in $gEntries) {
         -KjvDef          $kjv `
         -Origin          $origin `
         -Language        'Greek' `
-        -ConcordanceHtml $concHtml
+        -ConcordanceHtml $concHtml `
+        -BdbHtml         $bdbHtml
 
     $shortDef = if ($def) { Get-ShortDef $def } elseif ($kjv) { Get-ShortDef $kjv } else { '' }
     [void]$grkIndexEntries.Add(@{
