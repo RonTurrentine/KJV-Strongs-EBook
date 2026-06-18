@@ -1080,3 +1080,57 @@ Would require:
 
 ---
 
+
+---
+
+### Session 16
+- **Date:** 2026-06-18
+- **Model:** Claude Sonnet 4.6 (claude.ai)
+- **Work Done:**
+
+  **Sync modal fix**
+  - Real `syncToKindle` function never had modal code — only `testSyncModal` did
+  - Added full modal creation + 2 second minimum display time to `syncToKindle`
+  - Modal now always visible for at least 2 seconds regardless of sync speed
+
+  **Hebrew/Greek index buttons on index.html**
+  - Added [Hebrew] and [Greek] buttons to left of [Go To Passage]
+  - Change in `generate_bible.ps1` index.html nav-buttons template
+
+  **[BEG]/[END] pagination buttons**
+  - Added [BEG] (jump to page 1) and [END] (jump to last page)
+  - Change in `generate_dict.ps1` renderNav() function
+
+  **Concordance CSS fix**
+  - All concordance CSS missing from style.css
+  - Appended full concordance + note-picker CSS block
+
+  **BDB/Thayer file cleanup**
+  - Deleted test files: bdb-line.txt, bdb-quoted.txt, bdb-thayer-raw.txt,
+    bdb-thayer.csv, bdb-thayer.db, sqlite-nuget.zip, bdbthayer.LZMA
+  - Added all to .gitignore
+  - NOTE: bdb-thayer.dct.mybible deleted — re-download from MyBible to regenerate
+
+  **Documentation**
+  - `README.md` — completely rewritten to reflect current project state
+  - `WINDOWS-SETUP.md` — comprehensive Windows setup guide
+  - `MAC-SETUP.md` — comprehensive Mac setup guide (uses PowerShell Core)
+  - Future: Electron launcher app for non-technical users
+
+  **Verse link debugging**
+  - [[Luke.18:14]] vs [[Luke.18.14]] — colon vs dot syntax issue
+  - Syntax requires dots throughout: [[Book.Ch.Vs]]
+  - Book picker helps by auto-inserting [[Book. at cursor
+
+  **Electron launcher app — planned**
+  - For non-technical users who find setup guides intimidating
+  - Cross-platform: Windows (.exe) and Mac (.dmg)
+  - Source XML files hosted as GitHub Release assets
+  - Executables distributed via GitHub Releases page
+  - Will require Opus consultation when ready to build
+
+  **QA: 151/152 passing**
+  **All changes committed to GitHub**
+
+---
+
