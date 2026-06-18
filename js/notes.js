@@ -509,16 +509,38 @@
 
     window.syncToKindle = function () {
         if (!isLocalhost) { return; }
-        showToast("Syncing to Kindle...", "");
+
+        /* Show sync wait modal with minimum 2 second display */
+        var syncModal = document.getElementById("sync-modal");
+        if (!syncModal) {
+            syncModal = document.createElement("div");
+            syncModal.id = "sync-modal";
+            syncModal.className = "sync-modal";
+            var syncBox = document.createElement("div");
+            syncBox.className = "sync-modal-box";
+            var syncText = document.createElement("p");
+            syncText.className = "sync-modal-text";
+            syncText.innerHTML = "&#9889; Syncing to Kindle&hellip;<br><br>Please wait until sync is complete.";
+            syncBox.appendChild(syncText);
+            syncModal.appendChild(syncBox);
+            document.body.appendChild(syncModal);
+        }
+        addClass(syncModal, "is-open");
+        var syncStart = new Date().getTime();
 
         ajax("POST", "/api/sync-kindle", null, function (status, data) {
-            if (status === 200 && data) {
-                var msg = "Pushed " + (data.pushed || 0) + " file(s) to Kindle";
-                showToast(msg, "success");
-            } else {
-                var errMsg = (data && data.error) ? data.error : "Sync failed";
-                showToast(errMsg, "error");
-            }
+            var elapsed = new Date().getTime() - syncStart;
+            var delay = Math.max(0, 2000 - elapsed);
+            setTimeout(function () {
+                removeClass(syncModal, "is-open");
+                if (status === 200 && data) {
+                    var msg = "Pushed " + (data.pushed || 0) + " file(s) to Kindle";
+                    showToast(msg, "success");
+                } else {
+                    var errMsg = (data && data.error) ? data.error : "Sync failed";
+                    showToast(errMsg, "error");
+                }
+            }, delay);
         });
     };
 
