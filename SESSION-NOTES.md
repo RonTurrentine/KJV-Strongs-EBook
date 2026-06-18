@@ -981,3 +981,102 @@ Would require:
 
 ---
 
+
+---
+
+### Session 14
+- **Date:** 2026-06-17
+- **Model:** Claude Sonnet 4.6 (claude.ai)
+- **Work Done:**
+
+  **BDB/Thayer Lexicon Integration — Complete**
+  - `bdb-thayer.dct.mybible` confirmed as SQLite database
+  - Schema: `dictionary` table, columns: `word` (TEXT), `data` (TEXT)
+  - 14,197 entries with rich HTML hierarchical definitions
+  - Keys unpadded: `H1121` not `H0001`
+  - Data already formatted as HTML with `<ol><li>` nested lists
+
+  **Export script (`scripts/export-bdb.ps1`)**
+  - sqlite3 `.mode json` truncates long data fields — discovered via debugging
+  - Fix: individual queries per entry using streaming file writer
+  - Output: `bdb-thayer.json` — 6.5MB, 14,197 entries, full UTF-8
+  - Hebrew/Greek characters preserved correctly (`בּן`, `λόγος`)
+
+  **generate_dict.ps1 integration**
+  - Loads `bdb-thayer.json` using `System.Text.Json.JsonDocument`
+  - `Get-BdbHtml` function looks up entry by unpadded ID (strips leading zeros)
+  - `Convert-BdbLinks` converts `<a class='dict' href='#dH1129'>` to our dict links
+  - BDB block inserted between KJV Usage and concordance section
+  - Purple left border (`#7e57c2`) distinguishes BDB from Strong's (teal/gold)
+  - CSS added to both `style.css` and `style-kindle.css`
+
+  **Results**
+  - H1121 (son): beautiful 9-item hierarchical definition with nested sub-items
+  - H0430 (God/Elohim): full BDB definition showing all usages
+  - G3056 (Logos/Word): Thayer's Greek definition with full detail
+  - Origin cross-reference links work correctly
+  - Both PC and Kindle display correctly
+
+  **Files changed**
+  - `scripts/generate_dict.ps1` — BDB loading + Get-BdbHtml + Convert-BdbLinks
+  - `scripts/export-bdb.ps1` — robust SQLite export with individual queries
+  - `css/style.css` — `.dict-bdb` styles
+  - `css/style-kindle.css` — `.dict-bdb` styles (Kindle-compatible)
+  - `bdb-thayer.json` — gitignored, regenerated via export-bdb.ps1
+  - `.gitignore` — added bdb-thayer.json, bdb-thayer.csv, bdb-thayer.db,
+    bdb-thayer.dct.mybible, sqlite-nuget.zip
+
+  **Generation order (updated):**
+  1. `scripts/export-bdb.ps1` — export BDB/Thayer lexicon (one-time or when updated)
+  2. `scripts/generate_bible.ps1` — chapters + concordance.json
+  3. `scripts/generate_dict.ps1` — dictionary pages with BDB + concordance
+  4. `scripts/qa-test.ps1`
+  5. `scripts/rebake-notes.ps1`
+
+  **QA: 151/152 passing (sync button warning — needs regeneration)**
+  **All changes committed to GitHub**
+
+---
+
+
+---
+
+### Session 15
+- **Date:** 2026-06-17 (continued)
+- **Model:** Claude Sonnet 4.6 (claude.ai)
+- **Work Done:**
+
+  **Hebrew/Greek Index buttons on index.html**
+  - Added [Hebrew] and [Greek] buttons to the left of [Go To Passage] in index.html header
+  - Change in `generate_bible.ps1` index.html nav-buttons template
+
+  **[BEG] and [END] pagination buttons on index pages**
+  - Added [BEG] button (jumps to page 1) to left of Prev button
+  - Added [END] button (jumps to last page) to right of Next button
+  - Change in `generate_dict.ps1` renderNav() function
+  - Makes navigation much easier on large indices (Hebrew 8,674 / Greek 5,624 entries)
+
+  **Concordance CSS missing from style.css**
+  - All concordance CSS (conc-section, conc-link, conc-word, etc.) was missing
+  - Appended full concordance + note-picker CSS block to style.css
+  - style-kindle.css already had correct CSS
+
+  **BDB/Thayer file cleanup**
+  - Deleted test export files: bdb-line.txt, bdb-quoted.txt, bdb-thayer-raw.txt,
+    bdb-thayer.csv, bdb-thayer.db, sqlite-nuget.zip
+  - Deleted bdbthayer.LZMA from repository via git rm
+  - Kept bdb-thayer.json (needed by generate_dict.ps1)
+  - NOTE: bdb-thayer.dct.mybible (source database) also deleted locally
+    - To regenerate bdb-thayer.json, re-download from MyBible site
+    - Then run: pwsh -NoProfile -File .\scripts\export-bdb.ps1
+  - Added all BDB files to .gitignore
+
+  **start-study.ps1 param warning**
+  - Harmless error on server startup — server runs correctly despite warning
+  - Will investigate fix next session
+
+  **QA status: 151/152 (sync button warning)**
+  **All changes committed to GitHub**
+
+---
+
