@@ -550,6 +550,7 @@ foreach ($entry in $FlatChapters) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
   <link rel="icon" type="image/x-icon" href="../../BiblePencil.ico">
   <title>$($book.FullName) $chNum -- KJV</title>
   <link rel="stylesheet" href="../../css/style.css">
@@ -567,6 +568,7 @@ foreach ($entry in $FlatChapters) {
       $nextBookHtml
       <button class="btn" id="font-decrease" onclick="decreaseFontSize()">a&#8595;</button>
 	  <button class="btn" id="font-increase" onclick="increaseFontSize()">A&#8593;</button>
+      <button class="btn" id="strongs-toggle" onclick="toggleStrongs()" title="Show/Hide Strong&#39;s links"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
       <button class="btn sync-btn" id="sync-btn" onclick="syncToKindle()" title="Sync to Kindle">&#9889; K</button>
       <span id="unbaked-indicator"></span>
     </div>
@@ -619,6 +621,7 @@ foreach ($entry in $FlatChapters) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
   <link rel="icon" type="image/x-icon" href="../../BiblePencil.ico">
   <title>Cross-References: $pageTitle -- KJV</title>
   <link rel="stylesheet" href="../css/style.css">
@@ -683,6 +686,7 @@ foreach ($book in $BookTable) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
   <link rel="icon" type="image/x-icon" href="BiblePencil.ico">
   <title>KJV Bible with Strong's Concordance</title>
   <link rel="stylesheet" href="css/style.css">
@@ -728,6 +732,7 @@ Write-Host "Generating navigate.html..." -ForegroundColor Cyan
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
   <link rel="icon" type="image/x-icon" href="BiblePencil.ico">
   <title>Go To Passage -- KJV</title>
   <link rel="stylesheet" href="css/style.css">

@@ -1,36 +1,3 @@
-# ── POST /api/test-sync ────────────────────────────────────────
-# Simulates a slow sync for testing the modal UI (5 second delay)
-
-function Handle-TestSync {
-    param([System.Net.HttpListenerResponse]$Response)
-    Write-Host "[TEST-SYNC] Simulating sync (5 second delay)..." -ForegroundColor Yellow
-    Start-Sleep -Seconds 5
-    $result = @{
-        ok     = $true
-        pushed = 42
-        files  = @("books/01-Gen/1.html", "books/43-John/3.html", "css/style.css")
-    }
-    Write-Host "[TEST-SYNC] Done." -ForegroundColor Yellow
-    Send-Json -Response $Response -Data $result
-}
-
-# ================================================================
-# start-study.ps1 — KJV Strong's Bible PC Study Server
-# ================================================================
-# PowerShell 7+ (pwsh)
-#
-# Starts a local HTTP server on localhost:8080 that:
-#   1. Serves static HTML/CSS/JS files from the project root
-#   2. Handles note API endpoints (save, edit, delete, list)
-#   3. Bakes notes into chapter HTML files on every save/delete
-#   4. Syncs modified files to Kindle via ADB
-#
-# Usage:
-#   pwsh -File start-study.ps1
-#   Or double-click start-study.bat
-#
-# ================================================================
-
 param(
     [int]$Port = 8080
 )
@@ -40,7 +7,8 @@ $ErrorActionPreference = "Stop"
 # ── Configuration ────────────────────────────────────────────────
 
 $Root       = $PSScriptRoot
-$NotesFile  = Join-Path $Root "notes.json"
+$NotesFile       = Join-Path $Root "notes.json"
+$HighlightsFile = Join-Path $Root "highlights.json"
 $SyncState  = Join-Path $Root ".last-sync"
 $AdbPath    = "H:\Android SDK Platform Tools\adb.exe"
 $KindlePath = "/data/local/tmp"
@@ -482,6 +450,183 @@ function Handle-SyncKindle {
     Send-Json -Response $Response -Data $result
 }
 
+# ── Highlight Helper Functions ──────────────────────────────────
+function Get-Highlights {
+    if (Test-Path $HighlightsFile) {
+        $raw = Get-Content -Path $HighlightsFile -Raw -Encoding UTF8
+        if ($raw -and $raw.Trim().Length -gt 2) {
+            return ($raw | ConvertFrom-Json -AsHashtable)
+        }
+    }
+    return @{}
+}
+
+function Save-Highlights {
+    param([hashtable]$Highlights)
+    $json = $Highlights | ConvertTo-Json -Depth 2
+    Set-Content -Path $HighlightsFile -Value $json -Encoding UTF8
+}
+
+function Bake-Highlight {
+    param(
+        [string]$Ref,
+        [string]$Color   # "yellow", "green", "red", "blue", or "" to remove
+    )
+
+    $filePath = Get-ChapterFilePath -Ref $Ref
+    if (-not $filePath) {
+        Write-Host "  [WARN] Cannot find file for ref: $Ref" -ForegroundColor Yellow
+        return $false
+    }
+
+    $parts = $Ref -split "\."
+    $verseNum = $parts[2]
+
+    $html = Get-Content -Path $filePath -Raw -Encoding UTF8
+
+    # Match the verse <p> tag — with or without existing highlight class
+    # Handles: class="verse" and class="verse hl-yellow" etc.
+    $pattern = "(<p\s+class=`"verse)(\s+hl-\w+)?(`"\s+id=`"verse-$verseNum`")"
+
+    if ($Color) {
+        # Add or replace highlight class
+        $replacement = "`${1} hl-$Color`${3}"
+    }
+    else {
+        # Remove highlight class
+        $replacement = "`${1}`${3}"
+    }
+
+    if ($html -match $pattern) {
+        $html = $html -replace $pattern, $replacement
+        Set-Content -Path $filePath -Value $html -Encoding UTF8 -NoNewline
+
+        if ($Color) {
+            Write-Host "  [HIGHLIGHT] $Ref -> hl-$Color" -ForegroundColor Yellow
+        }
+        else {
+            Write-Host "  [UNHIGHLIGHT] $Ref" -ForegroundColor Gray
+        }
+        return $true
+    }
+    else {
+        Write-Host "  [WARN] Verse pattern not found for $Ref in $filePath" -ForegroundColor Yellow
+        return $false
+    }
+}
+
+
+# ── Highlight API Handlers ───────────────────────────────────────
+function Handle-GetHighlights {
+    param([System.Net.HttpListenerResponse]$Response)
+    $highlights = Get-Highlights
+    Send-Json -Response $Response -Data $highlights
+}
+
+# ── POST /api/highlights ───────────────────────────────────────
+
+function Handle-SaveHighlight {
+    param(
+        [System.Net.HttpListenerRequest]$Request,
+        [System.Net.HttpListenerResponse]$Response
+    )
+
+    $reader = New-Object System.IO.StreamReader($Request.InputStream, $Request.ContentEncoding)
+    $body = $reader.ReadToEnd()
+    $reader.Close()
+
+    try {
+        $data = $body | ConvertFrom-Json
+    }
+    catch {
+        Send-Error -Response $Response -StatusCode 400 -Message "Invalid JSON"
+        return
+    }
+
+    $ref   = $data.ref
+    $color = $data.color
+
+    if (-not $ref -or -not $color) {
+        Send-Error -Response $Response -StatusCode 400 -Message "Missing ref or color"
+        return
+    }
+
+    # Validate color
+    $validColors = @("yellow", "green", "red", "blue")
+    if ($color -notin $validColors) {
+        Send-Error -Response $Response -StatusCode 400 -Message "Invalid color: $color"
+        return
+    }
+
+    Write-Host "[HIGHLIGHT] $ref -> $color" -ForegroundColor Yellow
+
+    # Save to highlights.json
+    $highlights = Get-Highlights
+    $highlights[$ref] = $color
+    Save-Highlights -Highlights $highlights
+
+    # Bake into chapter HTML
+    $baked = Bake-Highlight -Ref $ref -Color $color
+
+    Send-Json -Response $Response -Data @{ ok = $true; baked = $baked }
+}
+
+# ── DELETE /api/highlights/{ref} ───────────────────────────────
+
+function Handle-DeleteHighlight {
+    param(
+        [string]$Ref,
+        [System.Net.HttpListenerResponse]$Response
+    )
+
+    Write-Host "[UNHIGHLIGHT] $Ref" -ForegroundColor Gray
+
+    $highlights = Get-Highlights
+    if ($highlights.ContainsKey($Ref)) {
+        $highlights.Remove($Ref)
+        Save-Highlights -Highlights $highlights
+    }
+
+    # Remove class from chapter HTML
+    $unbaked = Bake-Highlight -Ref $Ref -Color ""
+
+    Send-Json -Response $Response -Data @{ ok = $true; unbaked = $unbaked }
+}
+
+
+# ── POST /api/test-sync ────────────────────────────────────────
+# Simulates a slow sync for testing the modal UI (5 second delay)
+
+function Handle-TestSync {
+    param([System.Net.HttpListenerResponse]$Response)
+    Write-Host "[TEST-SYNC] Simulating sync (5 second delay)..." -ForegroundColor Yellow
+    Start-Sleep -Seconds 5
+    $result = @{
+        ok     = $true
+        pushed = 42
+        files  = @("books/01-Gen/1.html", "books/43-John/3.html", "css/style.css")
+    }
+    Write-Host "[TEST-SYNC] Done." -ForegroundColor Yellow
+    Send-Json -Response $Response -Data $result
+}
+
+# ================================================================
+# start-study.ps1 — KJV Strong's Bible PC Study Server
+# ================================================================
+# PowerShell 7+ (pwsh)
+#
+# Starts a local HTTP server on localhost:8080 that:
+#   1. Serves static HTML/CSS/JS files from the project root
+#   2. Handles note API endpoints (save, edit, delete, list)
+#   3. Bakes notes into chapter HTML files on every save/delete
+#   4. Syncs modified files to Kindle via ADB
+#
+# Usage:
+#   pwsh -File start-study.ps1
+#   Or double-click start-study.bat
+#
+# ================================================================
+
 
 # ================================================================
 # Static File Server
@@ -594,6 +739,16 @@ try {
             elseif ($path -match "^/api/notes/(.+)$" -and $method -eq "DELETE") {
                 $ref = [System.Web.HttpUtility]::UrlDecode($Matches[1])
                 Handle-DeleteNote -Ref $ref -Response $response
+            }
+            elseif ($path -eq "/api/highlights" -and $method -eq "GET") {
+                Handle-GetHighlights -Response $response
+            }
+            elseif ($path -eq "/api/highlights" -and $method -eq "POST") {
+                Handle-SaveHighlight -Request $request -Response $response
+            }
+            elseif ($path -match "^/api/highlights/(.+)$" -and $method -eq "DELETE") {
+                $ref = [System.Web.HttpUtility]::UrlDecode($Matches[1])
+                Handle-DeleteHighlight -Ref $ref -Response $response
             }
             elseif ($path -eq "/api/kindle-status" -and $method -eq "GET") {
                 $status = Get-KindleStatus

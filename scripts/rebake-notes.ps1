@@ -115,9 +115,74 @@ $notes.PSObject.Properties | ForEach-Object {
     }
 }
 
+# ── Rebake Highlights ─────────────────────────────────────────────
+Write-Host ""
+Write-Host "=== Rebaking Highlights ===" -ForegroundColor Yellow
+
+$highlightsFile = Join-Path $ProjectRoot "highlights.json"
+$hlCount  = 0
+$hlErrors = 0
+
+if (Test-Path $highlightsFile) {
+    $hlRaw = Get-Content -Path $highlightsFile -Raw -Encoding UTF8
+    $hlData = $null
+    if ($hlRaw -and $hlRaw.Trim().Length -gt 2) {
+        $hlData = $hlRaw | ConvertFrom-Json
+    }
+
+    if (-not $hlData) {
+        Write-Host "  No highlights to rebake." -ForegroundColor Gray
+    } else {
+        $hlData.PSObject.Properties | ForEach-Object {
+            $ref   = $_.Name
+            $color = $_.Value
+
+            $parts    = $ref -split '\.'
+            if ($parts.Length -lt 3) {
+                Write-Host "  [WARN] Invalid ref: $ref" -ForegroundColor Yellow
+                $hlErrors++
+                return
+            }
+            $bookAbbr = $parts[0]
+            $chNum    = $parts[1]
+            $vsNum    = $parts[2]
+
+            $folder = $BookTable[$bookAbbr]
+            if (-not $folder) {
+                Write-Host "  [WARN] Unknown book: $bookAbbr" -ForegroundColor Yellow
+                $hlErrors++
+                return
+            }
+
+            $filePath = Join-Path $ProjectRoot "books\$folder\$chNum.html"
+            if (-not (Test-Path $filePath)) {
+                Write-Host "  [WARN] File not found: $filePath" -ForegroundColor Yellow
+                $hlErrors++
+                return
+            }
+
+            $html = Get-Content -Path $filePath -Raw -Encoding UTF8
+            $hlPattern = "(<p\s+class=`"verse)(\s+hl-\w+)?(`"\s+id=`"verse-$vsNum`")"
+
+            if ($html -match $hlPattern) {
+                $hlReplacement = "`${1} hl-$color`${3}"
+                $html = $html -replace $hlPattern, $hlReplacement
+                [System.IO.File]::WriteAllText($filePath, $html, [System.Text.Encoding]::UTF8)
+                $hlCount++
+            } else {
+                Write-Host "  [WARN] Verse pattern not found: $ref" -ForegroundColor Yellow
+                $hlErrors++
+            }
+        }
+    }
+} else {
+    Write-Host "  No highlights.json found — skipping." -ForegroundColor Gray
+}
+
 Write-Host ""
 Write-Host "=====================================" -ForegroundColor Cyan
 Write-Host " Rebake complete!" -ForegroundColor Cyan
 Write-Host "=====================================" -ForegroundColor Cyan
-Write-Host " Notes baked : $count" -ForegroundColor Green
-Write-Host " Errors/skips: $errors" -ForegroundColor $(if ($errors -gt 0) { 'Yellow' } else { 'Green' })
+Write-Host " Notes baked      : $count" -ForegroundColor Green
+Write-Host " Highlights baked : $hlCount" -ForegroundColor Green
+Write-Host " Errors/skips     : $($errors + $hlErrors)" -ForegroundColor $(if (($errors + $hlErrors) -gt 0) { 'Yellow' } else { 'Green' })

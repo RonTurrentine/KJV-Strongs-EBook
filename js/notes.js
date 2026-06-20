@@ -133,6 +133,14 @@
     var modalDeleteBtn = null;
     var currentRef = "";
 
+    /* Highlight state */
+    var highlights = {};          /* ref -> color (loaded from server) */
+    var selectedColor = null;     /* currently selected in picker */
+    var originalColor = null;     /* color when modal opened (for cancel revert) */
+    var pickerRow = null;         /* the color picker DOM element */
+    var HL_COLORS = ["yellow", "green", "red", "blue"];
+    var HL_CLASSES = { yellow: "hl-yellow", green: "hl-green", red: "hl-red", blue: "hl-blue" };
+
     function createModal() {
         if (modal) { return; }
 
@@ -234,7 +242,37 @@
         btnRow.appendChild(cancelBtn);
         btnRow.appendChild(modalDeleteBtn);
 
+        /* Color picker row */
+        pickerRow = document.createElement("div");
+        pickerRow.className = "hl-picker";
+
+        var pickerLabel = document.createElement("span");
+        pickerLabel.className = "hl-picker-label";
+        pickerLabel.appendChild(document.createTextNode("Highlight:"));
+        pickerRow.appendChild(pickerLabel);
+
+        for (var ci = 0; ci < HL_COLORS.length; ci++) {
+            (function (color) {
+                var btn = document.createElement("button");
+                btn.className = "hl-btn hl-btn-" + color;
+                btn.setAttribute("data-color", color);
+                btn.setAttribute("title", color.charAt(0).toUpperCase() + color.slice(1));
+                btn.innerHTML = "&nbsp;";
+                btn.onclick = function () { selectHighlightColor(color); };
+                pickerRow.appendChild(btn);
+            })(HL_COLORS[ci]);
+        }
+
+        var clearBtn = document.createElement("button");
+        clearBtn.className = "hl-btn hl-btn-clear";
+        clearBtn.setAttribute("data-color", "clear");
+        clearBtn.setAttribute("title", "Remove highlight");
+        clearBtn.appendChild(document.createTextNode("\u2715"));
+        clearBtn.onclick = function () { selectHighlightColor(null); };
+        pickerRow.appendChild(clearBtn);
+
         box.appendChild(modalTitle);
+        box.appendChild(pickerRow);
         box.appendChild(modalVerse);
         box.appendChild(modalTextarea);
         box.appendChild(hint);
@@ -290,6 +328,13 @@
         modalTextarea.value = "";
         modalDeleteBtn.style.display = "none";
 
+        /* Set up highlight state for this verse */
+        var existingColor = highlights[ref] || null;
+        selectedColor = existingColor;
+        originalColor = existingColor;
+        updatePickerUI(selectedColor);
+        previewHighlight(ref, selectedColor);
+
         /* Fetch existing note from server */
         ajax("GET", "/api/notes", null, function (status, data) {
             if (status === 200 && data && data[ref]) {
@@ -304,9 +349,15 @@
 
     /* -- Close modal --------------------------------------------  */
 
-    function closeNoteModal() {
+    function closeNoteModal(skipRevert) {
         if (modal) { removeClass(modal, "is-open"); }
+        /* Revert highlight preview unless we just saved */
+        if (!skipRevert && currentRef && selectedColor !== originalColor) {
+            previewHighlight(currentRef, originalColor);
+        }
         currentRef = "";
+        selectedColor = null;
+        originalColor = null;
     }
     window.closeNoteModal = closeNoteModal;
 
@@ -343,17 +394,48 @@
 
     function saveNote() {
         var text = modalTextarea.value;
-        if (!text || !currentRef) {
-            showToast("Note is empty", "error");
+        var ref = currentRef;
+
+        if (!ref) { return; }
+
+        /* Save highlight first (independent of note) */
+        var hlColor = selectedColor;
+        var hlOriginal = originalColor;
+        var hlChanged = (hlColor !== hlOriginal);
+
+        if (hlChanged) {
+            if (hlColor) {
+                var hlPayload = JSON.stringify({ ref: ref, color: hlColor });
+                ajax("POST", "/api/highlights", hlPayload, function (st) {
+                    if (st === 200) {
+                        highlights[ref] = hlColor;
+                    }
+                });
+            } else {
+                ajax("DELETE", "/api/highlights/" + encodeURIComponent(ref), null, function (st) {
+                    if (st === 200) {
+                        delete highlights[ref];
+                    }
+                });
+            }
+        }
+
+        if (!text) {
+            /* No note text — just close, highlight already saved above */
+            closeNoteModal(true);
+            if (hlChanged) {
+                showToast("Highlight updated", "success");
+            } else {
+                showToast("Note is empty", "error");
+            }
             return;
         }
 
-        var ref = currentRef;
         var payload = JSON.stringify({ ref: ref, text: text });
 
         ajax("POST", "/api/notes", payload, function (status, data) {
             if (status === 200 && data && data.ok) {
-                closeNoteModal();
+                closeNoteModal(true);
                 updateVerseIndicator(ref, true);
                 refreshBakedNote(ref, text);
                 showToast("Note saved", "success");
@@ -374,7 +456,7 @@
         ajax("DELETE", "/api/notes/" + encodeURIComponent(ref), null,
             function (status, data) {
                 if (status === 200 && data && data.ok) {
-                    closeNoteModal();
+                    closeNoteModal(true);
                     updateVerseIndicator(ref, false);
                     clearBakedNote(ref);
                     showToast("Note deleted", "success");
@@ -602,6 +684,57 @@
        Initialization
        ============================================================ */
 
+    /* -- Highlight helper functions ------------------------------ */
+
+    function selectHighlightColor(color) {
+        selectedColor = color;
+        updatePickerUI(color);
+        if (currentRef) {
+            previewHighlight(currentRef, color);
+        }
+    }
+
+    function updatePickerUI(activeColor) {
+        if (!pickerRow) { return; }
+        var btns = pickerRow.getElementsByTagName("button");
+        for (var i = 0; i < btns.length; i++) {
+            var btnColor = btns[i].getAttribute("data-color");
+            if (btnColor === activeColor || (btnColor === "clear" && activeColor === null)) {
+                addClass(btns[i], "active");
+            } else {
+                removeClass(btns[i], "active");
+            }
+        }
+    }
+
+    function applyHighlightClass(verseId, color) {
+        var el = document.getElementById(verseId);
+        if (!el) { return; }
+        for (var i = 0; i < HL_COLORS.length; i++) {
+            removeClass(el, "hl-" + HL_COLORS[i]);
+        }
+        if (color && HL_CLASSES[color]) {
+            addClass(el, HL_CLASSES[color]);
+        }
+    }
+
+    function removeHighlightClass(verseId) {
+        var el = document.getElementById(verseId);
+        if (!el) { return; }
+        for (var i = 0; i < HL_COLORS.length; i++) {
+            removeClass(el, "hl-" + HL_COLORS[i]);
+        }
+    }
+
+    function previewHighlight(ref, color) {
+        var vsNum = ref.split(".")[2];
+        if (color) {
+            applyHighlightClass("verse-" + vsNum, color);
+        } else {
+            removeHighlightClass("verse-" + vsNum);
+        }
+    }
+
     if (!isChapterPage) { return; }
 
     if (isLocalhost) {
@@ -611,6 +744,20 @@
         /* Start Kindle status polling every 5 seconds */
         pollKindleStatus();
         setInterval(pollKindleStatus, 5000);
+
+        /* Load highlights from server and apply to current page */
+        ajax("GET", "/api/highlights", null, function (status, data) {
+            if (status === 200 && data) {
+                highlights = data;
+                for (var ref in highlights) {
+                    if (!highlights.hasOwnProperty(ref)) { continue; }
+                    var parts = ref.split(".");
+                    if (parts[0] === osisBook && parseInt(parts[1], 10) === chapterNum) {
+                        applyHighlightClass("verse-" + parts[2], highlights[ref]);
+                    }
+                }
+            }
+        });
 
         /* PC study mode: pencil buttons are active, show sync button */
 

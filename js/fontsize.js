@@ -276,3 +276,53 @@
     }
 
 })();
+
+/* ================================================================
+   Strong's Links Toggle — show/hide all lemma badges
+   ================================================================ */
+
+(function () {
+
+    var store = window._kjvStore;
+    var KEY   = "kjv_strongs_hidden";
+
+    /* SVG eye icons — open and with clean diagonal strikethrough */
+    var ICON_SHOW = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+    var ICON_HIDE = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><line x1="3" y1="3" x2="21" y2="21"/></svg>';
+
+    function setStrongsVisible(visible) {
+        var body = document.body;
+        if (visible) {
+            body.className = body.className.replace(/\s*\bstrongs-hidden\b/g, "");
+        } else {
+            if (body.className.indexOf("strongs-hidden") === -1) {
+                body.className = body.className + " strongs-hidden";
+            }
+        }
+        var btn = document.getElementById("strongs-toggle");
+        if (btn) {
+            btn.innerHTML = visible ? ICON_SHOW : ICON_HIDE;
+            btn.title     = visible ? "Hide Strong\u2019s links" : "Show Strong\u2019s links";
+        }
+        store.set(KEY, visible ? "1" : "0");
+    }
+
+    window.toggleStrongs = function () {
+        var hidden = document.body.className.indexOf("strongs-hidden") !== -1;
+        setStrongsVisible(hidden);
+    };
+
+    /* Restore saved preference on page load */
+    var saved = store.get(KEY);
+    if (saved === "0") {
+        setStrongsVisible(false);
+    } else {
+        /* Default visible — just set the icon */
+        var btn = document.getElementById("strongs-toggle");
+        if (btn) {
+            btn.innerHTML = ICON_SHOW;
+            btn.title = "Hide Strong\u2019s links";
+        }
+    }
+
+})();

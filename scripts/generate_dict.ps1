@@ -514,6 +514,7 @@ function Write-DictPage {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
   <link rel="icon" type="image/x-icon" href="../../BiblePencil.ico">
   <title>$titleText</title>
   <link rel="stylesheet" href="$cssPath">
@@ -608,6 +609,7 @@ function Write-IndexPage {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
   <link rel="icon" type="image/x-icon" href="../BiblePencil.ico">
   <title>$titleEsc</title>
   <link rel="stylesheet" href="$cssPath">

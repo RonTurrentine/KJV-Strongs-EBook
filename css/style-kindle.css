@@ -977,3 +977,24 @@ em.added,
     color: #e0e0e0;
     line-height: 1.6;
 }
+
+/* ── Strong's Links Toggle (reading mode) ──────────────────────── */
+
+body.strongs-hidden .strongs-link {
+    display: none !important;
+}
+
+#strongs-toggle {
+    font-size: 14px;
+    padding: 4px 6px;
+}
+
+/* ── Verse Highlight Colors (Kindle — slightly more opaque) ───────── */
+
+.hl-yellow { background: rgba(255, 245, 157, 0.45); border-left: 3px solid rgba(255, 220, 0, 0.65); }
+.hl-green  { background: rgba(165, 214, 167, 0.40); border-left: 3px solid rgba(76, 175, 80, 0.60); }
+.hl-red    { background: rgba(239, 154, 154, 0.38); border-left: 3px solid rgba(244, 67, 54, 0.55); }
+.hl-blue   { background: rgba(144, 202, 249, 0.38); border-left: 3px solid rgba(33, 150, 243, 0.55); }
+
+/* Color picker is editing UI — hidden on Kindle (read-only) */
+.hl-picker { display: none !important; }

@@ -1333,3 +1333,89 @@ body.is-localhost .sync-btn {
   border-color: #8bc34a;
   color: #ffffff;
 }
+
+/* ── Strong's Links Toggle (reading mode) ──────────────────────── */
+
+body.strongs-hidden .strongs-link {
+  display: none;
+}
+
+/* Keep a tiny gap where the badge was so text flows naturally */
+body.strongs-hidden .verse {
+  word-spacing: normal;
+}
+
+/* Strikethrough eye button styling */
+#strongs-toggle {
+  padding: 6px 8px;
+  line-height: 1;
+}
+
+#strongs-toggle svg {
+  display: inline-block;
+  vertical-align: middle;
+  color: #e0e0e0;
+}
+
+/* ── Verse Highlight Colors (pastel, dark-theme optimized) ───────── */
+
+.hl-yellow { background-color: rgba(255, 245, 157, 0.35) !important; border-left: 3px solid rgba(255, 220, 0, 0.5); }
+.hl-green  { background-color: rgba(165, 214, 167, 0.30) !important; border-left: 3px solid rgba(76, 175, 80, 0.45); }
+.hl-red    { background-color: rgba(239, 154, 154, 0.28) !important; border-left: 3px solid rgba(244, 67, 54, 0.4); }
+.hl-blue   { background-color: rgba(144, 202, 249, 0.28) !important; border-left: 3px solid rgba(33, 150, 243, 0.4); }
+
+/* ── Color Picker in Note Modal ───────────────────────────────────── */
+
+.hl-picker {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    align-items: center;
+    margin: 0 0 12px 0;
+}
+
+.hl-picker-label {
+    font-size: 0.85em;
+    color: #888888;
+    font-family: Arial, Helvetica, sans-serif;
+    margin-right: 8px;
+}
+
+.hl-btn {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    margin: 0 3px;
+    padding: 0;
+    border: 2px solid transparent;
+    -webkit-border-radius: 50%;
+    border-radius: 50%;
+    cursor: pointer;
+    -webkit-appearance: none;
+    vertical-align: middle;
+}
+
+.hl-btn.active {
+    border-color: #ffffff;
+    -webkit-box-shadow: 0 0 0 1px #888888;
+    box-shadow: 0 0 0 1px #888888;
+}
+
+.hl-btn-yellow { background-color: rgba(255, 245, 157, 0.9) !important; }
+.hl-btn-green  { background-color: rgba(165, 214, 167, 0.9) !important; }
+.hl-btn-red    { background-color: rgba(239, 154, 154, 0.9) !important; }
+.hl-btn-blue   { background-color: rgba(144, 202, 249, 0.9) !important; }
+
+.hl-btn-clear {
+    background: #333333;
+    color: #888888;
+    font-size: 14px;
+    line-height: 24px;
+    text-align: center;
+}
+
+.hl-btn-clear:active {
+    background: #444444;
+}
