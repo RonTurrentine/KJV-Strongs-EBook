@@ -1134,3 +1134,116 @@ Would require:
 
 ---
 
+### Session 17
+- **Date:** 2026-06-20
+- **Model:** Claude Sonnet 4.6 (claude.ai)
+- **Work Done:**
+
+  **Strong's links reading-mode toggle**
+  - Added 👁 eye button to chapter header, between font controls and sync button
+  - Toggles `.strongs-hidden` class on `<body>` — hides all Strong's badges for clutter-free reading
+  - SVG icon switches between open eye and eye-with-diagonal-strikethrough
+  - Preference persisted via existing `_kjvStore` storage chain (same as font size)
+  - Change in `js/fontsize.js` (new IIFE block) and `generate_bible.ps1` (button HTML)
+
+  **Verse highlighting feature (4 pastel colors)**
+  - Yellow/Green/Red/Blue highlight colors added to note modal as a color picker row
+  - Pastel rgba values with subtle left border accent; more opaque variants for Kindle
+  - Storage: `highlights.json`, keyed by `Book.Ch.Vs` same as notes
+  - Baked as `hl-{color}` CSS class directly on `<p class="verse">` elements
+  - Highlight save/delete independent of note text — a verse can have either, both, or neither
+  - New API endpoints in `start-study.ps1`: GET/POST `/api/highlights`, DELETE `/api/highlights/{ref}`
+  - `rebake-notes.ps1` extended to also rebake highlights after regeneration
+  - Fixed `start-study.ps1` "param( not recognized" error — a misplaced `Handle-TestSync`
+    function had been prepended to the very top of the file before the real `param()` block;
+    moved it to the correct location
+
+  **Edge dark-mode yellow highlight bug — found and fixed**
+  - Yellow highlights appeared dark olive in Edge but correct in Avast browser
+  - Root cause: Edge's "Force dark mode" auto-color-inversion was double-processing
+    the already-dark-themed page; yellow tones get muddied during inversion
+  - FIX: added `<meta name="color-scheme" content="dark">` to all page templates
+    (6 locations across `generate_bible.ps1` and `generate_dict.ps1`)
+  - Verified live by toggling Edge's force-dark setting on/off
+  - User can also manually disable "Force dark mode" in Edge settings as a fallback
+
+  **English word search feature (Bible SuperSearch API)**
+  - New `search.html` + `js/search.js` — searches KJV text via
+    `https://api.biblesupersearch.com/api?bible=kjv&search={query}` (free, no API key)
+  - Tested live: confirmed working, ~338 results for "faith" across 12 pages
+  - PC-only feature — requires internet; hidden on Kindle via `file://` protocol detection
+    on the Search nav button (inline script in `index.html`)
+  - `search.html` lives in `scripts/` as source of truth; `generate_bible.ps1`
+    Phase 5b copies it to project root on every regeneration
+  - Initial header-overlap bug fixed: `.search-page-wrap` needed `padding-top: 95px`
+    to clear the fixed 90px header (same pattern as `.chapter-content`)
+
+  **Advanced search scoping**
+  - Added Results-per-page dropdown: 50 / 100 / 200 / All
+    - Whole Bible + page size → API's native `page_limit`/`page` (server-side pagination)
+    - Any filtered scope → always `page_all=true`, filter client-side by `book_id`,
+      paginate the filtered array ourselves (keeps counts/pagination accurate)
+  - Added [BEG]/[END] pagination buttons matching the Strong's index page pattern
+  - Added Specific Book dropdown (all 66 books)
+  - Added Category checkboxes, multi-select, verified complete (66 books, no gaps):
+    - OT: Torah (5), Historical (12), Poetic/Wisdom (5), Prophetic (17) = 39 books
+    - NT: Gospels (4), Acts (1), Paul's Church Epistles (9), Paul's Pastoral
+      Epistles (4), General Epistles (8), Revelation (1) = 27 books
+  - UI REDESIGN mid-session: originally used Whole/OT/NT radio buttons alongside
+    Book dropdown and Category checkboxes (3 mutually-exclusive modes via radios) —
+    but radios could get permanently disabled/stuck with no way back once Book or
+    Category mode was selected via session-restore. REPLACED with simpler model:
+    - No more Whole/OT/NT radios at all
+    - Book dropdown empty + no categories checked = Whole Bible (the default)
+    - Selecting a Book clears any checked categories (and vice versa) — still
+      mutually exclusive, but no locked/stuck state possible
+    - Added "Old Testament" and "New Testament" **master checkboxes** — checking
+      one auto-checks all categories beneath it (4 for OT, 6 for NT)
+  - `getActiveScope()` rewritten: book dropdown wins if set, else union of all
+    checked category checkboxes, else Whole Bible — clean single source of truth
+
+  **Search result persistence across navigation (sessionStorage)**
+  - Problem: clicking a search result to view a verse, then returning, lost all
+    results and had to re-search from scratch — broke the "study multiple verses
+    on a topic" workflow
+  - Solution: full search state (query, scope selections, checked categories,
+    current page, and the actual result data) saved to `sessionStorage` after
+    every successful search/pagination action
+  - On page load, if saved state exists, UI controls and results are restored
+    instantly without re-calling the API
+  - Tab-scoped (not localStorage) — clears automatically when tab closes;
+    starting a new search clears old state to avoid staleness
+  - PC-only feature, so no conflict with Kindle's `file://` storage restrictions
+
+  **Cross-platform setup guides**
+  - `MAC-SETUP.md` and `WINDOWS-SETUP.md` written earlier this session, confirmed
+    PowerShell Core (`pwsh`) is already cross-platform — no script rewrite needed,
+    just path adjustments (ADB path, SQLite path, project root)
+
+  **Documentation/organization learning**
+  - Discussed "source of truth" pattern: `scripts/` holds source material (either
+    as standalone files like `search.html`, or as PowerShell here-strings like
+    `navigate.html`/`index.html`); project root holds generated/deployed output
+  - `search.html` can be copied directly into both `scripts/` and root without a
+    full `generate_bible.ps1` run, since it's a static file with no per-page
+    templating — faster than full regeneration for search-only changes
+
+  **KJV text edition identified**
+  - Confirmed via `kjv.osis.xml` header: King James Version (1769) Blayney
+    Standard Edition — the scholarly standard nearly all modern KJV texts use
+  - Source file tracks fine textual details (e.g. Genesis 1:2 comma discrepancy
+    between Blayney's quarto/folio editions) and aligns Words of Christ red-letter
+    markup with Louis Klopsch's 1901 edition
+  - README update with this provenance info was planned but not yet applied
+    (file mismatch this session — to be added next session)
+
+  **QA status:** not re-run this session after the search scoping redesign —
+  recommend running `qa-test.ps1` next session to confirm no regressions
+
+  **Files modified this session:** `fontsize.js`, `generate_bible.ps1`,
+  `style.css`, `style-kindle.css`, `notes.js`, `start-study.ps1`,
+  `rebake-notes.ps1`, `search.html`, `search.js`, `search-additions.css`,
+  `index.html` (Search nav button + file:// hiding script)
+
+---
+

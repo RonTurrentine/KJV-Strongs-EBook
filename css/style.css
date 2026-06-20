@@ -1419,3 +1419,289 @@ body.strongs-hidden .verse {
 .hl-btn-clear:active {
     background: #444444;
 }
+
+/* ================================================================
+   SEARCH CSS — Append to css/style.css ONLY (NOT style-kindle.css)
+   ================================================================ */
+
+/* -- Search Page Layout ----------------------------------------  */
+
+.search-page-wrap {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 95px 16px 20px 16px;
+}
+
+.search-title {
+    font-size: 1.3em;
+    color: #ffffff;
+    margin: 0 0 16px 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* -- Scope Panel -----------------------------------------------  */
+
+.scope-panel {
+    border: 1px solid #333333;
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 0 0 14px 0;
+    background: #111111;
+}
+
+.scope-legend {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: #888888;
+    font-family: Arial, Helvetica, sans-serif;
+    padding: 0 8px;
+}
+
+.scope-hint {
+    font-size: 0.8em;
+    color: #666666;
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0 0 10px 0;
+    font-style: italic;
+}
+
+.scope-master-label {
+    color: #00bcd4 !important;
+    margin-bottom: 2px;
+}
+
+.scope-row {
+    margin: 8px 0;
+}
+
+.scope-radio-label {
+    display: inline-block;
+    margin-right: 16px;
+    font-size: 0.9em;
+    color: #cccccc;
+    font-family: Arial, Helvetica, sans-serif;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+.scope-radio-label-top {
+    display: block;
+    margin-bottom: 6px;
+}
+
+.scope-radio-label input[type="radio"] {
+    margin-right: 4px;
+    vertical-align: middle;
+}
+
+.scope-book-select {
+    display: inline-block;
+    padding: 6px 8px;
+    min-height: 34px;
+    font-size: 0.9em;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #e0e0e0;
+    background: #1a1a1a;
+    border: 1px solid #444444;
+    -webkit-border-radius: 6px;
+    border-radius: 6px;
+    vertical-align: middle;
+    -webkit-appearance: menulist;
+    max-width: 200px;
+}
+
+.scope-book-select:disabled {
+    color: #555555;
+    background: #0d0d0d;
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+
+/* -- Category Checkboxes ----------------------------------------  */
+
+.scope-categories {
+    display: -webkit-flex;
+    display: flex;
+    margin: 4px 0 0 24px;
+}
+
+.scope-cat-column {
+    -webkit-flex: 1;
+    flex: 1;
+    min-width: 180px;
+}
+
+.scope-cat-heading {
+    font-size: 0.8em;
+    font-weight: bold;
+    color: #777777;
+    margin: 4px 0 4px 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.scope-check-label {
+    display: block;
+    font-size: 0.85em;
+    color: #bbbbbb;
+    font-family: Arial, Helvetica, sans-serif;
+    cursor: pointer;
+    padding: 2px 0;
+}
+
+.scope-check-label input[type="checkbox"] {
+    margin-right: 4px;
+    vertical-align: middle;
+}
+
+.scope-check-label input[type="checkbox"]:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+
+/* -- Results Per Page Row ----------------------------------------  */
+
+.search-controls-row {
+    margin: 0 0 10px 0;
+}
+
+.rpp-label {
+    font-size: 0.85em;
+    color: #888888;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.rpp-select {
+    display: inline-block;
+    padding: 4px 8px;
+    font-size: 0.85em;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #e0e0e0;
+    background: #1a1a1a;
+    border: 1px solid #444444;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    margin-left: 6px;
+    -webkit-appearance: menulist;
+}
+
+
+/* -- Search Form ------------------------------------------------  */
+
+.search-form {
+    display: -webkit-flex;
+    display: flex;
+    margin-bottom: 8px;
+}
+
+.search-input {
+    -webkit-flex: 1;
+    flex: 1;
+    padding: 10px 14px;
+    background: #1a1a1a;
+    border: 1px solid #444444;
+    -webkit-border-radius: 6px;
+    border-radius: 6px;
+    color: #e0e0e0;
+    font-size: 1em;
+    font-family: Georgia, "Times New Roman", serif;
+    margin-right: 8px;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+.search-input:focus {
+    border-color: #00bcd4;
+    outline: none;
+}
+
+.search-warning {
+    font-size: 0.82em;
+    color: #777777;
+    margin: 4px 0 16px 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* -- Results ----------------------------------------------------  */
+
+.search-results-header {
+    color: #888888;
+    font-size: 0.9em;
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 16px 0 10px 0;
+}
+
+.search-result-card {
+    background: #161616;
+    border: 1px solid #2a2a2a;
+    -webkit-border-radius: 6px;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+}
+
+.search-result-ref {
+    color: #00bcd4;
+    font-weight: bold;
+    text-decoration: none;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 0.95em;
+}
+
+.search-result-ref:active {
+    color: #4dd0e1;
+}
+
+.search-result-text {
+    margin: 6px 0 0 0;
+    line-height: 1.6;
+    color: #e0e0e0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 0.95em;
+}
+
+
+/* -- Pagination (reuses .conc-nav-btn / .conc-pg-label) ---------  */
+
+.search-pagination {
+    display: -webkit-flex;
+    display: flex;
+    -webkit-justify-content: center;
+    justify-content: center;
+    -webkit-align-items: center;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.search-pagination .btn,
+.search-pagination .conc-nav-btn {
+    margin: 0 4px;
+}
+
+
+/* -- Empty / Error / Loading States ----------------------------  */
+
+.search-empty,
+.search-error {
+    text-align: center;
+    color: #888888;
+    padding: 30px 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.search-error-detail {
+    font-size: 0.8em;
+    color: #666666;
+    margin-top: 8px;
+}
+
+.search-loading {
+    text-align: center;
+    color: #00bcd4;
+    padding: 20px 0;
+    font-family: Arial, Helvetica, sans-serif;
+}

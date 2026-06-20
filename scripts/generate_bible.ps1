@@ -698,6 +698,7 @@ foreach ($book in $BookTable) {
       <a href="indexes/strongs-hebrew-index.html" class="btn">Hebrew</a>
       <a href="indexes/strongs-greek-index.html" class="btn">Greek</a>
       <a href="navigate.html" class="btn">Go To Passage</a>
+      <a href="search.html" class="btn" id="search-nav-btn">Search</a>
     </div>
   </nav>
   <main class="chapter-content">
@@ -718,10 +719,29 @@ $($ntLinks.ToString())        </ul>
   </main>
   <script src="js/sticky-header.js"></script>
   <script src="js/bookmarks.js"></script>
+  <script>
+  (function () {
+      var p = window.location.protocol || "";
+      if (p === "file:") {
+          var btn = document.getElementById("search-nav-btn");
+          if (btn) { btn.style.display = "none"; }
+      }
+  })();
+  </script>
 </body>
 </html>
 "@ | Set-Content -Path (Join-Path $OutputRoot 'index.html') -Encoding UTF8
 Write-Host "index.html written." -ForegroundColor Green
+
+# Phase 5b: Copy search.html (static file, no per-page templating needed)
+Write-Host "Copying search.html..." -ForegroundColor Cyan
+$searchSrc = Join-Path $PSScriptRoot "search.html"
+if (Test-Path $searchSrc) {
+    Copy-Item -Path $searchSrc -Destination (Join-Path $OutputRoot 'search.html') -Force
+    Write-Host "  search.html copied." -ForegroundColor Green
+} else {
+    Write-Host "  WARNING: scripts/search.html not found - skipping." -ForegroundColor Yellow
+}
 
 # Phase 6: Generate navigate.html
 Write-Host "Generating navigate.html..." -ForegroundColor Cyan

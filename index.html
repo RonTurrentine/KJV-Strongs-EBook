@@ -15,6 +15,7 @@
       <a href="indexes/strongs-hebrew-index.html" class="btn">Hebrew</a>
       <a href="indexes/strongs-greek-index.html" class="btn">Greek</a>
       <a href="navigate.html" class="btn">Go To Passage</a>
+      <a href="search.html" class="btn" id="search-nav-btn">Search</a>
     </div>
   </nav>
   <main class="chapter-content">
@@ -101,5 +102,14 @@
   </main>
   <script src="js/sticky-header.js"></script>
   <script src="js/bookmarks.js"></script>
+  <script>
+  (function () {
+      var p = window.location.protocol || "";
+      if (p === "file:") {
+          var btn = document.getElementById("search-nav-btn");
+          if (btn) { btn.style.display = "none"; }
+      }
+  })();
+  </script>
 </body>
 </html>

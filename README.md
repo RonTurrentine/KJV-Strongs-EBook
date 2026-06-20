@@ -37,11 +37,34 @@ PC (localhost) and Kindle Fire tablet.
 - Notes bake instantly into the HTML — visible on Kindle without server
 - Sync to Kindle with one click (⚡ K button)
 
+### Verse Highlighting
+- 4 pastel highlight colors (yellow, green, red, blue)
+- Color picker built into the note modal — highlight and note together
+- Highlights bake into the HTML and sync to Kindle automatically
+- Visible in both study mode and clutter-free reading mode
+
+### Reading Mode
+- 👁 eye toggle hides all Strong's number badges for distraction-free reading
+- One click switches between study mode and reading mode
+- Preference remembered as you navigate between chapters
+
+### English Word Search (PC only)
+- Search the full KJV text for any English word or phrase
+- Powered by the free Bible SuperSearch API — no setup required
+- **Scope your search**: Whole Bible, a specific book, or any combination of
+  categories (Torah, Historical, Poetic/Wisdom, Prophetic, Gospels, Acts,
+  Paul's Epistles, General Epistles, Revelation)
+- Adjustable results per page (50/100/200/All) with [BEG]/[END] pagination
+- Click any result to jump straight to that verse
+- Results persist when you navigate to a verse and come back
+- Requires an internet connection — not available on Kindle
+
 ### Kindle Fire Support
 - Fully tested on Kindle Fire D01E (Android 2.3 WebKit)
 - Two-row centered header fits all book names
 - Two-column OT/NT book index
 - Baked notes with green italic styling
+- Baked verse highlights with pastel colors
 - Complete concordance with expand/collapse sections
 - Push all 15,000+ files to Kindle via ADB
 
@@ -125,6 +148,7 @@ KJV-Strongs-EBook/
 ├── BiblePencil.ico          App icon / browser favicon
 ├── index.html               Main book index (generated)
 ├── navigate.html            Go To Passage (generated)
+├── search.html               English word search, PC only (generated)
 ├── books/                   1,189 chapter HTML files (generated)
 │   └── {NN}-{Abbr}/
 │       └── {ch}.html
@@ -136,9 +160,10 @@ KJV-Strongs-EBook/
 │   ├── style.css            PC stylesheet
 │   └── style-kindle.css     Kindle Fire stylesheet
 ├── js/
-│   ├── notes.js             Notes system + Kindle sync
+│   ├── notes.js             Notes + highlights system + Kindle sync
+│   ├── search.js            English word search (PC only)
 │   ├── bible-data.js        Book/chapter metadata
-│   ├── fontsize.js          Font size controls
+│   ├── fontsize.js          Font size + reading mode toggle
 │   ├── bookmarks.js         Reading position memory
 │   └── sticky-header.js     Fixed/absolute header behavior
 └── scripts/                 PowerShell generators and utilities
@@ -164,6 +189,7 @@ These files are generated locally and excluded from the repository:
 | File | Purpose |
 |------|---------|
 | `notes.json` | Your personal study notes |
+| `highlights.json` | Your personal verse highlights |
 | `concordance.json` | Strong's concordance index (~22MB) |
 | `bdb-thayer.json` | BDB/Thayer lexicon export (~6.5MB) |
 | `KJV-Strongs.epub` | Built EPUB archive |
@@ -171,14 +197,32 @@ These files are generated locally and excluded from the repository:
 
 ---
 
+## Bible Text Edition
+
+This project uses the **King James Version (1769) Blayney Standard Edition** —
+the scholarly standard text that nearly all modern KJV Bibles are based on.
+
+The KJV was first published in 1611, but the text widely recognized as "the
+KJV" today is the result of Benjamin Blayney's 1769 Oxford revision, which
+standardized spelling, punctuation, and corrected printing errors that had
+crept into earlier editions. The source OSIS file used by this project
+carefully tracks textual details down to individual punctuation marks
+(e.g. a documented comma discrepancy between Blayney's quarto and folio
+editions at Genesis 1:2), and aligns the Words of Christ (red letter
+markup) with Louis Klopsch's 1901 edition — the publisher who popularized
+red-letter Bibles.
+
 ## Acknowledgements
 
-- KJV Bible text and Strong's numbers: OSIS format from open Scripture sources
+- KJV Bible text and Strong's numbers: OSIS format, King James Version
+  (1769) with Strong's Numbers and Morphology, from open Scripture sources
 - Hebrew lexicon: Strong's Hebrew and Aramaic Dictionary
 - Greek lexicon: Strong's Greek Dictionary  
 - BDB definitions: Brown-Driver-Briggs Hebrew Lexicon
 - Thayer definitions: Thayer's Greek Lexicon
 - Source data via MyBible dictionary format
+- English word search powered by the free Bible SuperSearch API
+  (api.biblesupersearch.com)
 
 ---
 
