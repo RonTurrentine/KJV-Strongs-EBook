@@ -299,10 +299,16 @@
                 body.className = body.className + " strongs-hidden";
             }
         }
+        /* Legacy standalone icon button, if present on the page */
         var btn = document.getElementById("strongs-toggle");
         if (btn) {
             btn.innerHTML = visible ? ICON_SHOW : ICON_HIDE;
             btn.title     = visible ? "Hide Strong\u2019s links" : "Show Strong\u2019s links";
+        }
+        /* Dropdown row state text */
+        var stateText = document.getElementById("strongs-state-text");
+        if (stateText) {
+            stateText.innerHTML = visible ? "Shown" : "Hidden";
         }
         store.set(KEY, visible ? "1" : "0");
     }
@@ -317,12 +323,146 @@
     if (saved === "0") {
         setStrongsVisible(false);
     } else {
-        /* Default visible — just set the icon */
+        /* Default visible — set icon and state text */
         var btn = document.getElementById("strongs-toggle");
         if (btn) {
             btn.innerHTML = ICON_SHOW;
             btn.title = "Hide Strong\u2019s links";
         }
+        var stateText = document.getElementById("strongs-state-text");
+        if (stateText) {
+            stateText.innerHTML = "Shown";
+        }
+    }
+
+})();
+
+/* ================================================================
+   Hamburger Settings Menu — toggle, click-outside-close, Escape
+   ================================================================ */
+
+(function () {
+
+    var settingsDropdown = document.getElementById("settings-dropdown");
+    var hamburgerBtn = document.getElementById("hamburger-btn");
+    var menuOpen = false;
+
+    window.toggleSettingsMenu = function () {
+        if (!settingsDropdown) { return; }
+        menuOpen = !menuOpen;
+        settingsDropdown.style.display = menuOpen ? "block" : "none";
+    };
+
+    function closeMenu() {
+        menuOpen = false;
+        if (settingsDropdown) { settingsDropdown.style.display = "none"; }
+    }
+
+    /* Close on click outside */
+    if (document.addEventListener) {
+        document.addEventListener("click", function (e) {
+            if (!menuOpen || !settingsDropdown) { return; }
+            var target = e.target || e.srcElement;
+            var inside = false;
+            var node = target;
+            while (node) {
+                if (node === settingsDropdown || node === hamburgerBtn) {
+                    inside = true;
+                    break;
+                }
+                node = node.parentNode;
+            }
+            if (!inside) { closeMenu(); }
+        }, false);
+    }
+
+    /* Close on Escape (stacks with any existing keydown handlers
+       via addEventListener rather than overwriting onkeydown) */
+    function handleEscape(e) {
+        e = e || window.event;
+        var key = e.keyCode || e.which;
+        if (key === 27 && menuOpen) {
+            closeMenu();
+        }
+    }
+
+    if (document.addEventListener) {
+        document.addEventListener("keydown", handleEscape, false);
+    } else if (document.attachEvent) {
+        document.attachEvent("onkeydown", handleEscape);
+    }
+
+    /* Kindle section of the dropdown only shows on localhost */
+    var kindleSection = document.getElementById("settings-kindle-section");
+    if (kindleSection) {
+        var isLocalhostMenu = (window.location.hostname === "localhost"
+                            || window.location.hostname === "127.0.0.1");
+        if (!isLocalhostMenu) {
+            kindleSection.style.display = "none";
+        }
+    }
+
+})();
+
+
+/* ================================================================
+   Keyboard Shortcuts
+   ================================================================
+   Ctrl+]  ->  increaseFontSize()
+   Ctrl+[  ->  decreaseFontSize()
+   H       ->  toggleStrongs() (no modifier key)
+
+   SAFETY: bails if focus is inside a text input/textarea/select/
+   contenteditable, so typing in the note modal or search boxes
+   is never interrupted.
+   ================================================================ */
+
+(function () {
+
+    function isTypingContext() {
+        var el = document.activeElement;
+        if (!el) { return false; }
+        var tag = el.tagName ? el.tagName.toUpperCase() : "";
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") { return true; }
+        if (el.isContentEditable) { return true; }
+        return false;
+    }
+
+    function handleShortcuts(e) {
+        e = e || window.event;
+        var key = e.keyCode || e.which;
+
+        /* Ctrl+] (221) -> increase font */
+        if (e.ctrlKey && key === 221) {
+            if (e.preventDefault) { e.preventDefault(); } else { e.returnValue = false; }
+            if (typeof window.increaseFontSize === "function") {
+                window.increaseFontSize();
+            }
+            return;
+        }
+
+        /* Ctrl+[ (219) -> decrease font */
+        if (e.ctrlKey && key === 219) {
+            if (e.preventDefault) { e.preventDefault(); } else { e.returnValue = false; }
+            if (typeof window.decreaseFontSize === "function") {
+                window.decreaseFontSize();
+            }
+            return;
+        }
+
+        /* H (72), no modifiers -> toggle Strong's */
+        if (key === 72 && !e.ctrlKey && !e.altKey && !e.metaKey && !e.shiftKey) {
+            if (isTypingContext()) { return; }
+            if (typeof window.toggleStrongs === "function") {
+                window.toggleStrongs();
+            }
+        }
+    }
+
+    if (document.addEventListener) {
+        document.addEventListener("keydown", handleShortcuts, false);
+    } else if (document.attachEvent) {
+        document.attachEvent("onkeydown", handleShortcuts);
     }
 
 })();

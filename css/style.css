@@ -261,22 +261,23 @@ button.btn:hover {
 /* ── Strong's Links ────────────────────────────────────────────── */
 
 .strongs-link {
-  display: inline-block;
-  color: #0a0a0a;
+  display: inline;
+  color: #00b7eb;
   text-decoration: none;
-  background-color: #008b8b;
-  border-radius: 4px;
-  padding: 1px 5px;
-  margin: 0 2px;
-  font-size: 0.82em;
+  background-color: transparent;
+  border-radius: 0;
+  padding: 0;
+  margin: 0 1px;
+  font-size: 0.7em;
   font-weight: bold;
-  transition: background-color 0.2s ease, transform 0.2s ease;
+  vertical-align: super;
+  transition: color 0.2s ease;
 }
 
 .strongs-link:hover,
 .strongs-link:focus-visible {
-  background-color: #00b7eb;
-  transform: translateY(-1px);
+  color: #5dd8f5;
+  text-decoration: underline;
 }
 
 /* ── Superscript Links ─────────────────────────────────────────── */
@@ -566,6 +567,11 @@ body.font-small  .chapter-content { font-size: 14px; }
 body.font-normal .chapter-content { font-size: 18px; }
 body.font-large  .chapter-content { font-size: 22px; }
 body.font-xlarge .chapter-content { font-size: 26px; }
+
+body.font-small  .search-page-wrap { font-size: 14px; }
+body.font-normal .search-page-wrap { font-size: 18px; }
+body.font-large  .search-page-wrap { font-size: 22px; }
+body.font-xlarge .search-page-wrap { font-size: 26px; }
 
 /* ── Two-column Book Index ─────────────────────────────────────── */
 
@@ -1704,4 +1710,108 @@ body.strongs-hidden .verse {
     color: #00bcd4;
     padding: 20px 0;
     font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ── Hamburger Button ──────────────────────────────────────────── */
+
+.hamburger-btn {
+    font-size: 20px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 6px 10px;
+    line-height: 28px;
+    letter-spacing: 0;
+}
+
+/* ── Settings Dropdown Panel ───────────────────────────────────── */
+
+.settings-dropdown {
+    display: none;
+    position: fixed;
+    top: 92px;
+    right: 8px;
+    width: 240px;
+    background-color: #1e1e1e;
+    border: 1px solid #444444;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    padding: 8px 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ── Section Labels ────────────────────────────────────────────── */
+
+.settings-section-label {
+    font-size: 0.7em;
+    font-weight: bold;
+    color: #666666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 6px 14px 4px 14px;
+    margin: 0;
+}
+
+/* ── Divider ───────────────────────────────────────────────────── */
+
+.settings-divider {
+    height: 1px;
+    background-color: #333333;
+    margin: 6px 0;
+}
+
+/* ── Menu Rows ─────────────────────────────────────────────────── */
+
+.settings-row {
+    padding: 8px 14px;
+    font-size: 0.85em;
+    color: #e0e0e0;
+    line-height: 1.4;
+}
+
+.settings-row-clickable {
+    cursor: pointer;
+}
+
+.settings-row-clickable:hover {
+    background-color: #2a2a2a;
+}
+
+.settings-row-clickable:active {
+    background-color: #333333;
+}
+
+.settings-row-icon {
+    display: inline-block;
+    width: 20px;
+    text-align: center;
+    margin-right: 6px;
+}
+
+.settings-row-label {
+    display: inline-block;
+    margin: 0 8px;
+    font-size: 0.9em;
+    color: #bbbbbb;
+}
+
+/* ── Font Size Row (buttons inline) ────────────────────────────── */
+
+.settings-font-row {
+    text-align: center;
+}
+
+.settings-font-btn {
+    min-width: 40px;
+    min-height: 36px;
+    padding: 4px 10px;
+    font-size: 14px;
+    vertical-align: middle;
+}
+
+/* ── Strong's State Text ───────────────────────────────────────── */
+
+#strongs-state-text {
+    font-weight: bold;
+    color: #00bcd4;
 }

@@ -998,3 +998,8 @@ body.strongs-hidden .strongs-link {
 
 /* Color picker is editing UI — hidden on Kindle (read-only) */
 .hl-picker { display: none !important; }
+
+/* ── Hamburger Menu (hidden entirely on Kindle) ────────────────── */
+
+.hamburger-btn { display: none !important; }
+.settings-dropdown { display: none !important; }

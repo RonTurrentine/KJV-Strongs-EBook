@@ -586,6 +586,26 @@
     }
 
     /* ============================================================
+       Rebake Notes
+       ============================================================ */
+
+    window.rebakeNotes = function () {
+        if (!isLocalhost) { return; }
+        showToast("Rebaking notes...", "");
+
+        ajax("POST", "/api/rebake", null, function (status, data) {
+            if (status === 200 && data && data.ok) {
+                var msg = "Rebaked " + (data.notesRebaked || 0) + " notes, "
+                        + (data.highlightsRebaked || 0) + " highlights";
+                showToast(msg, "success");
+            } else {
+                var errMsg = (data && data.error) ? data.error : "Rebake failed";
+                showToast(errMsg, "error");
+            }
+        });
+    };
+
+    /* ============================================================
        Sync to Kindle
        ============================================================ */
 

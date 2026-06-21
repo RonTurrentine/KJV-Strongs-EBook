@@ -594,6 +594,56 @@ function Handle-DeleteHighlight {
 }
 
 
+# ── POST /api/rebake ─────────────────────────────────────────────
+# Re-bakes notes.json and highlights.json into chapter HTML by
+# invoking rebake-notes.ps1 as a subprocess.
+
+function Handle-Rebake {
+    param([System.Net.HttpListenerResponse]$Response)
+
+    Write-Host "[REBAKE] Starting rebake..." -ForegroundColor Magenta
+
+    $rebakeScript = Join-Path $Root "scripts\rebake-notes.ps1"
+
+    if (-not (Test-Path $rebakeScript)) {
+        Write-Host "  [ERROR] rebake-notes.ps1 not found" -ForegroundColor Red
+        Send-Error -Response $Response -StatusCode 500 `
+            -Message "rebake-notes.ps1 not found at $rebakeScript"
+        return
+    }
+
+    try {
+        $output = & pwsh -NoProfile -NonInteractive -File $rebakeScript `
+            -ProjectRoot $Root 2>&1 | Out-String
+
+        Write-Host $output -ForegroundColor Gray
+
+        $notesCount = 0
+        $hlCount = 0
+
+        if ($output -match "Notes baked\s*:\s*(\d+)") {
+            $notesCount = [int]$Matches[1]
+        }
+        if ($output -match "Highlights baked\s*:\s*(\d+)") {
+            $hlCount = [int]$Matches[1]
+        }
+
+        Write-Host "  [REBAKE] Done: $notesCount notes, $hlCount highlights" -ForegroundColor Magenta
+
+        Send-Json -Response $Response -Data @{
+            ok                = $true
+            notesRebaked      = $notesCount
+            highlightsRebaked = $hlCount
+        }
+    }
+    catch {
+        Write-Host "  [ERROR] Rebake failed: $_" -ForegroundColor Red
+        Send-Error -Response $Response -StatusCode 500 `
+            -Message "Rebake failed: $($_.Exception.Message)"
+    }
+}
+
+
 # ── POST /api/test-sync ────────────────────────────────────────
 # Simulates a slow sync for testing the modal UI (5 second delay)
 
@@ -756,6 +806,9 @@ try {
             }
             elseif ($path -eq "/api/sync-kindle" -and $method -eq "POST") {
                 Handle-SyncKindle -Response $response
+            }
+            elseif ($path -eq "/api/rebake" -and $method -eq "POST") {
+                Handle-Rebake -Response $response
             }
             elseif ($path -eq "/api/test-sync" -and $method -eq "POST") {
                 Handle-TestSync -Response $response

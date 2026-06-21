@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -19,13 +19,40 @@
       <a href="1.html" class="btn" title="Philippians 1">&#9664;V</a>
       <a href="3.html" class="btn" title="Philippians 3">V&#9654;</a>
       <a href="../51-Col/1.html" class="btn" title="Colossians">B&#9654;</a>
-      <button class="btn" id="font-decrease" onclick="decreaseFontSize()">a&#8595;</button>
-	  <button class="btn" id="font-increase" onclick="increaseFontSize()">A&#8593;</button>
-      <button class="btn" id="strongs-toggle" onclick="toggleStrongs()" title="Show/Hide Strong&#39;s links"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
-      <button class="btn sync-btn" id="sync-btn" onclick="syncToKindle()" title="Sync to Kindle">&#9889; K</button>
+      <button class="btn hamburger-btn" id="hamburger-btn" onclick="toggleSettingsMenu()" title="Settings">&#9776;</button>
       <span id="unbaked-indicator"></span>
     </div>
   </nav>
+
+  <div class="settings-dropdown" id="settings-dropdown">
+    <div class="settings-section">
+      <p class="settings-section-label">DISPLAY</p>
+      <div class="settings-row settings-font-row">
+        <button class="btn settings-font-btn" id="font-decrease" onclick="decreaseFontSize()">a&#8595;</button>
+        <span class="settings-row-label">Font size</span>
+        <button class="btn settings-font-btn" id="font-increase" onclick="increaseFontSize()">A&#8593;</button>
+      </div>
+      <div class="settings-row settings-row-clickable" id="strongs-toggle-row" onclick="toggleStrongs()">
+        <span class="settings-row-icon">&#128065;</span>
+        <span>Strong's links: </span>
+        <span id="strongs-state-text">Shown</span>
+      </div>
+    </div>
+    <div class="settings-divider"></div>
+    <div class="settings-section settings-kindle-section" id="settings-kindle-section">
+      <p class="settings-section-label">KINDLE</p>
+      <div class="settings-row settings-row-clickable" onclick="syncToKindle()">
+        <span class="settings-row-icon">&#9889;</span>
+        Sync to Kindle
+      </div>
+      <div class="settings-row settings-row-clickable" onclick="rebakeNotes()">
+        <span class="settings-row-icon">&#128260;</span>
+        Rebake Notes
+      </div>
+    </div>
+  </div>
+
+
 
   <main class="chapter-content">
 	
@@ -71,7 +98,7 @@
       But <a href="../../dict/greek/g0235.html" class="strongs-link" title="G0235">[G0235]</a> made <a href="../../dict/greek/g2758.html" class="strongs-link" title="G2758">[G2758]</a> himself <a href="../../dict/greek/g1438.html" class="strongs-link" title="G1438">[G1438]</a> of no reputation <a href="../../dict/greek/g2758.html" class="strongs-link" title="G2758">[G2758]</a>, and took upon him <a href="../../dict/greek/g2983.html" class="strongs-link" title="G2983">[G2983]</a> the form <a href="../../dict/greek/g3444.html" class="strongs-link" title="G3444">[G3444]</a> of a servant <a href="../../dict/greek/g1401.html" class="strongs-link" title="G1401">[G1401]</a>, and was made <a href="../../dict/greek/g1096.html" class="strongs-link" title="G1096">[G1096]</a> in <a href="../../dict/greek/g1722.html" class="strongs-link" title="G1722">[G1722]</a> the likeness <a href="../../dict/greek/g3667.html" class="strongs-link" title="G3667">[G3667]</a> of men <a href="../../dict/greek/g0444.html" class="strongs-link" title="G0444">[G0444]</a>:
     </p>
     <div class="verse-note" id="note-verse-7"></div>
-    <p class="verse" id="verse-8">
+    <p class="verse hl-yellow" id="verse-8">
       <span class="verse-num">8</span>
       <button class="note-btn" onclick="openNoteModal('Phil.2.8')" title="Add note">&#9998;</button>
       And <a href="../../dict/greek/g2532.html" class="strongs-link" title="G2532">[G2532]</a> being found <a href="../../dict/greek/g2147.html" class="strongs-link" title="G2147">[G2147]</a> in fashion <a href="../../dict/greek/g4976.html" class="strongs-link" title="G4976">[G4976]</a> as <a href="../../dict/greek/g5613.html" class="strongs-link" title="G5613">[G5613]</a> a man <a href="../../dict/greek/g0444.html" class="strongs-link" title="G0444">[G0444]</a>, he humbled <a href="../../dict/greek/g5013.html" class="strongs-link" title="G5013">[G5013]</a> himself <a href="../../dict/greek/g1438.html" class="strongs-link" title="G1438">[G1438]</a>, and became <a href="../../dict/greek/g1096.html" class="strongs-link" title="G1096">[G1096]</a> obedient <a href="../../dict/greek/g5255.html" class="strongs-link" title="G5255">[G5255]</a> unto <a href="../../dict/greek/g3360.html" class="strongs-link" title="G3360">[G3360]</a> death <a href="../../dict/greek/g2288.html" class="strongs-link" title="G2288">[G2288]</a>, even <a href="../../dict/greek/g1161.html" class="strongs-link" title="G1161">[G1161]</a> the death <a href="../../dict/greek/g2288.html" class="strongs-link" title="G2288">[G2288]</a> of the cross <a href="../../dict/greek/g4716.html" class="strongs-link" title="G4716">[G4716]</a>.

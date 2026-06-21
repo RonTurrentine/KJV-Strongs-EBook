@@ -19,13 +19,40 @@
       <a href="4.html" class="btn" title="Romans 4">&#9664;V</a>
       <a href="6.html" class="btn" title="Romans 6">V&#9654;</a>
       <a href="../46-1Cor/1.html" class="btn" title="1 Corinthians">B&#9654;</a>
-      <button class="btn" id="font-decrease" onclick="decreaseFontSize()">a&#8595;</button>
-	  <button class="btn" id="font-increase" onclick="increaseFontSize()">A&#8593;</button>
-      <button class="btn" id="strongs-toggle" onclick="toggleStrongs()" title="Show/Hide Strong&#39;s links"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
-      <button class="btn sync-btn" id="sync-btn" onclick="syncToKindle()" title="Sync to Kindle">&#9889; K</button>
+      <button class="btn hamburger-btn" id="hamburger-btn" onclick="toggleSettingsMenu()" title="Settings">&#9776;</button>
       <span id="unbaked-indicator"></span>
     </div>
   </nav>
+
+  <div class="settings-dropdown" id="settings-dropdown">
+    <div class="settings-section">
+      <p class="settings-section-label">DISPLAY</p>
+      <div class="settings-row settings-font-row">
+        <button class="btn settings-font-btn" id="font-decrease" onclick="decreaseFontSize()">a&#8595;</button>
+        <span class="settings-row-label">Font size</span>
+        <button class="btn settings-font-btn" id="font-increase" onclick="increaseFontSize()">A&#8593;</button>
+      </div>
+      <div class="settings-row settings-row-clickable" id="strongs-toggle-row" onclick="toggleStrongs()">
+        <span class="settings-row-icon">&#128065;</span>
+        <span>Strong's links: </span>
+        <span id="strongs-state-text">Shown</span>
+      </div>
+    </div>
+    <div class="settings-divider"></div>
+    <div class="settings-section settings-kindle-section" id="settings-kindle-section">
+      <p class="settings-section-label">KINDLE</p>
+      <div class="settings-row settings-row-clickable" onclick="syncToKindle()">
+        <span class="settings-row-icon">&#9889;</span>
+        Sync to Kindle
+      </div>
+      <div class="settings-row settings-row-clickable" onclick="rebakeNotes()">
+        <span class="settings-row-icon">&#128260;</span>
+        Rebake Notes
+      </div>
+    </div>
+  </div>
+
+
 
   <main class="chapter-content">
 	
@@ -107,18 +134,21 @@
       (For <a href="../../dict/greek/g1063.html" class="strongs-link" title="G1063">[G1063]</a> until <a href="../../dict/greek/g0891.html" class="strongs-link" title="G0891">[G0891]</a> the law <a href="../../dict/greek/g3551.html" class="strongs-link" title="G3551">[G3551]</a> sin <a href="../../dict/greek/g0266.html" class="strongs-link" title="G0266">[G0266]</a> was <a href="../../dict/greek/g1510.html" class="strongs-link" title="G1510">[G1510]</a> in <a href="../../dict/greek/g1722.html" class="strongs-link" title="G1722">[G1722]</a> the world <a href="../../dict/greek/g2889.html" class="strongs-link" title="G2889">[G2889]</a>: but <a href="../../dict/greek/g1161.html" class="strongs-link" title="G1161">[G1161]</a> sin <a href="../../dict/greek/g0266.html" class="strongs-link" title="G0266">[G0266]</a> is <a href="../../dict/greek/g1677.html" class="strongs-link" title="G1677">[G1677]</a> not <a href="../../dict/greek/g3756.html" class="strongs-link" title="G3756">[G3756]</a> imputed <a href="../../dict/greek/g1677.html" class="strongs-link" title="G1677">[G1677]</a> when there is <a href="../../dict/greek/g1510.html" class="strongs-link" title="G1510">[G1510]</a> no <a href="../../dict/greek/g3361.html" class="strongs-link" title="G3361">[G3361]</a> law <a href="../../dict/greek/g3551.html" class="strongs-link" title="G3551">[G3551]</a>.
     </p>
     <div class="verse-note" id="note-verse-13"></div>
-    <p class="verse" id="verse-14">
+    <p class="verse hl-yellow" id="verse-14">
       <span class="verse-num">14</span>
       <button class="note-btn" onclick="openNoteModal('Rom.5.14')" title="Add note">&#9998;</button>
       Nevertheless <a href="../../dict/greek/g0235.html" class="strongs-link" title="G0235">[G0235]</a> death <a href="../../dict/greek/g3588.html" class="strongs-link" title="G3588">[G3588]</a><a href="../../dict/greek/g2288.html" class="strongs-link" title="G2288">[G2288]</a> reigned <a href="../../dict/greek/g0936.html" class="strongs-link" title="G0936">[G0936]</a> from <a href="../../dict/greek/g0575.html" class="strongs-link" title="G0575">[G0575]</a> Adam <a href="../../dict/greek/g0076.html" class="strongs-link" title="G0076">[G0076]</a> to <a href="../../dict/greek/g3360.html" class="strongs-link" title="G3360">[G3360]</a> Moses <a href="../../dict/greek/g3475.html" class="strongs-link" title="G3475">[G3475]</a>, even <a href="../../dict/greek/g2532.html" class="strongs-link" title="G2532">[G2532]</a> over <a href="../../dict/greek/g1909.html" class="strongs-link" title="G1909">[G1909]</a> them that had <a href="../../dict/greek/g0264.html" class="strongs-link" title="G0264">[G0264]</a> not <a href="../../dict/greek/g3361.html" class="strongs-link" title="G3361">[G3361]</a> sinned <a href="../../dict/greek/g0264.html" class="strongs-link" title="G0264">[G0264]</a> after <a href="../../dict/greek/g1909.html" class="strongs-link" title="G1909">[G1909]</a> the similitude <a href="../../dict/greek/g3588.html" class="strongs-link" title="G3588">[G3588]</a><a href="../../dict/greek/g3667.html" class="strongs-link" title="G3667">[G3667]</a> of <a href="../../dict/greek/g3588.html" class="strongs-link" title="G3588">[G3588]</a><a href="../../dict/greek/g3847.html" class="strongs-link" title="G3847">[G3847]</a> Adam’s <a href="../../dict/greek/g0076.html" class="strongs-link" title="G0076">[G0076]</a> transgression <a href="../../dict/greek/g3588.html" class="strongs-link" title="G3588">[G3588]</a><a href="../../dict/greek/g3847.html" class="strongs-link" title="G3847">[G3847]</a>, who <a href="../../dict/greek/g3739.html" class="strongs-link" title="G3739">[G3739]</a> is <a href="../../dict/greek/g1510.html" class="strongs-link" title="G1510">[G1510]</a> the figure <a href="../../dict/greek/g5179.html" class="strongs-link" title="G5179">[G5179]</a> of him that was to come <a href="../../dict/greek/g3195.html" class="strongs-link" title="G3195">[G3195]</a>.
     </p>
     <div class="verse-note" id="note-verse-14"></div>
-    <p class="verse" id="verse-15">
+    <p class="verse hl-yellow" id="verse-15">
       <span class="verse-num">15</span>
       <button class="note-btn" onclick="openNoteModal('Rom.5.15')" title="Add note">&#9998;</button>
       But <a href="../../dict/greek/g0235.html" class="strongs-link" title="G0235">[G0235]</a> not <a href="../../dict/greek/g3756.html" class="strongs-link" title="G3756">[G3756]</a> as <a href="../../dict/greek/g5613.html" class="strongs-link" title="G5613">[G5613]</a> the offence <a href="../../dict/greek/g3588.html" class="strongs-link" title="G3588">[G3588]</a><a href="../../dict/greek/g3900.html" class="strongs-link" title="G3900">[G3900]</a>, so <a href="../../dict/greek/g3779.html" class="strongs-link" title="G3779">[G3779]</a> also <a href="../../dict/greek/g2532.html" class="strongs-link" title="G2532">[G2532]</a> <em class="added">is</em> the free gift <a href="../../dict/greek/g3588.html" class="strongs-link" title="G3588">[G3588]</a><a href="../../dict/greek/g5486.html" class="strongs-link" title="G5486">[G5486]</a>. For <a href="../../dict/greek/g1063.html" class="strongs-link" title="G1063">[G1063]</a> if <a href="../../dict/greek/g1487.html" class="strongs-link" title="G1487">[G1487]</a> through the offence <a href="../../dict/greek/g3588.html" class="strongs-link" title="G3588">[G3588]</a><a href="../../dict/greek/g3900.html" class="strongs-link" title="G3900">[G3900]</a> of one <a href="../../dict/greek/g3588.html" class="strongs-link" title="G3588">[G3588]</a><a href="../../dict/greek/g1520.html" class="strongs-link" title="G1520">[G1520]</a> many <a href="../../dict/greek/g3588.html" class="strongs-link" title="G3588">[G3588]</a><a href="../../dict/greek/g4183.html" class="strongs-link" title="G4183">[G4183]</a> be dead <a href="../../dict/greek/g0599.html" class="strongs-link" title="G0599">[G0599]</a>, much <a href="../../dict/greek/g4183.html" class="strongs-link" title="G4183">[G4183]</a> more <a href="../../dict/greek/g3123.html" class="strongs-link" title="G3123">[G3123]</a> the grace <a href="../../dict/greek/g3588.html" class="strongs-link" title="G3588">[G3588]</a><a href="../../dict/greek/g5485.html" class="strongs-link" title="G5485">[G5485]</a> of God <a href="../../dict/greek/g3588.html" class="strongs-link" title="G3588">[G3588]</a><a href="../../dict/greek/g2316.html" class="strongs-link" title="G2316">[G2316]</a>, and <a href="../../dict/greek/g2532.html" class="strongs-link" title="G2532">[G2532]</a> the gift <a href="../../dict/greek/g3588.html" class="strongs-link" title="G3588">[G3588]</a><a href="../../dict/greek/g1431.html" class="strongs-link" title="G1431">[G1431]</a> by <a href="../../dict/greek/g1722.html" class="strongs-link" title="G1722">[G1722]</a> grace <a href="../../dict/greek/g5485.html" class="strongs-link" title="G5485">[G5485]</a>, <em class="added">which is</em> by one <a href="../../dict/greek/g3588.html" class="strongs-link" title="G3588">[G3588]</a><a href="../../dict/greek/g1520.html" class="strongs-link" title="G1520">[G1520]</a> man <a href="../../dict/greek/g0444.html" class="strongs-link" title="G0444">[G0444]</a>, Jesus <a href="../../dict/greek/g2424.html" class="strongs-link" title="G2424">[G2424]</a> Christ <a href="../../dict/greek/g5547.html" class="strongs-link" title="G5547">[G5547]</a>, hath abounded <a href="../../dict/greek/g4052.html" class="strongs-link" title="G4052">[G4052]</a> unto <a href="../../dict/greek/g1519.html" class="strongs-link" title="G1519">[G1519]</a> many <a href="../../dict/greek/g3588.html" class="strongs-link" title="G3588">[G3588]</a><a href="../../dict/greek/g4183.html" class="strongs-link" title="G4183">[G4183]</a>.
     </p>
-    <div class="verse-note" id="note-verse-15"></div>
+    <div class="verse-note" id="note-verse-15">
+  <p class="verse-note-text">Why did death reign? Because of Adam's condemnation (&quot;thou shalt surely die&quot; - <a href="../../books/01-Gen/2.html#verse-17" class="verse-note-link">Gen 2:17</a>) was imputed to all his offspring, even though there was no law, nor was there any direct disobedience to God's commandment. (see vs 19)</p>
+  <p class="verse-note-meta">Note saved: 2026-06-20 20:12</p>
+</div>
     <p class="verse" id="verse-16">
       <span class="verse-num">16</span>
       <button class="note-btn" onclick="openNoteModal('Rom.5.16')" title="Add note">&#9998;</button>
@@ -143,8 +173,8 @@
       For <a href="../../dict/greek/g1063.html" class="strongs-link" title="G1063">[G1063]</a> as <a href="../../dict/greek/g5618.html" class="strongs-link" title="G5618">[G5618]</a> by <a href="../../dict/greek/g1223.html" class="strongs-link" title="G1223">[G1223]</a> one <a href="../../dict/greek/g3588.html" class="strongs-link" title="G3588">[G3588]</a><a href="../../dict/greek/g1520.html" class="strongs-link" title="G1520">[G1520]</a> man’s <a href="../../dict/greek/g0444.html" class="strongs-link" title="G0444">[G0444]</a> disobedience <a href="../../dict/greek/g3588.html" class="strongs-link" title="G3588">[G3588]</a><a href="../../dict/greek/g3876.html" class="strongs-link" title="G3876">[G3876]</a> many <a href="../../dict/greek/g3588.html" class="strongs-link" title="G3588">[G3588]</a><a href="../../dict/greek/g4183.html" class="strongs-link" title="G4183">[G4183]</a> were made <a href="../../dict/greek/g2525.html" class="strongs-link" title="G2525">[G2525]</a> sinners <a href="../../dict/greek/g0268.html" class="strongs-link" title="G0268">[G0268]</a>, so <a href="../../dict/greek/g3779.html" class="strongs-link" title="G3779">[G3779]</a> by <a href="../../dict/greek/g1223.html" class="strongs-link" title="G1223">[G1223]</a> the obedience <a href="../../dict/greek/g3588.html" class="strongs-link" title="G3588">[G3588]</a><a href="../../dict/greek/g5218.html" class="strongs-link" title="G5218">[G5218]</a> of one <a href="../../dict/greek/g3588.html" class="strongs-link" title="G3588">[G3588]</a><a href="../../dict/greek/g1520.html" class="strongs-link" title="G1520">[G1520]</a> shall <a href="../../dict/greek/g2525.html" class="strongs-link" title="G2525">[G2525]</a> many <a href="../../dict/greek/g3588.html" class="strongs-link" title="G3588">[G3588]</a><a href="../../dict/greek/g4183.html" class="strongs-link" title="G4183">[G4183]</a> be made <a href="../../dict/greek/g2525.html" class="strongs-link" title="G2525">[G2525]</a> righteous <a href="../../dict/greek/g1342.html" class="strongs-link" title="G1342">[G1342]</a>.
     </p>
     <div class="verse-note" id="note-verse-19">
-  <p class="verse-note-text">Just as Adam's condemnation was imputed to us by Him (he was the earthly father of all), Righteousness was imputed to us by Christ (being the heavenly Father of all who believe).  <a href="../../books/43-John/3.html#verse-17" class="verse-note-link">John 3:17</a></p>
-  <p class="verse-note-meta">Note saved: 2026-06-20 16:49</p>
+  <p class="verse-note-text">Jesus is the antitype of Adam. Adam brought death to all, Jesus brought life to all. Just as Adam's condemnation was imputed to us by Him (he was the earthly father of all), Righteousness was imputed to us by Christ (being the heavenly Father of all who believe).  <a href="../../books/43-John/3.html#verse-17" class="verse-note-link">John 3:17</a>  See vs 15.  See also <a href="../../books/42-Luke/3.html#verse-38" class="verse-note-link">Luke 3:38</a></p>
+  <p class="verse-note-meta">Note saved: 2026-06-20 20:12</p>
 </div>
     <p class="verse" id="verse-20">
       <span class="verse-num">20</span>
