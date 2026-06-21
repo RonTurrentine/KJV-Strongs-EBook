@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <title>Search KJV — KJV Strong's Bible</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="BiblePencil.ico">
+</head>
+<body class="bible-text">
+
+  <nav class="chapter-nav">
+    <h1 class="book-chapter">KJV Bible</h1>
+    <div class="nav-buttons">
+      <a href="index.html" class="btn">Books</a>
+      <a href="indexes/strongs-hebrew-index.html" class="btn">Hebrew</a>
+      <a href="indexes/strongs-greek-index.html" class="btn">Greek</a>
+      <a href="navigate.html" class="btn">Go To</a>
+      <button class="btn" id="font-decrease" onclick="decreaseFontSize()">a&#8595;</button>
+      <button class="btn" id="font-increase" onclick="increaseFontSize()">A&#8593;</button>
+    </div>
+  </nav>
+
+  <div class="search-page-wrap">
+
+    <h2 class="search-title">Search KJV Text</h2>
+
+    <!-- ── Scope Panel ─────────────────────────────────────────── -->
+    <fieldset class="scope-panel" id="scope-panel">
+      <legend class="scope-legend">Search Scope</legend>
+      <p class="scope-hint">Leave everything blank to search the whole Bible.</p>
+
+      <!-- Specific Book -->
+      <div class="scope-row" id="scope-row-book">
+        <label class="scope-radio-label">Specific Book:
+          <select class="scope-book-select" id="scope-book-select" onchange="onBookSelected()">
+            <option value="">-- Whole Bible --</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- Category checkboxes, with OT/NT "select all" masters -->
+      <div class="scope-categories" id="scope-categories">
+        <div class="scope-cat-column">
+          <p class="scope-cat-heading">
+            <label class="scope-check-label scope-master-label" title="All 39 Old Testament books">
+              <input type="checkbox" id="cat-ot-master" onchange="onMasterChecked('ot')"> <strong>Old Testament</strong>
+            </label>
+          </p>
+          <label class="scope-check-label" title="Genesis, Exodus, Leviticus, Numbers, Deuteronomy"><input type="checkbox" class="cat-check" value="torah" onchange="onCategoryChecked()"> Torah</label>
+          <label class="scope-check-label" title="Joshua, Judges, Ruth, 1 Samuel, 2 Samuel, 1 Kings, 2 Kings, 1 Chronicles, 2 Chronicles, Ezra, Nehemiah, Esther"><input type="checkbox" class="cat-check" value="historical" onchange="onCategoryChecked()"> Historical</label>
+          <label class="scope-check-label" title="Job, Psalms, Proverbs, Ecclesiastes, Song of Solomon"><input type="checkbox" class="cat-check" value="poetic" onchange="onCategoryChecked()"> Poetic/Wisdom</label>
+          <label class="scope-check-label" title="Isaiah, Jeremiah, Lamentations, Ezekiel, Daniel, Hosea, Joel, Amos, Obadiah, Jonah, Micah, Nahum, Habakkuk, Zephaniah, Haggai, Zechariah, Malachi"><input type="checkbox" class="cat-check" value="prophetic" onchange="onCategoryChecked()"> Prophetic</label>
+        </div>
+        <div class="scope-cat-column">
+          <p class="scope-cat-heading">
+            <label class="scope-check-label scope-master-label" title="All 27 New Testament books">
+              <input type="checkbox" id="cat-nt-master" onchange="onMasterChecked('nt')"> <strong>New Testament</strong>
+            </label>
+          </p>
+          <label class="scope-check-label" title="Matthew, Mark, Luke, John"><input type="checkbox" class="cat-check" value="gospels" onchange="onCategoryChecked()"> Gospels</label>
+          <label class="scope-check-label" title="Acts"><input type="checkbox" class="cat-check" value="acts" onchange="onCategoryChecked()"> Acts</label>
+          <label class="scope-check-label" title="Romans, 1 Corinthians, 2 Corinthians, Galatians, Ephesians, Philippians, Colossians, 1 Thessalonians, 2 Thessalonians"><input type="checkbox" class="cat-check" value="paul_church" onchange="onCategoryChecked()"> Paul's Church Epistles</label>
+          <label class="scope-check-label" title="1 Timothy, 2 Timothy, Titus, Philemon"><input type="checkbox" class="cat-check" value="paul_pastoral" onchange="onCategoryChecked()"> Paul's Pastoral Epistles</label>
+          <label class="scope-check-label" title="Hebrews, James, 1 Peter, 2 Peter, 1 John, 2 John, 3 John, Jude"><input type="checkbox" class="cat-check" value="general" onchange="onCategoryChecked()"> General Epistles</label>
+          <label class="scope-check-label" title="Revelation"><input type="checkbox" class="cat-check" value="revelation" onchange="onCategoryChecked()"> Revelation</label>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- ── Results per page + Search form ──────────────────────── -->
+    <div class="search-controls-row">
+      <label class="rpp-label">Results per page:
+        <select class="rpp-select" id="rpp-select" onchange="onRppChanged()">
+          <option value="50" selected>50</option>
+          <option value="100">100</option>
+          <option value="200">200</option>
+          <option value="all">All</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="search-form" id="search-form">
+      <input type="text" class="search-input" id="search-input"
+             placeholder="Enter word or phrase..." autocomplete="off">
+      <button class="btn btn-primary" id="search-btn" onclick="doSearch()">Search</button>
+    </div>
+
+    <p class="search-warning">&#9888; Requires internet connection (Bible SuperSearch API)</p>
+
+    <div id="search-status"></div>
+    <div id="search-results"></div>
+    <div id="search-pagination"></div>
+
+  </div>
+
+  <script src="js/fontsize.js"></script>
+  <script src="js/search.js"></script>
+
+</body>
+</html>
