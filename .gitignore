@@ -38,3 +38,15 @@ bdb-thayer.dct.mybible
 bdb-thayer.json
 bdbthayer.LZMA
 sqlite-nuget.zip
+
+# Generated output (regenerate via scripts/)
+books/
+dict/
+indexes/
+index.html
+navigate.html
+concordance.json
+KJV-Strongs.epub
+
+# Personal data (never public)
+notes.json
