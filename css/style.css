@@ -1781,6 +1781,16 @@ body.strongs-hidden .verse {
     background-color: #333333;
 }
 
+/* Grayed-out state for Sync to Kindle when no device connected */
+.settings-row-disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.settings-row-disabled:hover {
+    background-color: transparent !important;
+}
+
 .settings-row-icon {
     display: inline-block;
     width: 20px;
@@ -1793,6 +1803,16 @@ body.strongs-hidden .verse {
     margin: 0 8px;
     font-size: 0.9em;
     color: #bbbbbb;
+}
+
+/* ── Home Button (SVG house icon) ──────────────────────────────── */
+
+.home-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    padding: 0 8px;
 }
 
 /* ── Font Size Row (buttons inline) ────────────────────────────── */

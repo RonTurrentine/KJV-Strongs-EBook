@@ -506,18 +506,18 @@ foreach ($entry in $FlatChapters) {
         $prev      = $FlatChapters[$flatIdx - 1]
         $prevHref  = if ($prev.Book.OsisId -eq $book.OsisId) { "$($prev.Chapter).html" } else { "../$($prev.Book.Folder)/$($prev.Chapter).html" }
         $prevLabel = "$($prev.Book.FullName) $($prev.Chapter)"
-        $prevHtml  = "<a href=`"$prevHref`" class=`"btn`" title=`"$prevLabel`">&#9664;V</a>"
+        $prevHtml  = "<a href=`"$prevHref`" class=`"btn`" title=`"$prevLabel`">&#9664;C</a>"
     } else {
-        $prevHtml  = "<span class=`"btn btn-disabled`">&#9664;V</span>"
+        $prevHtml  = "<span class=`"btn btn-disabled`">&#9664;C</span>"
     }
 
     if ($flatIdx -lt ($FlatChapters.Count - 1)) {
         $next      = $FlatChapters[$flatIdx + 1]
         $nextHref  = if ($next.Book.OsisId -eq $book.OsisId) { "$($next.Chapter).html" } else { "../$($next.Book.Folder)/$($next.Chapter).html" }
         $nextLabel = "$($next.Book.FullName) $($next.Chapter)"
-        $nextHtml  = "<a href=`"$nextHref`" class=`"btn`" title=`"$nextLabel`">V&#9654;</a>"
+        $nextHtml  = "<a href=`"$nextHref`" class=`"btn`" title=`"$nextLabel`">C&#9654;</a>"
     } else {
-        $nextHtml  = "<span class=`"btn btn-disabled`">V&#9654;</span>"
+        $nextHtml  = "<span class=`"btn btn-disabled`">C&#9654;</span>"
     }
 
     # Prev/Next Book buttons (always jump to chapter 1 of that book)
@@ -560,7 +560,7 @@ foreach ($entry in $FlatChapters) {
   <nav class="chapter-nav">
     <h1 class="book-chapter">$($book.FullName) $chNum</h1>
     <div class="nav-buttons">
-      <a href="../../index.html" class="btn">Books</a>
+      <a href="../../index.html" class="btn home-btn" title="Home"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></a>
       <a href="../../navigate.html#$($book.OsisId)" class="btn">Go To</a>
       $prevBookHtml
       $prevHtml
@@ -586,11 +586,10 @@ foreach ($entry in $FlatChapters) {
       </div>
     </div>
     <div class="settings-divider"></div>
-    <div class="settings-section settings-kindle-section" id="settings-kindle-section">
-      <p class="settings-section-label">KINDLE</p>
-      <div class="settings-row settings-row-clickable" onclick="syncToKindle()">
+    <div class="settings-section">
+      <div class="settings-row settings-row-clickable" id="sync-kindle-row" onclick="syncToKindle()">
         <span class="settings-row-icon">&#9889;</span>
-        Sync to Kindle
+        <span id="sync-kindle-label">Sync to Kindle</span>
       </div>
       <div class="settings-row settings-row-clickable" onclick="rebakeNotes()">
         <span class="settings-row-icon">&#128260;</span>
@@ -608,7 +607,7 @@ foreach ($entry in $FlatChapters) {
   <footer class="chapter-footer">
     <div class="nav-buttons">
       $prevHtml
-      <a href="../../index.html" class="btn">Books</a>
+      <a href="../../index.html" class="btn home-btn" title="Home"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></a>
       $nextHtml
     </div>
   </footer>
@@ -658,7 +657,7 @@ foreach ($entry in $FlatChapters) {
     <h1>Cross-References: $pageTitle</h1>
     <div class="nav-buttons">
       <a href="$backUrl" class="btn">&#9664; Back to Verse</a>
-      <a href="../index.html" class="btn">Books</a>
+      <a href="../index.html" class="btn home-btn" title="Home"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></a>
     </div>
   </nav>
   <main class="chapter-content">
@@ -788,7 +787,7 @@ Write-Host "Generating navigate.html..." -ForegroundColor Cyan
   <nav class="chapter-nav">
     <h1>Go To Passage</h1>
     <div class="nav-buttons">
-      <a href="index.html" class="btn">Books</a>
+      <a href="index.html" class="btn home-btn" title="Home"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></a>
     </div>
   </nav>
   <main class="chapter-content">

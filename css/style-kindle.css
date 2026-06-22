@@ -1002,4 +1002,5 @@ body.strongs-hidden .strongs-link {
 /* ── Hamburger Menu (hidden entirely on Kindle) ────────────────── */
 
 .hamburger-btn { display: none !important; }
+.home-btn { display: inline-block; vertical-align: middle; padding: 0 6px; }
 .settings-dropdown { display: none !important; }
