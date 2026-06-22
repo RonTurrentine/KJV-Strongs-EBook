@@ -277,9 +277,9 @@ if (Test-Path $mal4) {
 $rev22 = Join-Path $OutputRoot 'books/66-Rev/22.html'
 if (Test-Path $rev22) {
     $content = Get-Content -Raw $rev22
-if ($content -match 'btn-disabled.*V&#9654;|V&#9654;.*btn-disabled') {
+if ($content -match 'btn-disabled.*C&#9654;|C&#9654;.*btn-disabled') {
         Pass "Revelation 22: Next button is disabled (correct -- last chapter)"
-    } elseif ($content -match '<a href.*V&#9654;') {
+    } elseif ($content -match '<a href.*C&#9654;') {
         Fail "Revelation 22: Next button is active but should be disabled"
     } else {
         Fail "Revelation 22: Next button not found at all"
@@ -309,9 +309,9 @@ if (Test-Path $rev1) {
 $gen1 = Join-Path $OutputRoot 'books/01-Gen/1.html'
 if (Test-Path $gen1) {
     $content = Get-Content -Raw $gen1
-    if ($content -match 'btn-disabled.*&#9664;V|&#9664;V.*btn-disabled') {
+    if ($content -match 'btn-disabled.*&#9664;C|&#9664;C.*btn-disabled') {
         Pass "Genesis 1: Prev button is disabled (correct -- first chapter)"
-    } elseif ($content -match '<a href.*&#9664;V') {
+    } elseif ($content -match '<a href.*&#9664;C') {
         Fail "Genesis 1: Prev button is active but should be disabled"
     } else {
         Fail "Genesis 1: Prev button not found at all"
@@ -658,9 +658,9 @@ Section "TEST 15: Navigation & Go To"
 $ruthFile = Join-Path $OutputRoot 'books/08-Ruth/1.html'
 if (Test-Path $ruthFile) {
     $ruthContent = Get-Content -Raw $ruthFile
-    if ($ruthContent -match '&#9664;V')            { Pass "Ruth 1: prev chapter button present" }
+    if ($ruthContent -match '&#9664;C')            { Pass "Ruth 1: prev chapter button present" }
     else                                           { Fail "Ruth 1: prev chapter button MISSING" }
-    if ($ruthContent -match 'V&#9654;')            { Pass "Ruth 1: next chapter button present" }
+    if ($ruthContent -match 'C&#9654;')            { Pass "Ruth 1: next chapter button present" }
     else                                           { Fail "Ruth 1: next chapter button MISSING" }
     if ($ruthContent -match '&#9664;B')            { Pass "Ruth 1: prev book button present" }
     else                                           { Fail "Ruth 1: prev book button MISSING" }
