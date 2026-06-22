@@ -618,7 +618,7 @@ function Write-IndexPage {
   <nav class="chapter-nav">
     <h1 class="book-chapter">$titleEsc</h1>
     <div class="nav-buttons">
-      <a href="../index.html" class="btn">Books</a>
+      <a href="../index.html" class="btn home-btn" title="Home"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></a>
     </div>
   </nav>
   <main class="chapter-content">

@@ -16,8 +16,11 @@ PC (localhost) and Kindle Fire tablet.
 - Complete KJV Bible — all 66 books, 1,189 chapters
 - Every word linked to its Strong's Hebrew or Greek number
 - Clean, readable dark theme optimized for extended study
-- Font size controls, reading position bookmarks
-- `[◀B][◀V][V▶][B▶]` navigation buttons for chapter and book jumping
+- Font size controls (a↓ / A↑), reading position bookmarks
+- ☰ hamburger settings menu — font size, Strong's toggle, Sync to Kindle, Rebake Notes
+- 🏠 Home button returns to the main book index from any page
+- Keyboard shortcuts: `Ctrl+]` increase font, `Ctrl+[` decrease font, `H` toggle Strong's
+- `[◀B][◀C][C▶][B▶]` navigation buttons for chapter and book jumping
 - **Go To Passage** — jump to any book, chapter, and verse instantly
 
 ### Strong's Lexicon
@@ -35,7 +38,7 @@ PC (localhost) and Kindle Fire tablet.
 - Rich modal editor with **book picker** for easy verse linking
 - Link to any verse using `[[Book.Ch.Vs]]` syntax (e.g. `[[John.3.16]]`)
 - Notes bake instantly into the HTML — visible on Kindle without server
-- Sync to Kindle with one click (⚡ K button)
+- Sync to Kindle via ⚡ Sync to Kindle in the ☰ hamburger menu (grayed out when no device connected)
 
 ### Verse Highlighting
 - 4 pastel highlight colors (yellow, green, red, blue)
@@ -72,33 +75,48 @@ PC (localhost) and Kindle Fire tablet.
 
 ## Quick Start
 
+### Option A — Electron Launcher (easiest, recommended for new installs)
+
+Download `KJV Strong's Bible Setup.exe` from the [GitHub Releases page](https://github.com/RonTurrentine/KJV-Strongs-EBook/releases) and run it. The launcher will:
+- Install PowerShell 7+ if needed
+- Download all required source files automatically
+- Generate all 1,189 chapters and 14,298 dictionary pages
+- Start the study server and open the Bible in an embedded window
+
+> **Note:** Your antivirus may scan files during setup — this is normal and harmless. If asked to allow or trust the app, click **Allow**.
+
+### Option B — Manual Setup
+
 ### Requirements
 - PowerShell 7+ (`pwsh`)
-- ADB (Android Debug Bridge) — for Kindle push
-- SQLite3 — for BDB/Thayer lexicon export
+- ADB (Android Debug Bridge) — for Kindle push only
 
 ### Source files required (not in repo — too large)
-Place these in the project root:
+These are downloaded automatically by the Electron Launcher, or can be obtained
+from the [GitHub Releases page](https://github.com/RonTurrentine/KJV-Strongs-EBook/releases):
 - `kjv.osis.xml` — KJV Bible in OSIS format with Strong's numbers
+- `bdb-thayer.json` — BDB/Thayer lexicon (pre-exported JSON, ~6.5MB)
+
+The following are bundled in the repo and do not need to be downloaded separately:
 - `StrongHebrewG.xml` — Hebrew Strong's lexicon
 - `strongsgreek.xml` — Greek Strong's lexicon
-- `bdb-thayer.dct.mybible` — BDB/Thayer lexicon (SQLite, from MyBible)
 
 ### Generation (one-time setup)
 
 ```powershell
-# 1. Export BDB/Thayer lexicon
-pwsh -NoProfile -File .\scripts\export-bdb.ps1
-
-# 2. Generate all 1,189 Bible chapters + concordance index
+# 1. Generate all 1,189 Bible chapters + concordance index
 pwsh -NoProfile -File .\scripts\generate_bible.ps1
 
-# 3. Generate all 14,298 dictionary pages with BDB definitions
+# 2. Generate all 14,298 dictionary pages with BDB definitions
 pwsh -NoProfile -File .\scripts\generate_dict.ps1
 
-# 4. Verify output (151+ tests)
+# 3. Verify output (155+ tests)
 pwsh -NoProfile -File .\scripts\qa-test.ps1
 ```
+
+> **Note:** If you need to regenerate `bdb-thayer.json` from scratch (e.g. you have
+> an updated MyBible source file), you will need SQLite3 and can run:
+> `pwsh -NoProfile -File .\scripts\export-bdb.ps1`
 
 ### Running the Study Server
 
@@ -131,7 +149,7 @@ Then open Silk browser on Kindle and navigate to:
 | `scripts/generate_bible.ps1` | Generate all Bible chapter HTML + concordance.json |
 | `scripts/generate_dict.ps1` | Generate all dictionary HTML with BDB + concordance |
 | `scripts/export-bdb.ps1` | Export BDB/Thayer SQLite database to JSON |
-| `scripts/qa-test.ps1` | Run 151+ quality assurance tests |
+| `scripts/qa-test.ps1` | Run 155+ quality assurance tests |
 | `scripts/rebake-notes.ps1` | Restore baked notes after regeneration |
 | `scripts/package_epub.ps1` | Build EPUB archive + push to Kindle |
 | `scripts/adb-push-all.ps1` | Push all files to Kindle via ADB |
@@ -175,8 +193,9 @@ KJV-Strongs-EBook/
 
 | Platform | Status | Guide |
 |----------|--------|-------|
-| Windows 10/11 | ✅ Fully supported | [WINDOWS-SETUP.md](WINDOWS-SETUP.md) |
-| macOS | ✅ Supported via PowerShell Core | [MAC-SETUP.md](MAC-SETUP.md) |
+| Windows 10/11 (Launcher) | ✅ Fully supported | Download from Releases page |
+| Windows 10/11 (Manual) | ✅ Fully supported | [WINDOWS-SETUP.md](WINDOWS-SETUP.md) |
+| macOS (Manual) | ✅ Supported via PowerShell Core | [MAC-SETUP.md](MAC-SETUP.md) |
 | Kindle Fire D01E | ✅ Fully tested | See Quick Start above |
 | Other Kindle models | 🔜 Planned | Future release |
 
@@ -191,9 +210,9 @@ These files are generated locally and excluded from the repository:
 | `notes.json` | Your personal study notes |
 | `highlights.json` | Your personal verse highlights |
 | `concordance.json` | Strong's concordance index (~22MB) |
-| `bdb-thayer.json` | BDB/Thayer lexicon export (~6.5MB) |
+| `bdb-thayer.json` | BDB/Thayer lexicon (~6.5MB) — download from Releases page |
 | `KJV-Strongs.epub` | Built EPUB archive |
-| `*.dct.mybible` | MyBible source database |
+| `kjv.osis.xml` | KJV source XML — download from Releases page |
 
 ---
 
@@ -217,10 +236,11 @@ red-letter Bibles.
 - KJV Bible text and Strong's numbers: OSIS format, King James Version
   (1769) with Strong's Numbers and Morphology, from open Scripture sources
 - Hebrew lexicon: Strong's Hebrew and Aramaic Dictionary
-- Greek lexicon: Strong's Greek Dictionary  
+- Greek lexicon: Strong's Greek Dictionary
 - BDB definitions: Brown-Driver-Briggs Hebrew Lexicon
 - Thayer definitions: Thayer's Greek Lexicon
-- Source data via MyBible dictionary format
+- BDB/Thayer data pre-exported from MyBible dictionary format and hosted
+  as a release asset — end users do not need MyBible or SQLite3
 - English word search powered by the free Bible SuperSearch API
   (api.biblesupersearch.com)
 
