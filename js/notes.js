@@ -681,7 +681,6 @@
     function updateSyncButton(connected) {
         var btn = document.getElementById("sync-btn");
         var row = document.getElementById("sync-kindle-row");
-        var label = document.getElementById("sync-kindle-label");
 
         /* Handle legacy sync-btn in header (if present) */
         if (btn) {
@@ -701,11 +700,11 @@
             if (connected) {
                 removeClass(row, "settings-row-disabled");
                 row.onclick = function () { syncToKindle(); };
-                if (label) { label.textContent = "Sync to Kindle"; }
+                row.title = "";
             } else {
                 addClass(row, "settings-row-disabled");
-                row.onclick = null;  /* disable click when no Kindle */
-                if (label) { label.textContent = "Sync to Kindle (not connected)"; }
+                row.onclick = null;
+                row.title = "Not connected";
             }
         }
     }

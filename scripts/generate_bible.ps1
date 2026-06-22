@@ -589,7 +589,7 @@ foreach ($entry in $FlatChapters) {
     <div class="settings-section">
       <div class="settings-row settings-row-clickable" id="sync-kindle-row" onclick="syncToKindle()">
         <span class="settings-row-icon">&#9889;</span>
-        <span id="sync-kindle-label">Sync to Kindle</span>
+        Sync to Kindle
       </div>
       <div class="settings-row settings-row-clickable" onclick="rebakeNotes()">
         <span class="settings-row-icon">&#128260;</span>
