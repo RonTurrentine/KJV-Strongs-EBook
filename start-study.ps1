@@ -752,13 +752,19 @@ Write-Host ""
 Write-Host "  Press Ctrl+C to stop the server." -ForegroundColor Yellow
 Write-Host ""
 
-# Open browser
-try {
-    Start-Process $BaseUrl
-    Write-Host "  Browser opened." -ForegroundColor Green
-}
-catch {
-    Write-Host "  Could not open browser. Navigate to $BaseUrl manually." -ForegroundColor Yellow
+# Open browser — only when running standalone (not from Electron launcher).
+# The Electron app sets KJV_LAUNCHER=1 before spawning this server,
+# so we skip Start-Process when that env var is present (Electron handles the window).
+if ($env:KJV_LAUNCHER -ne "1") {
+    try {
+        Start-Process $BaseUrl
+        Write-Host "  Browser opened." -ForegroundColor Green
+    }
+    catch {
+        Write-Host "  Could not open browser. Navigate to $BaseUrl manually." -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  Running inside launcher — skipping browser open." -ForegroundColor Gray
 }
 
 Write-Host ""

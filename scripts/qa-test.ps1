@@ -553,8 +553,14 @@ if (Test-Path $genChFile) {
     else                                           { Fail "Genesis 1: pencil buttons MISSING" }
     if ($genChContent -match 'class="verse-note"') { Pass "Genesis 1: verse-note placeholders present" }
     else                                           { Fail "Genesis 1: verse-note placeholders MISSING" }
-    if ($genChContent -match 'class="sync-btn"')   { Pass "Genesis 1: sync button present" }
-    else                                           { Fail "Genesis 1: sync button MISSING" }
+    if ($genChContent -match 'onclick="syncToKindle\(\)"') { Pass "Genesis 1: sync button present (hamburger menu)" }
+    else                                                   { Fail "Genesis 1: sync button MISSING" }
+    if ($genChContent -match 'id="hamburger-btn"')         { Pass "Genesis 1: hamburger menu button present" }
+    else                                                   { Fail "Genesis 1: hamburger menu button MISSING" }
+    if ($genChContent -match 'id="settings-dropdown"')     { Pass "Genesis 1: settings dropdown present" }
+    else                                                   { Fail "Genesis 1: settings dropdown MISSING" }
+    if ($genChContent -match 'onclick="rebakeNotes\(\)"')  { Pass "Genesis 1: rebake notes menu item present" }
+    else                                                   { Fail "Genesis 1: rebake notes menu item MISSING" }
     if ($genChContent -match 'openNoteModal')      { Pass "Genesis 1: openNoteModal calls present" }
     else                                           { Fail "Genesis 1: openNoteModal calls MISSING" }
     if ($genChContent -match 'notes\.js')          { Pass "Genesis 1: notes.js script tag present" }

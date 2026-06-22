@@ -1247,3 +1247,142 @@ Would require:
 
 ---
 
+Session 18
+
+Date: 2026-06-22
+Model: Claude Sonnet 4.6 (claude.ai)
+Work Done:
+Superscript Strong's badges
+
+Changed .strongs-link from teal pill/badge style to superscript text
+display: inline, vertical-align: super, font-size: 0.7em, no background
+Color changed to #00b7eb directly on text (no pill needed)
+Hover underlines instead of old "lift" transform
+Kindle CSS left unchanged (already used a lighter non-pill style)
+
+Hamburger settings menu
+
+Moved font size buttons, Strong's toggle, Sync to Kindle out of main header
+Added ☰ hamburger button at far right of nav bar
+Dropdown panel outside .chapter-nav (critical — overflow: hidden on nav was clipping it)
+Dropdown uses position: fixed; top: 92px; right: 8px to stay anchored
+Two sections: "Display" (font + Strong's toggle) and "Kindle" (Sync + Rebake Notes)
+Unbaked notes indicator stays in main header bar
+Hamburger + dropdown hidden entirely on Kindle via style-kindle.css
+Files changed: generate_bible.ps1, fontsize.js, notes.js, start-study.ps1,
+
+style.css, style-kindle.css
+
+Keyboard shortcuts
+
+Ctrl+] → increase font size
+Ctrl+[ → decrease font size
+H (no modifier) → toggle Strong's links
+Safety check: shortcuts bail if document.activeElement is INPUT/TEXTAREA/SELECT
+Added to fontsize.js as a third IIFE
+
+Rebake Notes API endpoint
+
+New POST /api/rebake in start-study.ps1 → invokes rebake-notes.ps1 as subprocess
+Fixed Opus's regex to match actual output: "Notes baked" / "Highlights baked"
+
+(Opus assumed "Notes rebaked" / "Highlights rebaked" — corrected before integration)
+rebakeNotes() function added to notes.js — shows toast with counts on completion
+Menu item "Rebake Notes" in hamburger dropdown triggers this
+
+Hover states on dropdown menu rows
+
+Added :hover background highlight to .settings-row-clickable
+Active state darkens slightly further for clear click feedback
+
+QA test updates
+
+Updated sync button check from class="sync-btn" to onclick="syncToKindle()"
+Added 3 new checks: hamburger button, settings dropdown, rebake notes menu item
+Result: 153/153 passing, 0 failures, 1 harmless legacy warning (xrefs/)
+
+GitHub Releases
+
+Learned about GitHub Releases as a free distribution channel (2GB per file, unlimited files)
+Created v1.0.0 Release with kjv.osis.xml and bdb-thayer.json as downloadable assets
+These are the two files required for setup that are too large for the git repo itself
+
+Repository cleanup (major)
+
+Adopted "lean repo" philosophy — source files only, no generated output
+git rm --cached to untrack: books/, dict/, indexes/, index.html,
+
+navigate.html, concordance.json, KJV-Strongs.epub, notes.json
+Deleted From Opus/ scratch folder entirely
+Added to .gitignore: all of the above plus highlights.json, .last-sync
+Added previously untracked: MAC-SETUP.md, WINDOWS-SETUP.md, search.html
+Repo size: was ~76MB, now ~31MB after cleanup
+
+BFG Repo-Cleaner — history scrub
+
+Used BFG 1.14.0 (Java 8 compatible) to permanently remove notes.json from
+
+all historical commits (personal study notes had been publicly visible)
+Full process: mirror clone → BFG scrub → git gc --prune=now --aggressive
+
+→ force push → rename old local folder → fresh clone → copy back local files
+Notes.json scrubbed from 44 commits, 46 object IDs changed
+Repo size reduced from 76.79MB to 31.45MB
+
+Node.js installation
+
+Node.js v24.15.0 + npm 11.12.1 installed (MSI installer)
+PATH fix: $env:PATH += ";C:\Program Files\nodejs" for current session
+
+(restart PC to make permanent)
+
+Electron Launcher — initial build (WORKING!)
+
+Created C:\Users\OldTi\kjv-strongs-launcher\ as a separate project/repo
+7 files from Opus consultation: main.js, preload.js, setup.html,
+
+setup.js, setup.css, package.json, LAUNCHER-DEV-NOTES.md
+Plus .gitignore (ignoring node_modules/, dist/, etc.)
+Two fixes applied to Opus output before testing:
+
+PowerShell MSI URL was hardcoded to v7.4.6 — changed to dynamic GitHub
+
+API lookup for latest win-x64.msi asset
+installedVersion was hardcoded to "1.0.0" — now uses real release tag
+
+fetched during download step
+
+
+npm install completed successfully (405 packages, deprecation warnings normal)
+npm start — FULL SETUP FLOW WORKED ON FIRST RUN:
+
+PowerShell detected automatically (skipped install)
+Kindle prompt shown → user clicked "No, skip"
+Downloaded kjv.osis.xml and bdb-thayer.json from GitHub Release
+Ran generate_bible.ps1 — 1,189 chapters in 2m 17s ← first timing data!
+Ran generate_dict.ps1 — completed successfully
+Ran rebake-notes.ps1 — completed
+Server started, Bible app opened in embedded Electron window ✅
+
+
+Conversation hit 100-file limit before capturing final elapsed time and
+
+testing close/shutdown behavior
+
+Pending for next session:
+
+Note the final total generation elapsed time (all 3 scripts)
+Test subsequent launch (should skip setup, go straight to Bible)
+Test close/shutdown (verify no orphaned PowerShell processes via Task Manager)
+Create GitHub repo for launcher (KJV-Strongs-Launcher) and push
+Add icon.ico (convert BiblePencil.ico from main project)
+Eventually: npm run build to produce the actual .exe installer
+Restart PC to make Node.js PATH permanent
+
+QA status: 153/153 passing
+
+Files modified this session: style.css, style-kindle.css,
+
+generate_bible.ps1, fontsize.js, notes.js, start-study.ps1,
+
+scripts/qa-test.ps1
