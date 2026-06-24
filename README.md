@@ -89,34 +89,31 @@ Download `KJV Strong's Bible Setup.exe` from the [GitHub Releases page](https://
 
 ### Requirements
 - PowerShell 7+ (`pwsh`)
-- ADB (Android Debug Bridge) — for Kindle push only
+- ADB (Android Debug Bridge) — for Kindle push
+- SQLite3 — for BDB/Thayer lexicon export
 
 ### Source files required (not in repo — too large)
-These are downloaded automatically by the Electron Launcher, or can be obtained
-from the [GitHub Releases page](https://github.com/RonTurrentine/KJV-Strongs-EBook/releases):
+Place these in the project root:
 - `kjv.osis.xml` — KJV Bible in OSIS format with Strong's numbers
-- `bdb-thayer.json` — BDB/Thayer lexicon (pre-exported JSON, ~6.5MB)
-
-The following are bundled in the repo and do not need to be downloaded separately:
 - `StrongHebrewG.xml` — Hebrew Strong's lexicon
 - `strongsgreek.xml` — Greek Strong's lexicon
+- `bdb-thayer.dct.mybible` — BDB/Thayer lexicon (SQLite, from MyBible)
 
 ### Generation (one-time setup)
 
 ```powershell
-# 1. Generate all 1,189 Bible chapters + concordance index
+# 1. Export BDB/Thayer lexicon
+pwsh -NoProfile -File .\scripts\export-bdb.ps1
+
+# 2. Generate all 1,189 Bible chapters + concordance index
 pwsh -NoProfile -File .\scripts\generate_bible.ps1
 
-# 2. Generate all 14,298 dictionary pages with BDB definitions
+# 3. Generate all 14,298 dictionary pages with BDB definitions
 pwsh -NoProfile -File .\scripts\generate_dict.ps1
 
-# 3. Verify output (155+ tests)
+# 4. Verify output (151+ tests)
 pwsh -NoProfile -File .\scripts\qa-test.ps1
 ```
-
-> **Note:** If you need to regenerate `bdb-thayer.json` from scratch (e.g. you have
-> an updated MyBible source file), you will need SQLite3 and can run:
-> `pwsh -NoProfile -File .\scripts\export-bdb.ps1`
 
 ### Running the Study Server
 
@@ -210,9 +207,9 @@ These files are generated locally and excluded from the repository:
 | `notes.json` | Your personal study notes |
 | `highlights.json` | Your personal verse highlights |
 | `concordance.json` | Strong's concordance index (~22MB) |
-| `bdb-thayer.json` | BDB/Thayer lexicon (~6.5MB) — download from Releases page |
+| `bdb-thayer.json` | BDB/Thayer lexicon export (~6.5MB) |
 | `KJV-Strongs.epub` | Built EPUB archive |
-| `kjv.osis.xml` | KJV source XML — download from Releases page |
+| `*.dct.mybible` | MyBible source database |
 
 ---
 
@@ -236,11 +233,10 @@ red-letter Bibles.
 - KJV Bible text and Strong's numbers: OSIS format, King James Version
   (1769) with Strong's Numbers and Morphology, from open Scripture sources
 - Hebrew lexicon: Strong's Hebrew and Aramaic Dictionary
-- Greek lexicon: Strong's Greek Dictionary
+- Greek lexicon: Strong's Greek Dictionary  
 - BDB definitions: Brown-Driver-Briggs Hebrew Lexicon
 - Thayer definitions: Thayer's Greek Lexicon
-- BDB/Thayer data pre-exported from MyBible dictionary format and hosted
-  as a release asset — end users do not need MyBible or SQLite3
+- Source data via MyBible dictionary format
 - English word search powered by the free Bible SuperSearch API
   (api.biblesupersearch.com)
 
@@ -248,10 +244,26 @@ red-letter Bibles.
 
 ## License
 
-This project is for personal Bible study use.
-Scripture text is in the public domain (KJV, published 1611).
-Strong's numbering system is in the public domain.
-BDB/Thayer lexicon data sourced from MyBible — please respect their terms of use.
+Copyright (C) 2026 Ron Turrentine
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see https://www.gnu.org/licenses/
+
+**Third-party content:**
+- Scripture text (KJV) — public domain (published 1611)
+- Strong's numbering system — public domain
+- BDB definitions (Brown-Driver-Briggs, 1906) — public domain
+- Thayer definitions (Thayer's Greek Lexicon, 1889) — public domain
 
 ---
 
