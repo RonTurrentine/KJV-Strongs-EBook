@@ -1,3 +1,20 @@
+# KJV Strong's Bible with Concordance
+# Copyright (C) 2026 Ron Turrentine
+# https://github.com/RonTurrentine/KJV-Strongs-EBook
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+
 # generate_bible.ps1
 # Full KJV Bible generator with Strong's links and OSIS cross-references.
 # Produces one HTML file per chapter under books/{NN}-{Abbr}/{ch}.html,
@@ -558,7 +575,7 @@ foreach ($entry in $FlatChapters) {
 <body class="bible-text">
 
   <nav class="chapter-nav">
-    <h1 class="book-chapter">$($book.FullName) $chNum</h1>
+    <h1 class="book-chapter">$($book.FullName) $chNum <span class="chapter-meta">($($verses.Count) v)</span></h1>
     <div class="nav-buttons">
       <a href="../../index.html" class="btn home-btn" title="Home"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></a>
       <a href="../../navigate.html#$($book.OsisId)" class="btn">Go To</a>
@@ -720,7 +737,7 @@ Write-Host "Generating index.html..." -ForegroundColor Cyan
 $otLinks = [System.Text.StringBuilder]::new()
 $ntLinks = [System.Text.StringBuilder]::new()
 foreach ($book in $BookTable) {
-    $link = "  <li><a href=`"books/$($book.Folder)/1.html`">$($book.FullName)</a> <span class=`"chapter-count`">($($book.Chapters) ch)</span></li>`n"
+    $link = "  <li><a href=`"books/$($book.Folder)/1.html`">$($book.FullName) <span class=`"chapter-count`">($($book.Chapters) ch)</span></a></li>`n"
     if ($book.Testament -eq 'OT') { [void]$otLinks.Append($link) } else { [void]$ntLinks.Append($link) }
 }
 
@@ -743,8 +760,50 @@ foreach ($book in $BookTable) {
       <a href="indexes/strongs-greek-index.html" class="btn">Greek</a>
       <a href="navigate.html" class="btn">Go To Passage</a>
       <a href="search.html" class="btn" id="search-nav-btn">Search</a>
+      <button class="btn hamburger-btn" id="hamburger-btn" onclick="toggleSettingsMenu()" title="Settings">&#9776;</button>
     </div>
   </nav>
+
+  <div class="settings-dropdown" id="settings-dropdown">
+    <div class="settings-section">
+      <p class="settings-section-label">DISPLAY</p>
+      <div class="settings-row settings-font-row">
+        <button class="btn settings-font-btn" id="font-decrease" onclick="decreaseFontSize()">a&#8595;</button>
+        <span class="settings-row-label">Font size</span>
+        <button class="btn settings-font-btn" id="font-increase" onclick="increaseFontSize()">A&#8593;</button>
+      </div>
+    </div>
+    <div class="settings-divider"></div>
+    <div class="settings-section">
+      <div class="settings-row settings-row-clickable" id="sync-kindle-row" onclick="syncToKindle()">
+        <span class="settings-row-icon">&#9889;</span>
+        Sync to Kindle
+      </div>
+      <div class="settings-row settings-row-clickable" onclick="rebakeNotes()">
+        <span class="settings-row-icon">&#128260;</span>
+        Rebake Notes
+      </div>
+    </div>
+    <div class="settings-divider"></div>
+    <div class="settings-section">
+      <div class="settings-row settings-row-clickable" onclick="window.open('help.html','_blank')">
+        <span class="settings-row-icon">&#10067;</span>
+        Help / Documentation
+      </div>
+      <div class="settings-row settings-row-clickable" onclick="window.open('about.html','_blank')">
+        <span class="settings-row-icon">&#8505;</span>
+        About
+      </div>
+    </div>
+    <div class="settings-divider"></div>
+    <div class="settings-section">
+      <div class="settings-row settings-row-clickable settings-row-exit" onclick="window.close()">
+        <span class="settings-row-icon">&#10005;</span>
+        Exit
+      </div>
+    </div>
+  </div>
+
   <main class="chapter-content">
     <div id="bookmark-resume"></div>
     <div class="book-columns">
@@ -761,6 +820,8 @@ $($ntLinks.ToString())        </ul>
       <div class="book-col-clear"></div>
     </div>
   </main>
+  <script src="js/fontsize.js"></script>
+  <script src="js/notes.js"></script>
   <script src="js/sticky-header.js"></script>
   <script src="js/bookmarks.js"></script>
   <script>
