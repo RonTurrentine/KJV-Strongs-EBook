@@ -1,12 +1,37 @@
 # KJV Strong's Bible — Windows Setup Guide
 
-This guide walks through setting up the KJV Strong's Bible study tool on Windows.
+---
+
+## Option A — Installer (Recommended)
+
+The easiest way to get started is the one-click installer:
+
+1. Go to the [GitHub Releases page](https://github.com/RonTurrentine/KJV-Strongs-EBook/releases/latest)
+2. Download **`KJV Strong's Bible Setup 1.1.0.exe`**
+3. Run the installer
+
+The launcher will automatically:
+- Install PowerShell 7+ if needed (you will see a Windows security prompt — click **Yes**)
+- Download all required source files from GitHub
+- Generate all 1,189 Bible chapters and 14,298 dictionary pages
+- Start the study server and open the Bible in an embedded window
+
+> **Note:** Your antivirus software may scan files during setup — this is completely
+> normal and harmless. If asked to allow or trust the application, click **Allow**.
+> A Windows security prompt will appear when installing PowerShell — click **Yes** to proceed.
+
+**That's it!** Setup typically takes 3-5 minutes on a WiFi connection.
 
 ---
 
-## Prerequisites
+## Option B — Manual Setup (Developers / Advanced Users)
 
-### 1. Install PowerShell 7+ (pwsh)
+Use this option if you want to run the tool from source, contribute to development,
+or have full control over the generation pipeline.
+
+### Prerequisites
+
+#### 1. Install PowerShell 7+ (pwsh)
 Windows comes with PowerShell 5.x but we need PowerShell 7+.
 
 Download and install from:
@@ -20,8 +45,8 @@ pwsh --version
 ```
 You should see `PowerShell 7.x.x` or higher.
 
-### 2. Install ADB (Android Debug Bridge)
-Required for pushing files to the Kindle Fire via USB.
+#### 2. Install ADB (Android Debug Bridge)
+Required only if you plan to sync to a Kindle Fire device.
 
 Download the Android SDK Platform Tools for Windows:
 https://developer.android.com/tools/releases/platform-tools
@@ -35,7 +60,7 @@ Verify ADB works:
 & 'H:\Android SDK Platform Tools\adb.exe' version
 ```
 
-### 3. Install Git
+#### 3. Install Git
 If you don't have Git installed:
 https://git-scm.com/download/win
 
@@ -44,39 +69,30 @@ Verify:
 git --version
 ```
 
-### 4. Install SQLite Tools
-Required for exporting the BDB/Thayer lexicon.
-
-Download SQLite tools for Windows:
-https://www.sqlite.org/download.html
-
-1. Download `sqlite-tools-win-x64-*.zip`
-2. Extract to a folder, e.g. `H:\SQLiteTools\`
-3. Note the full path to `sqlite3.exe` — you'll need it later
-
 ---
 
-## Project Setup
+### Project Setup
 
-### 1. Clone the repository
-Open PowerShell and run:
+#### 1. Clone the repository
 ```powershell
 cd 'C:\Users\YourName'
 git clone https://github.com/RonTurrentine/KJV-Strongs-EBook.git
 cd KJV-Strongs-EBook
 ```
 
-### 2. Download required source files
-The following files are NOT included in the repository (too large) and must be
-obtained separately. Place them in the project root directory:
+#### 2. Download required source files
+The following files are NOT included in the repository (too large).
+Download them from the [GitHub Releases page](https://github.com/RonTurrentine/KJV-Strongs-EBook/releases/latest)
+and place them in the project root:
 
 - **`kjv.osis.xml`** (~28MB) — KJV Bible in OSIS format with Strong's numbers
-- **`StrongHebrewG.xml`** (~6MB) — Hebrew Strong's lexicon
-- **`strongsgreek.xml`** (~2MB) — Greek Strong's lexicon
-- **`bdb-thayer.dct.mybible`** — BDB/Thayer lexicon (SQLite database)
-  - Source: MyBible app dictionary downloads
+- **`bdb-thayer.json`** (~6.5MB) — BDB/Thayer lexicon (pre-exported JSON)
 
-### 3. Update paths in scripts
+> **Note:** `bdb-thayer.json` is pre-exported and ready to use. You do NOT need
+> SQLite3 or the MyBible source database unless you want to re-export from scratch
+> (see `scripts/export-bdb.ps1` for that advanced workflow).
+
+#### 3. Update paths in scripts
 Several scripts have paths that need to match your system. Open each file
 in a text editor and update the following:
 
@@ -88,11 +104,6 @@ in a text editor and update the following:
 **`scripts/package_epub.ps1`** — update `$AdbPath`:
 ```powershell
 [string]$AdbPath = 'H:\Android SDK Platform Tools\adb.exe'
-```
-
-**`scripts/export-bdb.ps1`** — update `$Sqlite3`:
-```powershell
-[string]$Sqlite3 = 'H:\SQLiteTools\sqlite3.exe'
 ```
 
 **`start-study.ps1`** — update `$adbPath` in two places:
@@ -108,37 +119,33 @@ update `$ProjectRoot` if different from default:
 
 ---
 
-## Generation Steps
+### Generation Steps
 
 Run these commands in order from the project root directory:
 
 ```powershell
 cd 'C:\Users\YourName\KJV-Strongs-EBook'
 
-# 1. Export BDB/Thayer lexicon (one-time setup)
-pwsh -NoProfile -File .\scripts\export-bdb.ps1
-
-# 2. Generate Bible chapter pages + concordance
+# 1. Generate Bible chapter pages + concordance
 pwsh -NoProfile -File .\scripts\generate_bible.ps1
 
-# 3. Generate dictionary pages with BDB definitions + concordance
+# 2. Generate dictionary pages with BDB definitions + concordance
 pwsh -NoProfile -File .\scripts\generate_dict.ps1
 
-# 4. Run QA tests
+# 3. Run QA tests
 pwsh -NoProfile -File .\scripts\qa-test.ps1
 
-# 5. Rebake personal notes (if you have any)
+# 4. Rebake personal notes (if you have any)
 pwsh -NoProfile -File .\scripts\rebake-notes.ps1
 ```
 
 Generation takes approximately:
-- `generate_bible.ps1` — 10-15 minutes
-- `generate_dict.ps1` — 5-10 minutes
-- `export-bdb.ps1` — 15-20 minutes (one-time only)
+- `generate_bible.ps1` — 2-3 minutes
+- `generate_dict.ps1` — 1-2 minutes
 
 ---
 
-## Running the Study Server
+### Running the Study Server
 
 Double-click `start-study.bat` in the project root folder.
 
@@ -151,13 +158,13 @@ pwsh -NoProfile -File .\start-study.ps1
 This starts the local server at `http://localhost:8080` and opens your browser
 automatically.
 
-To stop the server: close the terminal window (Ctrl+C may not work).
+To stop the server: close the terminal window.
 
 ---
 
 ## Using the Bible Study Tool
 
-Once the server is running, your browser opens to `http://localhost:8080`.
+Once running, your browser opens to `http://localhost:8080`.
 
 **Key features:**
 - Browse all 66 books of the KJV Bible
@@ -170,6 +177,9 @@ Once the server is running, your browser opens to `http://localhost:8080`.
 - Use `[[Book.Ch.Vs]]` syntax in notes to create verse links (e.g. `[[John.3.16]]`)
 - Click **Go To Passage** to jump to any verse
 - Click **Hebrew** or **Greek** to browse the full Strong's index
+- ☰ hamburger menu — font size, Strong's toggle, Sync to Kindle, Rebake Notes
+- 🏠 Home button returns to the main book index from any page
+- Keyboard shortcuts: `Ctrl+]` increase font, `Ctrl+[` decrease font, `H` toggle Strong's
 
 ---
 
@@ -188,7 +198,7 @@ Connect your Kindle Fire D01E via USB.
 ```
 You should see your device listed as `device` (not `offline`).
 
-**Push all files to Kindle (~15-30 minutes):**
+**Push all files to Kindle:**
 ```powershell
 pwsh -NoProfile -File .\scripts\package_epub.ps1
 ```
@@ -211,7 +221,7 @@ Notes are stored in `notes.json` in the project root. This file is personal
 and is excluded from GitHub (listed in `.gitignore`).
 
 After making notes via the study server, sync them to the Kindle using the
-**⚡ K** button in any chapter page header.
+⚡ **Sync to Kindle** option in the ☰ hamburger menu on any chapter page.
 
 If you regenerate the Bible pages (run `generate_bible.ps1`), your notes
 will disappear from the HTML — restore them by running:
@@ -248,11 +258,6 @@ to use a different port number (change all references from `8080` to e.g. `8081`
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
-**Generation scripts are slow**
-Normal — generating 15,000+ HTML files takes time. Expect:
-- `generate_bible.ps1`: 10-15 minutes
-- `generate_dict.ps1`: 5-10 minutes
-
 ---
 
 ## File Structure
@@ -264,6 +269,7 @@ KJV-Strongs-EBook\
 ├── BiblePencil.ico          Browser tab icon
 ├── index.html               Main book index (generated)
 ├── navigate.html            Go To Passage page (generated)
+├── search.html              English word search (generated)
 ├── notes.json               Your personal notes (NOT in GitHub)
 ├── concordance.json         Strong's concordance index (NOT in GitHub)
 ├── books\                   1,189 chapter HTML files (generated)
@@ -283,8 +289,8 @@ KJV-Strongs-EBook\
 └── scripts\
     ├── generate_bible.ps1   Bible generator
     ├── generate_dict.ps1    Dictionary generator
-    ├── export-bdb.ps1       BDB/Thayer exporter
-    ├── qa-test.ps1          Quality assurance
+    ├── export-bdb.ps1       BDB/Thayer exporter (advanced, optional)
+    ├── qa-test.ps1          Quality assurance (155+ tests)
     ├── rebake-notes.ps1     Restore baked notes
     ├── adb-push-all.ps1     Push to Kindle
     ├── package_epub.ps1     EPUB packager
@@ -293,4 +299,4 @@ KJV-Strongs-EBook\
 
 ---
 
-*Generated for KJV Strong's Bible study tool — https://github.com/RonTurrentine/KJV-Strongs-EBook*
+*KJV Strong's Bible — https://github.com/RonTurrentine/KJV-Strongs-EBook*
