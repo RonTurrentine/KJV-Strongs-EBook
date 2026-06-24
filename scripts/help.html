@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <title>Help — KJV Strong's Bible</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="BiblePencil.ico">
+  <style>
+    .help-wrap {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 24px 20px 60px 20px;
+    }
+    .help-title {
+      font-size: 1.6em;
+      color: #00bcd4;
+      margin-bottom: 4px;
+    }
+    .help-subtitle {
+      color: #888;
+      font-size: 0.9em;
+      margin-bottom: 32px;
+    }
+    .help-section {
+      margin-bottom: 32px;
+    }
+    .help-section h2 {
+      font-size: 1.1em;
+      color: #00bcd4;
+      border-bottom: 1px solid #333;
+      padding-bottom: 6px;
+      margin-bottom: 12px;
+    }
+    .help-section p {
+      color: #ccc;
+      line-height: 1.7;
+      margin-bottom: 10px;
+      font-size: 0.92em;
+    }
+    .help-section ul {
+      color: #ccc;
+      line-height: 1.8;
+      font-size: 0.92em;
+      padding-left: 20px;
+      margin-bottom: 10px;
+    }
+    .help-section ul li {
+      margin-bottom: 4px;
+    }
+    .help-key {
+      display: inline-block;
+      background: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 4px;
+      padding: 1px 7px;
+      font-family: monospace;
+      font-size: 0.9em;
+      color: #e0e0e0;
+    }
+    .help-badge {
+      display: inline-block;
+      background: #1a3a4a;
+      color: #00bcd4;
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-size: 0.82em;
+      font-family: monospace;
+    }
+    .close-bar {
+      position: sticky;
+      top: 0;
+      background: #1a1a1a;
+      border-bottom: 1px solid #333;
+      padding: 8px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+    .close-bar-title {
+      color: #00bcd4;
+      font-size: 0.9em;
+      font-weight: bold;
+    }
+    .close-btn {
+      background: #2a2a2a;
+      color: #ccc;
+      border: 1px solid #444;
+      border-radius: 4px;
+      padding: 4px 14px;
+      cursor: pointer;
+      font-size: 0.85em;
+    }
+    .close-btn:hover {
+      background: #333;
+      color: #fff;
+    }
+  </style>
+</head>
+<body class="bible-text">
+
+  <div class="close-bar">
+    <span class="close-bar-title">&#10067; Help / Documentation</span>
+    <button class="close-btn" onclick="window.close()">&#10005; Close Tab</button>
+  </div>
+
+  <div class="help-wrap">
+
+    <h1 class="help-title">KJV Strong's Bible</h1>
+    <p class="help-subtitle">Help &amp; Documentation — v1.1.0</p>
+
+    <!-- ── Navigation ─────────────────────────────────────────── -->
+    <div class="help-section">
+      <h2>&#127968; Navigation</h2>
+      <p>The main book index shows all 66 books of the Bible organized by Old and New Testament. Click any book to open its chapter list, then click a chapter to begin reading.</p>
+      <ul>
+        <li><strong>🏠 Home button</strong> — returns to the main book index from any page</li>
+        <li><strong>◀B / B▶</strong> — jump to the previous or next Bible book</li>
+        <li><strong>◀C / C▶</strong> — jump to the previous or next chapter</li>
+        <li><strong>Go To</strong> — jump directly to any book, chapter, and verse</li>
+        <li><strong>Hebrew / Greek</strong> — browse the full Strong's lexicon index</li>
+        <li><strong>Search</strong> — search the full KJV text (PC only, requires internet)</li>
+      </ul>
+    </div>
+
+    <!-- ── Strong's Numbers ───────────────────────────────────── -->
+    <div class="help-section">
+      <h2>&#128214; Strong's Numbers</h2>
+      <p>Every word in the Bible text is linked to its Strong's reference number. These appear as small badges like <span class="help-badge">H0430</span> (Hebrew) or <span class="help-badge">G3056</span> (Greek) next to each word.</p>
+      <p>Click any badge to open the full lexicon entry for that word, which includes:</p>
+      <ul>
+        <li>Strong's definition and how the KJV translates it</li>
+        <li>BDB (Hebrew) or Thayer (Greek) hierarchical definition with nested sub-meanings</li>
+        <li>Clickable cross-references to related words</li>
+        <li>A complete concordance — every verse in the Bible where that word appears</li>
+      </ul>
+      <p>You can hide all Strong's badges using the <strong>👁 Strong's links</strong> toggle in the ☰ settings menu, or by pressing <span class="help-key">H</span> on your keyboard.</p>
+    </div>
+
+    <!-- ── Settings Menu ──────────────────────────────────────── -->
+    <div class="help-section">
+      <h2>☰ Settings Menu</h2>
+      <p>The hamburger menu (☰) in the top-right corner of every chapter page contains the following options:</p>
+      <ul>
+        <li><strong>Font size</strong> — increase or decrease the text size with the a↓ / A↑ buttons</li>
+        <li><strong>Strong's links</strong> — show or hide Strong's number badges</li>
+        <li><strong>⚡ Sync to Kindle</strong> — push your notes and highlights to a connected Kindle Fire device (grayed out when no device is connected)</li>
+        <li><strong>🔄 Rebake Notes</strong> — re-embed your personal notes into the HTML after regenerating the Bible files</li>
+        <li><strong>❓ Help / Documentation</strong> — opens this page</li>
+        <li><strong>ℹ️ About</strong> — shows version and project information</li>
+        <li><strong>✕ Exit</strong> — closes the application</li>
+      </ul>
+    </div>
+
+    <!-- ── Keyboard Shortcuts ─────────────────────────────────── -->
+    <div class="help-section">
+      <h2>&#9000; Keyboard Shortcuts</h2>
+      <ul>
+        <li><span class="help-key">H</span> — toggle Strong's number badges on/off</li>
+        <li><span class="help-key">Ctrl</span> + <span class="help-key">]</span> — increase font size</li>
+        <li><span class="help-key">Ctrl</span> + <span class="help-key">[</span> — decrease font size</li>
+      </ul>
+    </div>
+
+    <!-- ── Personal Notes ─────────────────────────────────────── -->
+    <div class="help-section">
+      <h2>&#9999; Personal Notes</h2>
+      <p>You can add personal study notes to any verse. Click the gold ✏ pencil button that appears next to any verse to open the note editor.</p>
+      <ul>
+        <li><strong>Verse links</strong> — type <span class="help-key">[[Book.Ch.Vs]]</span> in a note to create a clickable link to another verse (e.g. <span class="help-key">[[John.3.16]]</span>)</li>
+        <li><strong>Book picker</strong> — use the book picker dropdown in the note editor to insert verse references easily</li>
+        <li><strong>Baked notes</strong> — notes are embedded directly into the HTML pages so they appear even on Kindle without a server running</li>
+        <li><strong>After regeneration</strong> — if you regenerate the Bible pages, run <em>Rebake Notes</em> from the ☰ menu to restore your notes</li>
+      </ul>
+    </div>
+
+    <!-- ── Verse Highlighting ─────────────────────────────────── -->
+    <div class="help-section">
+      <h2>&#127775; Verse Highlighting</h2>
+      <p>You can highlight any verse in one of four pastel colors — yellow, green, red, or blue. The color picker is built into the note editor modal.</p>
+      <ul>
+        <li>Highlights are baked into the HTML alongside notes</li>
+        <li>Visible in both study mode and reading mode</li>
+        <li>Sync to Kindle automatically includes highlights</li>
+      </ul>
+    </div>
+
+    <!-- ── Reading Mode ───────────────────────────────────────── -->
+    <div class="help-section">
+      <h2>&#128065; Reading Mode</h2>
+      <p>The 👁 eye toggle in the top navigation bar switches between <strong>Study Mode</strong> (Strong's badges visible) and <strong>Reading Mode</strong> (clean text only, no badges). Your preference is remembered as you navigate between chapters.</p>
+    </div>
+
+    <!-- ── Search ─────────────────────────────────────────────── -->
+    <div class="help-section">
+      <h2>&#128269; English Word Search</h2>
+      <p>The Search page lets you search the full KJV text for any English word or phrase. It is powered by the free Bible SuperSearch API and requires an internet connection.</p>
+      <ul>
+        <li><strong>Scope</strong> — search the whole Bible, a specific book, or any combination of categories (Torah, Historical, Poetic/Wisdom, Prophetic, Gospels, Acts, Paul's Epistles, General Epistles, Revelation)</li>
+        <li><strong>Results per page</strong> — choose 50, 100, 200, or All</li>
+        <li>Click any result to jump directly to that verse</li>
+        <li>Results are remembered when you navigate to a verse and come back</li>
+        <li>Not available on Kindle Fire</li>
+      </ul>
+    </div>
+
+    <!-- ── Kindle Fire ────────────────────────────────────────── -->
+    <div class="help-section">
+      <h2>&#128241; Kindle Fire Sync</h2>
+      <p>If you have a Kindle Fire device connected via USB, you can sync the entire Bible (including your notes and highlights) to it using <strong>⚡ Sync to Kindle</strong> in the ☰ settings menu.</p>
+      <p>On the Kindle, open the Silk browser and navigate to:<br>
+      <span class="help-key">file:///data/local/tmp/index.html</span></p>
+      <p>The Sync to Kindle option will be grayed out when no Kindle device is detected. ADB (Android Debug Bridge) must be installed and the device must be connected via USB with USB debugging enabled.</p>
+    </div>
+
+  </div>
+
+</body>
+</html>

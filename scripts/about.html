@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <title>About — KJV Strong's Bible</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="BiblePencil.ico">
+  <style>
+    .about-wrap {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 40px 20px 60px 20px;
+      text-align: center;
+    }
+    .about-icon {
+      font-size: 3em;
+      margin-bottom: 12px;
+    }
+    .about-title {
+      font-size: 1.8em;
+      color: #00bcd4;
+      margin-bottom: 4px;
+    }
+    .about-version {
+      font-size: 1em;
+      color: #888;
+      margin-bottom: 6px;
+    }
+    .about-tagline {
+      color: #aaa;
+      font-size: 0.9em;
+      margin-bottom: 32px;
+    }
+    .about-divider {
+      height: 1px;
+      background: #333;
+      margin: 24px 0;
+    }
+    .about-section {
+      text-align: left;
+      margin-bottom: 20px;
+    }
+    .about-section h2 {
+      font-size: 0.85em;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+    .about-section p {
+      color: #ccc;
+      font-size: 0.9em;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+    .about-section a {
+      color: #00bcd4;
+      text-decoration: none;
+    }
+    .about-section a:hover {
+      text-decoration: underline;
+    }
+    .about-stat-row {
+      display: flex;
+      justify-content: space-around;
+      margin: 16px 0;
+    }
+    .about-stat {
+      text-align: center;
+    }
+    .about-stat-num {
+      font-size: 1.4em;
+      color: #00bcd4;
+      font-weight: bold;
+    }
+    .about-stat-label {
+      font-size: 0.75em;
+      color: #888;
+      margin-top: 2px;
+    }
+    .close-bar {
+      position: sticky;
+      top: 0;
+      background: #1a1a1a;
+      border-bottom: 1px solid #333;
+      padding: 8px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+    .close-bar-title {
+      color: #00bcd4;
+      font-size: 0.9em;
+      font-weight: bold;
+    }
+    .close-btn {
+      background: #2a2a2a;
+      color: #ccc;
+      border: 1px solid #444;
+      border-radius: 4px;
+      padding: 4px 14px;
+      cursor: pointer;
+      font-size: 0.85em;
+    }
+    .close-btn:hover {
+      background: #333;
+      color: #fff;
+    }
+  </style>
+</head>
+<body class="bible-text">
+
+  <div class="close-bar">
+    <span class="close-bar-title">&#8505; About</span>
+    <button class="close-btn" onclick="window.close()">&#10005; Close Tab</button>
+  </div>
+
+  <div class="about-wrap">
+
+    <div class="about-icon">&#128214;</div>
+    <h1 class="about-title">KJV Strong's Bible</h1>
+    <p class="about-version">v1.1.0</p>
+    <p class="about-tagline">with Strong's Concordance &amp; BDB/Thayer Lexicon</p>
+
+    <div class="about-stat-row">
+      <div class="about-stat">
+        <div class="about-stat-num">1,189</div>
+        <div class="about-stat-label">Bible Chapters</div>
+      </div>
+      <div class="about-stat">
+        <div class="about-stat-num">66</div>
+        <div class="about-stat-label">Books</div>
+      </div>
+      <div class="about-stat">
+        <div class="about-stat-num">14,298</div>
+        <div class="about-stat-label">Lexicon Pages</div>
+      </div>
+      <div class="about-stat">
+        <div class="about-stat-num">155+</div>
+        <div class="about-stat-label">QA Tests</div>
+      </div>
+    </div>
+
+    <div class="about-divider"></div>
+
+    <div class="about-section">
+      <h2>Description</h2>
+      <p>A complete, offline-capable KJV Bible study tool with Strong's Hebrew/Greek lexicon,
+      BDB/Thayer definitions, personal notes, verse highlighting, and full concordance —
+      designed for both PC (localhost) and Kindle Fire tablet.</p>
+    </div>
+
+    <div class="about-divider"></div>
+
+    <div class="about-section">
+      <h2>Bible Text Edition</h2>
+      <p>This app uses the <strong style="color:#e0e0e0;">King James Version (1769) Blayney Standard Edition</strong> —
+      the scholarly standard text that nearly all modern KJV Bibles are based on.</p>
+      <p>The KJV was first published in 1611. The text used here reflects Benjamin Blayney's
+      1769 Oxford revision, which standardized spelling and punctuation. Words of Christ
+      (red letter) are aligned with Louis Klopsch's 1901 edition.</p>
+    </div>
+
+    <div class="about-divider"></div>
+
+    <div class="about-section">
+      <h2>Acknowledgements</h2>
+      <p>&#8226; KJV Bible text &amp; Strong's numbers — OSIS format with Strong's Numbers and Morphology</p>
+      <p>&#8226; Hebrew lexicon — Strong's Hebrew and Aramaic Dictionary</p>
+      <p>&#8226; Greek lexicon — Strong's Greek Dictionary</p>
+      <p>&#8226; BDB definitions — Brown-Driver-Briggs Hebrew Lexicon</p>
+      <p>&#8226; Thayer definitions — Thayer's Greek Lexicon</p>
+      <p>&#8226; English word search — <a href="https://api.biblesupersearch.com" target="_blank">Bible SuperSearch API</a></p>
+    </div>
+
+    <div class="about-divider"></div>
+
+    <div class="about-section">
+      <h2>Links</h2>
+      <p>&#128279; <a href="https://github.com/RonTurrentine/KJV-Strongs-EBook" target="_blank">GitHub Repository</a></p>
+      <p>&#11015; <a href="https://github.com/RonTurrentine/KJV-Strongs-EBook/releases/latest" target="_blank">Latest Release</a></p>
+    </div>
+
+    <div class="about-divider"></div>
+
+    <p style="color:#555; font-size:0.8em; margin-top:24px;">
+      Built with PowerShell 7, static HTML, and a love for God's Word &#128214;
+    </p>
+
+  </div>
+
+</body>
+</html>

@@ -1791,6 +1791,15 @@ body.strongs-hidden .verse {
     background-color: transparent !important;
 }
 
+/* Exit row — subtle red tint on hover */
+.settings-row-exit {
+    color: #ff6b6b;
+}
+
+.settings-row-exit:hover {
+    background-color: #2a1a1a !important;
+}
+
 .settings-row-icon {
     display: inline-block;
     width: 20px;

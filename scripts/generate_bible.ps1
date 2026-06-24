@@ -596,6 +596,24 @@ foreach ($entry in $FlatChapters) {
         Rebake Notes
       </div>
     </div>
+    <div class="settings-divider"></div>
+    <div class="settings-section">
+      <div class="settings-row settings-row-clickable" onclick="window.open('../../help.html','_blank')">
+        <span class="settings-row-icon">&#10067;</span>
+        Help / Documentation
+      </div>
+      <div class="settings-row settings-row-clickable" onclick="window.open('../../about.html','_blank')">
+        <span class="settings-row-icon">&#8505;</span>
+        About
+      </div>
+    </div>
+    <div class="settings-divider"></div>
+    <div class="settings-section">
+      <div class="settings-row settings-row-clickable settings-row-exit" onclick="window.close()">
+        <span class="settings-row-icon">&#10005;</span>
+        Exit
+      </div>
+    </div>
   </div>
 
 
@@ -767,6 +785,17 @@ if (Test-Path $searchSrc) {
     Write-Host "  search.html copied." -ForegroundColor Green
 } else {
     Write-Host "  WARNING: scripts/search.html not found - skipping." -ForegroundColor Yellow
+}
+
+# Phase 5c: Copy help.html and about.html (static files)
+foreach ($staticFile in @('help.html', 'about.html')) {
+    $src = Join-Path $PSScriptRoot $staticFile
+    if (Test-Path $src) {
+        Copy-Item -Path $src -Destination (Join-Path $OutputRoot $staticFile) -Force
+        Write-Host "  $staticFile copied." -ForegroundColor Green
+    } else {
+        Write-Host "  WARNING: scripts/$staticFile not found - skipping." -ForegroundColor Yellow
+    }
 }
 
 # Phase 6: Generate navigate.html
