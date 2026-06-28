@@ -607,7 +607,8 @@ function Write-IndexPage {
     param(
         [string]$FilePath,
         [string]$Language,
-        [System.Collections.Generic.List[hashtable]]$Entries
+        [System.Collections.Generic.List[hashtable]]$Entries,
+        [string]$Sha = ""
     )
 
     $lang     = $Language.ToLower()
@@ -642,7 +643,7 @@ function Write-IndexPage {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark">
-  <meta name="kjv-sha" content="$InstalledSha">
+  <meta name="kjv-sha" content="$Sha">
   <link rel="icon" type="image/x-icon" href="../BiblePencil.ico">
   <title>$titleEsc</title>
   <link rel="stylesheet" href="$cssPath">
@@ -913,7 +914,7 @@ Write-Host "Hebrew done - $count pages written."
 $hebIndexEntries = $hebIndexEntries | Sort-Object { $_.Num }
 Write-Host "Writing Hebrew index ($($hebIndexEntries.Count) entries)..."
 $hebIdxPath = Join-Path $IndexDir 'strongs-hebrew-index.html'
-Write-IndexPage -FilePath $hebIdxPath -Language 'Hebrew' -Entries $hebIndexEntries
+Write-IndexPage -FilePath $hebIdxPath -Language 'Hebrew' -Entries $hebIndexEntries -Sha $InstalledSha
 Write-Host "Hebrew index written."
 
 # ── Greek ────────────────────────────────────────────────────────────────────
@@ -984,7 +985,7 @@ Write-Host "Greek done - $count pages written."
 $grkIndexEntries = $grkIndexEntries | Sort-Object { $_.Num }
 Write-Host "Writing Greek index ($($grkIndexEntries.Count) entries)..."
 $grkIdxPath = Join-Path $IndexDir 'strongs-greek-index.html'
-Write-IndexPage -FilePath $grkIdxPath -Language 'Greek' -Entries $grkIndexEntries
+Write-IndexPage -FilePath $grkIdxPath -Language 'Greek' -Entries $grkIndexEntries -Sha $InstalledSha
 Write-Host "Greek index written."
 
 Write-Host "Dictionary generation complete."
