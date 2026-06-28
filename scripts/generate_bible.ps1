@@ -388,6 +388,20 @@ function ConvertTo-VerseHtml {
     return $verses
 }
 
+# Phase 0: Fetch current GitHub commit SHA (baked into pages for update detection)
+Write-Host "Fetching latest commit SHA from GitHub..." -ForegroundColor Cyan
+$InstalledSha = ""
+try {
+    $apiUrl  = "https://api.github.com/repos/RonTurrentine/KJV-Strongs-EBook/commits/main"
+    $headers = @{ "User-Agent" = "KJV-Strongs-Generator"; "Accept" = "application/vnd.github.v3+json" }
+    $resp    = Invoke-RestMethod -Uri $apiUrl -Headers $headers -TimeoutSec 10
+    $InstalledSha = $resp.sha
+    Write-Host "  SHA: $($InstalledSha.Substring(0,7))..." -ForegroundColor Green
+} catch {
+    Write-Host "  Could not fetch SHA (offline?). Update check will be disabled." -ForegroundColor Yellow
+    $InstalledSha = ""
+}
+
 # Phase 1: Load OSIS XML
 Write-Host "Loading OSIS XML from $OsisPath..." -ForegroundColor Cyan
 $osis = [xml](Get-Content -Raw -Path $OsisPath)
@@ -568,6 +582,7 @@ foreach ($entry in $FlatChapters) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark">
+  <meta name="kjv-sha" content="$InstalledSha">
   <link rel="icon" type="image/x-icon" href="../../BiblePencil.ico">
   <title>$($book.FullName) $chNum -- KJV</title>
   <link rel="stylesheet" href="../../css/style.css">
@@ -575,9 +590,10 @@ foreach ($entry in $FlatChapters) {
 <body class="bible-text">
 
   <nav class="chapter-nav">
-    <h1 class="book-chapter">$($book.FullName) $chNum <span class="chapter-meta">($($verses.Count) v)</span></h1>
+    <h1 class="book-chapter"><span class="update-cross" onclick="openUpdateModal()" title="Update available!"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="18" viewBox="0 0 14 18" fill="currentColor"><rect x="5.5" y="0" width="3" height="18"/><rect x="0" y="4" width="14" height="3"/></svg></span>$($book.FullName) $chNum <span class="chapter-meta">($($verses.Count) v)</span></h1>
     <div class="nav-buttons">
       <a href="../../index.html" class="btn home-btn" title="Home"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></a>
+      <button class="btn" onclick="history.back()" title="Back">&#9664; Back</button>
       <a href="../../navigate.html#$($book.OsisId)" class="btn">Go To</a>
       $prevBookHtml
       $prevHtml
@@ -748,17 +764,18 @@ foreach ($book in $BookTable) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark">
+  <meta name="kjv-sha" content="$InstalledSha">
   <link rel="icon" type="image/x-icon" href="BiblePencil.ico">
   <title>KJV Bible with Strong's Concordance</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="bible-text">
   <nav class="chapter-nav">
-    <h1>KJV Bible</h1>
+    <h1><span class="update-cross" onclick="openUpdateModal()" title="Update available!"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="18" viewBox="0 0 14 18" fill="currentColor"><rect x="5.5" y="0" width="3" height="18"/><rect x="0" y="4" width="14" height="3"/></svg></span>KJV Bible</h1>
     <div class="nav-buttons">
       <a href="indexes/strongs-hebrew-index.html" class="btn">Hebrew</a>
       <a href="indexes/strongs-greek-index.html" class="btn">Greek</a>
-      <a href="navigate.html" class="btn">Go To Passage</a>
+      <a href="navigate.html" class="btn">Go To</a>
       <a href="search.html" class="btn" id="search-nav-btn">Search</a>
       <button class="btn hamburger-btn" id="hamburger-btn" onclick="toggleSettingsMenu()" title="Settings">&#9776;</button>
     </div>
@@ -842,17 +859,23 @@ Write-Host "index.html written." -ForegroundColor Green
 Write-Host "Copying search.html..." -ForegroundColor Cyan
 $searchSrc = Join-Path $PSScriptRoot "search.html"
 if (Test-Path $searchSrc) {
-    Copy-Item -Path $searchSrc -Destination (Join-Path $OutputRoot 'search.html') -Force
+    $searchDest = Join-Path $OutputRoot 'search.html'
+    $searchContent = Get-Content -Path $searchSrc -Raw -Encoding UTF8
+    $searchContent = $searchContent -replace 'KJV_SHA_PLACEHOLDER', $InstalledSha
+    Set-Content -Path $searchDest -Value $searchContent -Encoding UTF8
     Write-Host "  search.html copied." -ForegroundColor Green
 } else {
     Write-Host "  WARNING: scripts/search.html not found - skipping." -ForegroundColor Yellow
 }
 
-# Phase 5c: Copy help.html and about.html (static files)
+# Phase 5c: Copy help.html and about.html (static files) — inject SHA
 foreach ($staticFile in @('help.html', 'about.html')) {
     $src = Join-Path $PSScriptRoot $staticFile
     if (Test-Path $src) {
-        Copy-Item -Path $src -Destination (Join-Path $OutputRoot $staticFile) -Force
+        $dest = Join-Path $OutputRoot $staticFile
+        $content = Get-Content -Path $src -Raw -Encoding UTF8
+        $content = $content -replace 'KJV_SHA_PLACEHOLDER', $InstalledSha
+        Set-Content -Path $dest -Value $content -Encoding UTF8
         Write-Host "  $staticFile copied." -ForegroundColor Green
     } else {
         Write-Host "  WARNING: scripts/$staticFile not found - skipping." -ForegroundColor Yellow
@@ -869,17 +892,59 @@ Write-Host "Generating navigate.html..." -ForegroundColor Cyan
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark">
+  <meta name="kjv-sha" content="$InstalledSha">
   <link rel="icon" type="image/x-icon" href="BiblePencil.ico">
-  <title>Go To Passage -- KJV</title>
+  <title>Go To -- KJV</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="bible-text">
   <nav class="chapter-nav">
-    <h1>Go To Passage</h1>
+    <h1><span class="update-cross" onclick="openUpdateModal()" title="Update available!"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="18" viewBox="0 0 14 18" fill="currentColor"><rect x="5.5" y="0" width="3" height="18"/><rect x="0" y="4" width="14" height="3"/></svg></span>Go To</h1>
     <div class="nav-buttons">
       <a href="index.html" class="btn home-btn" title="Home"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></a>
+      <button class="btn" onclick="history.back()" title="Back">&#9664; Back</button>
+      <button class="btn hamburger-btn" id="hamburger-btn" onclick="toggleSettingsMenu()" title="Settings">&#9776;</button>
     </div>
   </nav>
+  <div class="settings-dropdown" id="settings-dropdown">
+    <div class="settings-section">
+      <p class="settings-section-label">DISPLAY</p>
+      <div class="settings-row settings-font-row">
+        <button class="btn settings-font-btn" id="font-decrease" onclick="decreaseFontSize()">a&#8595;</button>
+        <span class="settings-row-label">Font size</span>
+        <button class="btn settings-font-btn" id="font-increase" onclick="increaseFontSize()">A&#8593;</button>
+      </div>
+    </div>
+    <div class="settings-divider"></div>
+    <div class="settings-section">
+      <div class="settings-row settings-row-clickable" id="sync-kindle-row" onclick="syncToKindle()">
+        <span class="settings-row-icon">&#9889;</span>
+        Sync to Kindle
+      </div>
+      <div class="settings-row settings-row-clickable" onclick="rebakeNotes()">
+        <span class="settings-row-icon">&#128260;</span>
+        Rebake Notes
+      </div>
+    </div>
+    <div class="settings-divider"></div>
+    <div class="settings-section">
+      <div class="settings-row settings-row-clickable" onclick="window.open('help.html','_blank')">
+        <span class="settings-row-icon">&#10067;</span>
+        Help / Documentation
+      </div>
+      <div class="settings-row settings-row-clickable" onclick="window.open('about.html','_blank')">
+        <span class="settings-row-icon">&#8505;</span>
+        About
+      </div>
+    </div>
+    <div class="settings-divider"></div>
+    <div class="settings-section">
+      <div class="settings-row settings-row-clickable settings-row-exit" onclick="window.close()">
+        <span class="settings-row-icon">&#10005;</span>
+        Exit
+      </div>
+    </div>
+  </div>
   <main class="chapter-content">
     <div class="navigator-form">
       <label for="book-select">Book:</label>
@@ -989,6 +1054,8 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
  -->
   <script src="js/bible-data.js"></script>
+  <script src="js/fontsize.js"></script>
+  <script src="js/notes.js"></script>
   <script src="js/sticky-header.js"></script>
   <script>
   var selectedBookIdx = -1;

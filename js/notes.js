@@ -1,3 +1,22 @@
+/*
+ * KJV Strong's Bible with Concordance
+ * Copyright (C) 2026 Ron Turrentine
+ * https://github.com/RonTurrentine/KJV-Strongs-EBook
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 /* ================================================================
    notes.js — Personal study notes for KJV Strong's Bible
    ================================================================
@@ -770,6 +789,132 @@
         } else {
             removeHighlightClass("verse-" + vsNum);
         }
+    }
+
+    /* ============================================================
+       Update Check — Cross Icon Notification
+       ============================================================
+       On every page load (localhost only), silently checks GitHub
+       for the latest commit SHA on main. If newer than the SHA
+       baked into this page at generation time, shows a glowing
+       gold cross icon in the header as an update notification.
+       ============================================================ */
+
+    if (isLocalhost) {
+        (function () {
+
+            /* The installed SHA is baked into each page by generate_bible.ps1
+               as a meta tag: <meta name="kjv-sha" content="abc1234...">      */
+            function getInstalledSha() {
+                var metas = document.getElementsByTagName("meta");
+                for (var i = 0; i < metas.length; i++) {
+                    if (metas[i].getAttribute("name") === "kjv-sha") {
+                        return metas[i].getAttribute("content") || "";
+                    }
+                }
+                return "";
+            }
+
+            function showCrossIcon(latestSha, commitMsg) {
+                var crosses = document.getElementsByClassName("update-cross");
+                for (var i = 0; i < crosses.length; i++) {
+                    crosses[i].title = "Update available! Click for details.";
+                    addClass(crosses[i], "is-visible");
+                    /* Store latest info for modal */
+                    crosses[i].setAttribute("data-sha", latestSha);
+                    crosses[i].setAttribute("data-msg", commitMsg || "New updates available.");
+                }
+            }
+
+            function createUpdateModal() {
+                if (document.getElementById("update-modal")) { return; }
+                var modal = document.createElement("div");
+                modal.id = "update-modal";
+                modal.className = "update-modal";
+                modal.innerHTML =
+                    '<div class="update-modal-box">' +
+                    '  <div class="update-modal-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="18" viewBox="0 0 14 18" fill="currentColor"><rect x="5.5" y="0" width="3" height="18"/><rect x="0" y="4" width="14" height="3"/></svg></div>' +
+                    '  <h2 class="update-modal-title">Update Available</h2>' +
+                    '  <p class="update-modal-msg">A new version of KJV Strong\'s Bible is available.<br>Your Bible pages will be regenerated with the latest content.</p>' +
+                    '  <p class="update-modal-commit" id="update-commit-msg"></p>' +
+                    '  <div class="update-modal-progress" id="update-progress">Updating... this may take a few minutes.<br><br><span id="update-progress-detail">Downloading latest files...</span></div>' +
+                    '  <div class="update-modal-btns" id="update-btns">' +
+                    '    <button class="update-now-btn" onclick="doUpdateNow()"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="18" viewBox="0 0 14 18" fill="currentColor"><rect x="5.5" y="0" width="3" height="18"/><rect x="0" y="4" width="14" height="3"/></svg> Update Now</button>' +
+                    '    <button class="update-later-btn" onclick="closeUpdateModal()">Later</button>' +
+                    '  </div>' +
+                    '</div>';
+                document.body.appendChild(modal);
+            }
+
+            window.openUpdateModal = function () {
+                createUpdateModal();
+                var modal = document.getElementById("update-modal");
+                var msgEl = document.getElementById("update-commit-msg");
+                var crosses = document.getElementsByClassName("update-cross");
+                var msg = "";
+                var sha = "";
+                if (crosses.length > 0) {
+                    msg = crosses[0].getAttribute("data-msg") || "";
+                    sha = crosses[0].getAttribute("data-sha") || "";
+                }
+                if (msgEl) { msgEl.textContent = sha ? "Latest: " + sha.substring(0, 7) + (msg ? " — " + msg : "") : ""; }
+                addClass(modal, "is-open");
+            };
+
+            window.closeUpdateModal = function () {
+                var modal = document.getElementById("update-modal");
+                if (modal) { removeClass(modal, "is-open"); }
+            };
+
+            window.doUpdateNow = function () {
+                var btns = document.getElementById("update-btns");
+                var progress = document.getElementById("update-progress");
+                if (btns) { btns.style.display = "none"; }
+                if (progress) { addClass(progress, "is-visible"); }
+
+                ajax("POST", "/api/update", null, function (status, data) {
+                    var detail = document.getElementById("update-progress-detail");
+                    if (status === 200 && data && data.success) {
+                        if (detail) { detail.textContent = "Update complete! Reloading..."; }
+                        setTimeout(function () {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        if (detail) { detail.textContent = "Update failed: " + (data && data.error ? data.error : "Unknown error"); }
+                        if (btns) { btns.style.display = "flex"; }
+                        if (progress) { removeClass(progress, "is-visible"); }
+                    }
+                });
+            };
+
+            /* Silently check GitHub for latest commit SHA */
+            var installedSha = getInstalledSha();
+            if (!installedSha) { return; } /* page not baked with SHA — skip */
+
+            var xhr;
+            try { xhr = new XMLHttpRequest(); }
+            catch (e) { return; }
+
+            xhr.open("GET", "https://api.github.com/repos/RonTurrentine/KJV-Strongs-EBook/commits/main", true);
+            xhr.setRequestHeader("Accept", "application/vnd.github.v3+json");
+            xhr.timeout = 8000;
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState !== 4) { return; }
+                if (xhr.status !== 200) { return; }
+                try {
+                    var data = JSON.parse(xhr.responseText);
+                    var latestSha = data.sha || "";
+                    var commitMsg = (data.commit && data.commit.message)
+                        ? data.commit.message.split("\n")[0]
+                        : "";
+                    if (latestSha && latestSha !== installedSha) {
+                        showCrossIcon(latestSha, commitMsg);
+                    }
+                } catch (e) { /* parse error — ignore */ }
+            };
+            xhr.send(null);
+
+        })();
     }
 
     if (!isChapterPage) { return; }

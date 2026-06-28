@@ -611,6 +611,62 @@ function Handle-DeleteHighlight {
 }
 
 
+# ── POST /api/update ─────────────────────────────────────────────
+# Pulls latest repo from GitHub and reruns generation pipeline.
+# Called by the browser when user clicks "Update Now" on the cross icon.
+
+function Handle-Update {
+    param([System.Net.HttpListenerResponse]$Response)
+
+    Write-Host "[UPDATE] Starting update..." -ForegroundColor Cyan
+
+    $generateBibleScript = Join-Path $Root "scripts\generate_bible.ps1"
+    $generateDictScript  = Join-Path $Root "scripts\generate_dict.ps1"
+    $rebakeScript        = Join-Path $Root "scripts\rebake-notes.ps1"
+
+    if (-not (Test-Path $generateBibleScript)) {
+        Send-Error -Response $Response -StatusCode 500 `
+            -Message "generate_bible.ps1 not found"
+        return
+    }
+
+    try {
+        # Step 1: Pull latest from GitHub
+        Write-Host "  [UPDATE] Pulling latest from GitHub..." -ForegroundColor Cyan
+        $gitOutput = & git -C $Root pull origin main 2>&1 | Out-String
+        Write-Host $gitOutput -ForegroundColor Gray
+
+        # Step 2: Run generate_bible.ps1
+        Write-Host "  [UPDATE] Running generate_bible.ps1..." -ForegroundColor Cyan
+        $bibleOutput = & pwsh -NoProfile -NonInteractive -File $generateBibleScript `
+            -OutputRoot $Root 2>&1 | Out-String
+        Write-Host $bibleOutput -ForegroundColor Gray
+
+        # Step 3: Run generate_dict.ps1
+        Write-Host "  [UPDATE] Running generate_dict.ps1..." -ForegroundColor Cyan
+        $dictOutput = & pwsh -NoProfile -NonInteractive -File $generateDictScript 2>&1 | Out-String
+        Write-Host $dictOutput -ForegroundColor Gray
+
+        # Step 4: Rebake notes
+        if (Test-Path $rebakeScript) {
+            Write-Host "  [UPDATE] Rebaking notes..." -ForegroundColor Cyan
+            & pwsh -NoProfile -NonInteractive -File $rebakeScript -ProjectRoot $Root 2>&1 | Out-Null
+        }
+
+        Write-Host "  [UPDATE] Complete!" -ForegroundColor Green
+
+        Send-Json -Response $Response -Data @{
+            success = $true
+            message = "Update complete"
+        }
+    }
+    catch {
+        Write-Host "  [UPDATE ERROR] $_" -ForegroundColor Red
+        Send-Error -Response $Response -StatusCode 500 `
+            -Message "Update failed: $($_.Exception.Message)"
+    }
+}
+
 # ── POST /api/rebake ─────────────────────────────────────────────
 # Re-bakes notes.json and highlights.json into chapter HTML by
 # invoking rebake-notes.ps1 as a subprocess.
@@ -832,6 +888,9 @@ try {
             }
             elseif ($path -eq "/api/rebake" -and $method -eq "POST") {
                 Handle-Rebake -Response $response
+            }
+            elseif ($path -eq "/api/update" -and $method -eq "POST") {
+                Handle-Update -Response $response
             }
             elseif ($path -eq "/api/test-sync" -and $method -eq "POST") {
                 Handle-TestSync -Response $response

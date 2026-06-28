@@ -32,6 +32,21 @@ param(
 
 # Load Concordance Index
 $ConcordancePath = Join-Path $PSScriptRoot "..\concordance.json"
+
+# Fetch current GitHub commit SHA (baked into pages for update detection)
+Write-Host "Fetching latest commit SHA from GitHub..." -ForegroundColor Cyan
+$InstalledSha = ""
+try {
+    $apiUrl  = "https://api.github.com/repos/RonTurrentine/KJV-Strongs-EBook/commits/main"
+    $headers = @{ "User-Agent" = "KJV-Strongs-Generator"; "Accept" = "application/vnd.github.v3+json" }
+    $resp    = Invoke-RestMethod -Uri $apiUrl -Headers $headers -TimeoutSec 10
+    $InstalledSha = $resp.sha
+    Write-Host "  SHA: $($InstalledSha.Substring(0,7))..." -ForegroundColor Green
+} catch {
+    Write-Host "  Could not fetch SHA (offline?). Update check will be disabled." -ForegroundColor Yellow
+    $InstalledSha = ""
+}
+
 $ConcordanceData = @{}
 if (Test-Path $ConcordancePath) {
     Write-Host "Loading concordance index..." -ForegroundColor Cyan
@@ -627,17 +642,59 @@ function Write-IndexPage {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark">
+  <meta name="kjv-sha" content="$InstalledSha">
   <link rel="icon" type="image/x-icon" href="../BiblePencil.ico">
   <title>$titleEsc</title>
   <link rel="stylesheet" href="$cssPath">
 </head>
 <body>
   <nav class="chapter-nav">
-    <h1 class="book-chapter">$titleEsc</h1>
+    <h1 class="book-chapter"><span class="update-cross" onclick="openUpdateModal()" title="Update available!"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="18" viewBox="0 0 14 18" fill="currentColor"><rect x="5.5" y="0" width="3" height="18"/><rect x="0" y="4" width="14" height="3"/></svg></span>$titleEsc</h1>
     <div class="nav-buttons">
       <a href="../index.html" class="btn home-btn" title="Home"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></a>
+      <button class="btn" onclick="history.back()" title="Back">&#9664; Back</button>
+      <button class="btn hamburger-btn" id="hamburger-btn" onclick="toggleSettingsMenu()" title="Settings">&#9776;</button>
     </div>
   </nav>
+  <div class="settings-dropdown" id="settings-dropdown">
+    <div class="settings-section">
+      <p class="settings-section-label">DISPLAY</p>
+      <div class="settings-row settings-font-row">
+        <button class="btn settings-font-btn" id="font-decrease" onclick="decreaseFontSize()">a&#8595;</button>
+        <span class="settings-row-label">Font size</span>
+        <button class="btn settings-font-btn" id="font-increase" onclick="increaseFontSize()">A&#8593;</button>
+      </div>
+    </div>
+    <div class="settings-divider"></div>
+    <div class="settings-section">
+      <div class="settings-row settings-row-clickable" id="sync-kindle-row" onclick="syncToKindle()">
+        <span class="settings-row-icon">&#9889;</span>
+        Sync to Kindle
+      </div>
+      <div class="settings-row settings-row-clickable" onclick="rebakeNotes()">
+        <span class="settings-row-icon">&#128260;</span>
+        Rebake Notes
+      </div>
+    </div>
+    <div class="settings-divider"></div>
+    <div class="settings-section">
+      <div class="settings-row settings-row-clickable" onclick="window.open('../help.html','_blank')">
+        <span class="settings-row-icon">&#10067;</span>
+        Help / Documentation
+      </div>
+      <div class="settings-row settings-row-clickable" onclick="window.open('../about.html','_blank')">
+        <span class="settings-row-icon">&#8505;</span>
+        About
+      </div>
+    </div>
+    <div class="settings-divider"></div>
+    <div class="settings-section">
+      <div class="settings-row settings-row-clickable settings-row-exit" onclick="window.close()">
+        <span class="settings-row-icon">&#10005;</span>
+        Exit
+      </div>
+    </div>
+  </div>
   <main class="chapter-content">
 
     <div class="index-controls">
@@ -768,6 +825,8 @@ function render() {
 render();
 </script>
 
+  <script src="../js/fontsize.js"></script>
+  <script src="../js/notes.js"></script>
   <script src="../js/sticky-header.js"></script>
 $ConcordanceHtml
 $ConcordanceInlineJs
