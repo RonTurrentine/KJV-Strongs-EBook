@@ -892,7 +892,7 @@ Write-Host "Generating navigate.html..." -ForegroundColor Cyan
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark">
-  <meta name="kjv-sha" content="$InstalledSha">
+  <meta name="kjv-sha" content="KJV_SHA_PLACEHOLDER">
   <link rel="icon" type="image/x-icon" href="BiblePencil.ico">
   <title>Go To -- KJV</title>
   <link rel="stylesheet" href="css/style.css">
@@ -1148,7 +1148,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
   </script>
 </body>
 </html>
-'@ | Set-Content -Path (Join-Path $OutputRoot 'navigate.html') -Encoding UTF8
+'@ | ForEach-Object { $_ -replace 'KJV_SHA_PLACEHOLDER', $InstalledSha } | Set-Content -Path (Join-Path $OutputRoot 'navigate.html') -Encoding UTF8
 Write-Host "navigate.html written." -ForegroundColor Green
 
 # Write concordance.json
