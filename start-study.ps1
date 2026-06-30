@@ -615,6 +615,31 @@ function Handle-DeleteHighlight {
 # Pulls latest repo from GitHub and reruns generation pipeline.
 # Called by the browser when user clicks "Update Now" on the cross icon.
 
+$UpdateStatusFile = Join-Path $Root ".update-status.json"
+
+function Write-UpdateStatus {
+    param(
+        [string]$Step,
+        [int]$Percent,
+        [string]$Detail = "",
+        [bool]$Done = $false,
+        [bool]$Error = $false,
+        [string]$ErrorMessage = ""
+    )
+    $status = @{
+        step    = $Step
+        percent = $Percent
+        detail  = $Detail
+        done    = $Done
+        error   = $Error
+        errorMessage = $ErrorMessage
+        ts      = (Get-Date).ToString("o")
+    }
+    try {
+        $status | ConvertTo-Json -Compress | Set-Content -Path $UpdateStatusFile -Encoding UTF8
+    } catch { }
+}
+
 function Handle-Update {
     param([System.Net.HttpListenerResponse]$Response)
 
@@ -630,40 +655,98 @@ function Handle-Update {
         return
     }
 
-    try {
-        # Step 1: Pull latest from GitHub
-        Write-Host "  [UPDATE] Pulling latest from GitHub..." -ForegroundColor Cyan
-        $gitOutput = & git -C $Root pull origin main 2>&1 | Out-String
-        Write-Host $gitOutput -ForegroundColor Gray
+    # Respond immediately — the actual work runs in a background job so
+    # the server's single request loop stays free to answer status polls.
+    Send-Json -Response $Response -Data @{ started = $true }
 
-        # Step 2: Run generate_bible.ps1
-        Write-Host "  [UPDATE] Running generate_bible.ps1..." -ForegroundColor Cyan
-        $bibleOutput = & pwsh -NoProfile -NonInteractive -File $generateBibleScript `
-            -OutputRoot $Root 2>&1 | Out-String
-        Write-Host $bibleOutput -ForegroundColor Gray
+    Write-UpdateStatus -Step "pull" -Percent 5 -Detail "Pulling latest from GitHub..."
 
-        # Step 3: Run generate_dict.ps1
-        Write-Host "  [UPDATE] Running generate_dict.ps1..." -ForegroundColor Cyan
-        $dictOutput = & pwsh -NoProfile -NonInteractive -File $generateDictScript 2>&1 | Out-String
-        Write-Host $dictOutput -ForegroundColor Gray
+    Start-Job -Name "kjv-update" -ScriptBlock {
+        param($Root, $GenerateBibleScript, $GenerateDictScript, $RebakeScript, $StatusFile)
 
-        # Step 4: Rebake notes
-        if (Test-Path $rebakeScript) {
-            Write-Host "  [UPDATE] Rebaking notes..." -ForegroundColor Cyan
-            & pwsh -NoProfile -NonInteractive -File $rebakeScript -ProjectRoot $Root 2>&1 | Out-Null
+        function Write-Status {
+            param($Step, $Percent, $Detail, $Done = $false, $Err = $false, $ErrMsg = "")
+            $s = @{ step=$Step; percent=$Percent; detail=$Detail; done=$Done; error=$Err; errorMessage=$ErrMsg; ts=(Get-Date).ToString("o") }
+            $s | ConvertTo-Json -Compress | Set-Content -Path $StatusFile -Encoding UTF8
         }
 
-        Write-Host "  [UPDATE] Complete!" -ForegroundColor Green
+        try {
+            # ── Download latest repo as ZIP and extract over existing files ──
+            # NOTE: The installed app is NOT a git clone — it was extracted
+            # from a ZIP by the Electron launcher. There is no .git folder,
+            # so `git pull` silently fails here. We replicate the launcher's
+            # cloneRepo() approach: download the latest ZIP from GitHub and
+            # extract it directly over the existing install folder.
+            Write-Status "pull" 10 "Downloading latest files from GitHub..."
 
+            $zipUrl  = "https://github.com/RonTurrentine/KJV-Strongs-EBook/archive/refs/heads/main.zip"
+            $zipPath = Join-Path $env:TEMP "kjv-update-repo.zip"
+
+            Invoke-WebRequest -Uri $zipUrl -OutFile $zipPath -UseBasicParsing -TimeoutSec 120
+
+            Write-Status "pull" 18 "Extracting latest files..."
+
+            $extractTemp = Join-Path $env:TEMP "kjv-update-extract"
+            if (Test-Path $extractTemp) { Remove-Item -Recurse -Force $extractTemp }
+            Expand-Archive -Path $zipPath -DestinationPath $extractTemp -Force
+
+            # GitHub zip extracts to a subfolder like KJV-Strongs-EBook-main/
+            $extractedDir = Join-Path $extractTemp "KJV-Strongs-EBook-main"
+            if (Test-Path $extractedDir) {
+                Get-ChildItem -Path $extractedDir -Force | ForEach-Object {
+                    $destPath = Join-Path $Root $_.Name
+                    if (Test-Path $destPath) {
+                        Remove-Item -Recurse -Force $destPath -ErrorAction SilentlyContinue
+                    }
+                    Move-Item -Path $_.FullName -Destination $destPath -Force
+                }
+            }
+
+            # Cleanup temp files
+            Remove-Item -Force $zipPath -ErrorAction SilentlyContinue
+            Remove-Item -Recurse -Force $extractTemp -ErrorAction SilentlyContinue
+
+            Write-Status "bible" 25 "Generating Bible chapters..."
+
+            $bibleOutput = & pwsh -NoProfile -NonInteractive -File $GenerateBibleScript -OutputRoot $Root 2>&1 | Out-String
+            Write-Status "dict" 65 "Generating dictionary pages..."
+
+            $dictOutput = & pwsh -NoProfile -NonInteractive -File $GenerateDictScript 2>&1 | Out-String
+            Write-Status "rebake" 90 "Rebaking your notes..."
+
+            if (Test-Path $RebakeScript) {
+                & pwsh -NoProfile -NonInteractive -File $RebakeScript -ProjectRoot $Root 2>&1 | Out-Null
+            }
+
+            Write-Status "complete" 100 "Update complete!" $true
+        }
+        catch {
+            Write-Status "error" 0 "" $true $true $_.Exception.Message
+        }
+    } -ArgumentList $Root, $generateBibleScript, $generateDictScript, $rebakeScript, $UpdateStatusFile | Out-Null
+}
+
+# ── GET /api/update-status ───────────────────────────────────────
+# Polled by the browser every ~1.5s while an update is running.
+
+function Handle-UpdateStatus {
+    param([System.Net.HttpListenerResponse]$Response)
+
+    if (-not (Test-Path $UpdateStatusFile)) {
         Send-Json -Response $Response -Data @{
-            success = $true
-            message = "Update complete"
+            step = "idle"; percent = 0; detail = ""; done = $false; error = $false
         }
+        return
     }
-    catch {
-        Write-Host "  [UPDATE ERROR] $_" -ForegroundColor Red
-        Send-Error -Response $Response -StatusCode 500 `
-            -Message "Update failed: $($_.Exception.Message)"
+
+    try {
+        $raw = Get-Content -Path $UpdateStatusFile -Raw -Encoding UTF8
+        $data = $raw | ConvertFrom-Json
+        Send-Json -Response $Response -Data $data
+    } catch {
+        Send-Json -Response $Response -Data @{
+            step = "idle"; percent = 0; detail = ""; done = $false; error = $false
+        }
     }
 }
 
@@ -926,6 +1009,9 @@ try {
             }
             elseif ($path -eq "/api/update" -and $method -eq "POST") {
                 Handle-Update -Response $response
+            }
+            elseif ($path -eq "/api/update-status" -and $method -eq "GET") {
+                Handle-UpdateStatus -Response $response
             }
             elseif ($path -eq "/api/test-sync" -and $method -eq "POST") {
                 Handle-TestSync -Response $response
