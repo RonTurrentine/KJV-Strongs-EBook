@@ -1925,6 +1925,23 @@ body.strongs-hidden .verse {
     display: block;
 }
 
+.update-progress-bar-wrap {
+    width: 100%;
+    height: 8px;
+    background: #222;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.update-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #00695c, #00bcd4);
+    border-radius: 4px;
+    transition: width 0.4s ease;
+}
+
 .update-modal-btns {
     display: flex;
     gap: 12px;

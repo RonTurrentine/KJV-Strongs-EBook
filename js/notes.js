@@ -861,7 +861,10 @@
                     '  <h2 class="update-modal-title">Update Available</h2>' +
                     '  <p class="update-modal-msg">A new version of KJV Strong\'s Bible is available.<br>Your Bible pages will be regenerated with the latest content.</p>' +
                     '  <p class="update-modal-commit" id="update-commit-msg"></p>' +
-                    '  <div class="update-modal-progress" id="update-progress">Updating... this may take a few minutes.<br><br><span id="update-progress-detail">Downloading latest files...</span></div>' +
+                    '  <div class="update-modal-progress" id="update-progress">' +
+                    '    <div class="update-progress-bar-wrap"><div class="update-progress-bar" id="update-progress-bar"></div></div>' +
+                    '    <span id="update-progress-detail">Starting update...</span>' +
+                    '  </div>' +
                     '  <div class="update-modal-btns" id="update-btns">' +
                     '    <button class="update-now-btn" onclick="doUpdateNow()"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="18" viewBox="0 0 14 18" fill="currentColor"><rect x="5.5" y="0" width="3" height="18"/><rect x="0" y="4" width="14" height="3"/></svg> Update Now</button>' +
                     '    <button class="update-later-btn" onclick="closeUpdateModal()">Later</button>' +
@@ -893,18 +896,46 @@
             window.doUpdateNow = function () {
                 var btns = document.getElementById("update-btns");
                 var progress = document.getElementById("update-progress");
+                var bar = document.getElementById("update-progress-bar");
+                var detail = document.getElementById("update-progress-detail");
                 if (btns) { btns.style.display = "none"; }
                 if (progress) { addClass(progress, "is-visible"); }
 
+                var pollTimer = null;
+
+                function poll() {
+                    ajax("GET", "/api/update-status", null, function (status, data) {
+                        if (status !== 200 || !data) { return; }
+
+                        if (bar) { bar.style.width = (data.percent || 0) + "%"; }
+                        if (detail) { detail.textContent = data.detail || ""; }
+
+                        if (data.done) {
+                            if (pollTimer) { clearInterval(pollTimer); }
+                            if (data.error) {
+                                if (detail) { detail.textContent = "Update failed: " + (data.errorMessage || "Unknown error"); }
+                                if (btns) { btns.style.display = "flex"; }
+                                if (progress) { removeClass(progress, "is-visible"); }
+                            } else {
+                                if (detail) { detail.textContent = "Update complete! Reloading..."; }
+                                if (bar) { bar.style.width = "100%"; }
+                                setTimeout(function () {
+                                    window.location.reload();
+                                }, 1200);
+                            }
+                        }
+                    });
+                }
+
+                /* Kick off the update — server responds immediately and
+                   runs the actual work in a background job. We then poll
+                   /api/update-status every 1.5s for live progress. */
                 ajax("POST", "/api/update", null, function (status, data) {
-                    var detail = document.getElementById("update-progress-detail");
-                    if (status === 200 && data && data.success) {
-                        if (detail) { detail.textContent = "Update complete! Reloading..."; }
-                        setTimeout(function () {
-                            window.location.reload();
-                        }, 1500);
+                    if (status === 200 && data && data.started) {
+                        pollTimer = setInterval(poll, 1500);
+                        poll(); /* immediate first check */
                     } else {
-                        if (detail) { detail.textContent = "Update failed: " + (data && data.error ? data.error : "Unknown error"); }
+                        if (detail) { detail.textContent = "Could not start update."; }
                         if (btns) { btns.style.display = "flex"; }
                         if (progress) { removeClass(progress, "is-visible"); }
                     }
