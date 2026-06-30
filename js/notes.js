@@ -649,6 +649,189 @@
     };
 
     /* ============================================================
+       Import Notes / Highlights
+       ============================================================
+       File picker -> read JSON client-side -> POST to preview ->
+       show diff/conflict modal -> user resolves conflicts ->
+       POST to commit -> rebake -> reload.
+       ============================================================ */
+
+    var importedBundle = null; /* holds the parsed file while modal is open */
+
+    function createImportFileInput() {
+        if (document.getElementById("import-file-input")) { return; }
+        var input = document.createElement("input");
+        input.type = "file";
+        input.id = "import-file-input";
+        input.accept = ".json,application/json";
+        input.style.display = "none";
+        input.onchange = function (e) {
+            var file = e.target.files && e.target.files[0];
+            if (!file) { return; }
+            var reader = new FileReader();
+            reader.onload = function (evt) {
+                var parsed;
+                try {
+                    parsed = JSON.parse(evt.target.result);
+                } catch (err) {
+                    showToast("That file isn't valid JSON.", "error");
+                    return;
+                }
+                importedBundle = parsed;
+                requestImportPreview(parsed);
+            };
+            reader.onerror = function () {
+                showToast("Could not read that file.", "error");
+            };
+            reader.readAsText(file);
+            input.value = ""; /* allow re-selecting the same file later */
+        };
+        document.body.appendChild(input);
+    }
+
+    window.importNotes = function () {
+        if (!isLocalhost) {
+            showToast("Import is only available when running the study server.", "error");
+            return;
+        }
+        createImportFileInput();
+        document.getElementById("import-file-input").click();
+    };
+
+    function requestImportPreview(bundle) {
+        showToast("Comparing with your current notes...", "");
+        ajax("POST", "/api/import-notes/preview", JSON.stringify(bundle), function (status, data) {
+            if (status === 200 && data && data.ok) {
+                showImportPreviewModal(data);
+            } else {
+                showToast("Could not preview import — file may be malformed.", "error");
+            }
+        });
+    }
+
+    function createImportModal() {
+        if (document.getElementById("import-modal")) { return; }
+        var modal = document.createElement("div");
+        modal.id = "import-modal";
+        modal.className = "import-modal";
+        modal.innerHTML =
+            '<div class="import-modal-box">' +
+            '  <h2 class="import-modal-title">&#128229; Import Notes &amp; Highlights</h2>' +
+            '  <div id="import-summary" class="import-summary"></div>' +
+            '  <div id="import-conflicts" class="import-conflicts"></div>' +
+            '  <div class="import-modal-btns">' +
+            '    <button class="update-now-btn" id="import-apply-btn" onclick="applyImport()">Apply Import</button>' +
+            '    <button class="update-later-btn" onclick="closeImportModal()">Cancel</button>' +
+            '  </div>' +
+            '</div>';
+        document.body.appendChild(modal);
+    }
+
+    function showImportPreviewModal(data) {
+        createImportModal();
+        var modal = document.getElementById("import-modal");
+        var summaryEl = document.getElementById("import-summary");
+        var conflictsEl = document.getElementById("import-conflicts");
+
+        var n = data.notes, h = data.highlights;
+        var totalNew = n.newCount + h.newCount;
+        var totalConflicts = n.conflictCount + h.conflictCount;
+        var totalUnchanged = n.unchangedCount + h.unchangedCount;
+
+        var summaryHtml = "";
+        if (totalNew > 0) { summaryHtml += '<p class="import-line import-line-new">+ ' + totalNew + " new item(s) will be added</p>"; }
+        if (totalConflicts > 0) { summaryHtml += '<p class="import-line import-line-conflict">&#9888; ' + totalConflicts + " conflict(s) found &mdash; choose below</p>"; }
+        if (totalUnchanged > 0) { summaryHtml += '<p class="import-line import-line-same">' + totalUnchanged + " item(s) are already identical</p>"; }
+        if (totalNew === 0 && totalConflicts === 0 && totalUnchanged === 0) { summaryHtml = '<p class="import-line">No notes or highlights found in that file.</p>'; }
+        summaryEl.innerHTML = summaryHtml;
+
+        var conflictsHtml = "";
+        n.conflicts.forEach(function (c) {
+            conflictsHtml += renderNoteConflict(c);
+        });
+        h.conflicts.forEach(function (c) {
+            conflictsHtml += renderHighlightConflict(c);
+        });
+        conflictsEl.innerHTML = conflictsHtml;
+
+        var applyBtn = document.getElementById("import-apply-btn");
+        if (applyBtn) {
+            applyBtn.textContent = totalNew + totalConflicts > 0
+                ? "Apply Import"
+                : "Nothing to Import";
+            applyBtn.disabled = (totalNew + totalConflicts === 0);
+        }
+
+        addClass(modal, "is-open");
+    }
+
+    function escapeHtml(s) {
+        var d = document.createElement("div");
+        d.textContent = s == null ? "" : String(s);
+        return d.innerHTML;
+    }
+
+    function renderNoteConflict(c) {
+        var safeRef = escapeHtml(c.ref);
+        return '<div class="import-conflict-row" data-ref="' + safeRef + '" data-kind="note">' +
+            '  <p class="import-conflict-ref">' + safeRef + '</p>' +
+            '  <label class="import-conflict-opt"><input type="radio" name="res-note-' + safeRef + '" value="imported" checked> ' +
+            '    <span class="import-conflict-label">Imported:</span> <span class="import-conflict-text">' + escapeHtml(c.importedText) + '</span></label>' +
+            '  <label class="import-conflict-opt"><input type="radio" name="res-note-' + safeRef + '" value="current"> ' +
+            '    <span class="import-conflict-label">Keep current:</span> <span class="import-conflict-text">' + escapeHtml(c.currentText) + '</span></label>' +
+            '</div>';
+    }
+
+    function renderHighlightConflict(c) {
+        var safeRef = escapeHtml(c.ref);
+        return '<div class="import-conflict-row" data-ref="' + safeRef + '" data-kind="highlight">' +
+            '  <p class="import-conflict-ref">' + safeRef + ' (highlight)</p>' +
+            '  <label class="import-conflict-opt"><input type="radio" name="res-hl-' + safeRef + '" value="imported" checked> ' +
+            '    <span class="import-conflict-label">Imported:</span> <span class="import-swatch import-swatch-' + escapeHtml(c.importedColor) + '"></span></label>' +
+            '  <label class="import-conflict-opt"><input type="radio" name="res-hl-' + safeRef + '" value="current"> ' +
+            '    <span class="import-conflict-label">Keep current:</span> <span class="import-swatch import-swatch-' + escapeHtml(c.currentColor) + '"></span></label>' +
+            '</div>';
+    }
+
+    window.closeImportModal = function () {
+        var modal = document.getElementById("import-modal");
+        if (modal) { removeClass(modal, "is-open"); }
+        importedBundle = null;
+    };
+
+    window.applyImport = function () {
+        if (!importedBundle) { return; }
+
+        var resolutions = {};
+        var rows = document.querySelectorAll(".import-conflict-row");
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            var ref = row.getAttribute("data-ref");
+            var kind = row.getAttribute("data-kind");
+            var checked = row.querySelector('input[type="radio"]:checked');
+            var value = checked ? checked.value : "imported";
+            var key = (kind === "highlight") ? ("hl:" + ref) : ref;
+            resolutions[key] = value;
+        }
+
+        var applyBtn = document.getElementById("import-apply-btn");
+        if (applyBtn) { applyBtn.disabled = true; applyBtn.textContent = "Importing..."; }
+
+        var payload = JSON.stringify({ bundle: importedBundle, resolutions: resolutions });
+
+        ajax("POST", "/api/import-notes/commit", payload, function (status, data) {
+            if (status === 200 && data && data.ok) {
+                showToast("Imported " + data.imported + " item(s)" + (data.skipped ? ", skipped " + data.skipped : ""), "success");
+                closeImportModal();
+                setTimeout(function () { window.location.reload(); }, 1200);
+            } else {
+                showToast("Import failed.", "error");
+                if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = "Apply Import"; }
+            }
+        });
+    };
+
+    /* ============================================================
        Sync to Kindle
        ============================================================ */
 

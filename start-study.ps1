@@ -756,14 +756,19 @@ function Handle-UpdateStatus {
 function Handle-ExportNotes {
     param([System.Net.HttpListenerResponse]$Response)
 
-    if (-not (Test-Path $NotesFile)) {
-        Send-Error -Response $Response -StatusCode 404 -Message "No notes file found."
-        return
-    }
-
     try {
-        $content  = [System.IO.File]::ReadAllBytes($NotesFile)
-        $stamp    = (Get-Date).ToString("yyyy-MM-dd")
+        $notes      = Get-Notes
+        $highlights = Get-Highlights
+
+        $bundle = @{
+            exportedAt = (Get-Date -Format "o")
+            notes      = $notes
+            highlights = $highlights
+        }
+
+        $json    = $bundle | ConvertTo-Json -Depth 6
+        $content = [System.Text.Encoding]::UTF8.GetBytes($json)
+        $stamp   = (Get-Date).ToString("yyyy-MM-dd")
         $filename = "kjv-notes-$stamp.json"
 
         $Response.StatusCode  = 200
@@ -773,12 +778,215 @@ function Handle-ExportNotes {
         $Response.OutputStream.Write($content, 0, $content.Length)
         $Response.OutputStream.Close()
 
-        Write-Host "[EXPORT] Notes exported as $filename ($($content.Length) bytes)" -ForegroundColor Green
+        Write-Host "[EXPORT] Notes + highlights exported as $filename ($($content.Length) bytes)" -ForegroundColor Green
     }
     catch {
         Write-Host "[EXPORT ERROR] $_" -ForegroundColor Red
         Send-Error -Response $Response -StatusCode 500 `
             -Message "Export failed: $($_.Exception.Message)"
+    }
+}
+
+# ── POST /api/import-notes/preview ───────────────────────────────
+# Accepts an uploaded notes export (notes + highlights bundle, or a
+# legacy notes-only file) and compares it against the current state.
+# Returns a diff summary without writing anything — used to drive
+# the conflict-resolution modal in the browser.
+
+function Handle-ImportPreview {
+    param(
+        [System.Net.HttpListenerRequest]$Request,
+        [System.Net.HttpListenerResponse]$Response
+    )
+
+    $reader = New-Object System.IO.StreamReader($Request.InputStream, $Request.ContentEncoding)
+    $body = $reader.ReadToEnd()
+    $reader.Close()
+
+    try {
+        $uploaded = $body | ConvertFrom-Json
+    }
+    catch {
+        Send-Error -Response $Response -StatusCode 400 -Message "Invalid JSON file"
+        return
+    }
+
+    # Support both the new bundle format { notes:{}, highlights:{} }
+    # and the legacy flat notes.json format (just { "Gen.1.1": {...} })
+    $importedNotes = @{}
+    $importedHighlights = @{}
+
+    if ($uploaded.PSObject.Properties.Name -contains "notes") {
+        $uploaded.notes.PSObject.Properties | ForEach-Object { $importedNotes[$_.Name] = $_.Value }
+        if ($uploaded.PSObject.Properties.Name -contains "highlights") {
+            $uploaded.highlights.PSObject.Properties | ForEach-Object { $importedHighlights[$_.Name] = $_.Value }
+        }
+    } else {
+        # Legacy flat format — treat the whole thing as notes
+        $uploaded.PSObject.Properties | ForEach-Object { $importedNotes[$_.Name] = $_.Value }
+    }
+
+    $currentNotes      = Get-Notes
+    $currentHighlights = Get-Highlights
+
+    $newNotes       = @()
+    $conflictNotes  = @()
+    $unchangedNotes = 0
+
+    foreach ($ref in $importedNotes.Keys) {
+        $importedText = $importedNotes[$ref].text
+        if (-not $currentNotes.ContainsKey($ref)) {
+            $newNotes += $ref
+        }
+        elseif ($currentNotes[$ref].text -eq $importedText) {
+            $unchangedNotes++
+        }
+        else {
+            $conflictNotes += @{
+                ref          = $ref
+                currentText  = $currentNotes[$ref].text
+                importedText = $importedText
+            }
+        }
+    }
+
+    $newHighlights      = @()
+    $conflictHighlights = @()
+    $unchangedHighlights = 0
+
+    foreach ($ref in $importedHighlights.Keys) {
+        $importedColor = $importedHighlights[$ref]
+        if (-not $currentHighlights.ContainsKey($ref)) {
+            $newHighlights += $ref
+        }
+        elseif ($currentHighlights[$ref] -eq $importedColor) {
+            $unchangedHighlights++
+        }
+        else {
+            $conflictHighlights += @{
+                ref           = $ref
+                currentColor  = $currentHighlights[$ref]
+                importedColor = $importedColor
+            }
+        }
+    }
+
+    Send-Json -Response $Response -Data @{
+        ok = $true
+        notes = @{
+            newCount       = $newNotes.Count
+            conflictCount  = $conflictNotes.Count
+            unchangedCount = $unchangedNotes
+            conflicts      = $conflictNotes
+        }
+        highlights = @{
+            newCount       = $newHighlights.Count
+            conflictCount  = $conflictHighlights.Count
+            unchangedCount = $unchangedHighlights
+            conflicts      = $conflictHighlights
+        }
+    }
+}
+
+# ── POST /api/import-notes/commit ────────────────────────────────
+# Applies the import using the user's conflict resolutions.
+# Body: { bundle: {...uploaded file...}, resolutions: { "Gen.1.1": "imported"|"current", ... } }
+# Any ref NOT in resolutions defaults to "imported" if new, or is
+# skipped if it was already identical (unchanged).
+
+function Handle-ImportCommit {
+    param(
+        [System.Net.HttpListenerRequest]$Request,
+        [System.Net.HttpListenerResponse]$Response
+    )
+
+    $reader = New-Object System.IO.StreamReader($Request.InputStream, $Request.ContentEncoding)
+    $body = $reader.ReadToEnd()
+    $reader.Close()
+
+    try {
+        $payload = $body | ConvertFrom-Json
+    }
+    catch {
+        Send-Error -Response $Response -StatusCode 400 -Message "Invalid JSON"
+        return
+    }
+
+    $uploaded    = $payload.bundle
+    $resolutions = @{}
+    if ($payload.resolutions) {
+        $payload.resolutions.PSObject.Properties | ForEach-Object { $resolutions[$_.Name] = $_.Value }
+    }
+
+    $importedNotes = @{}
+    $importedHighlights = @{}
+
+    if ($uploaded.PSObject.Properties.Name -contains "notes") {
+        $uploaded.notes.PSObject.Properties | ForEach-Object { $importedNotes[$_.Name] = $_.Value }
+        if ($uploaded.PSObject.Properties.Name -contains "highlights") {
+            $uploaded.highlights.PSObject.Properties | ForEach-Object { $importedHighlights[$_.Name] = $_.Value }
+        }
+    } else {
+        $uploaded.PSObject.Properties | ForEach-Object { $importedNotes[$_.Name] = $_.Value }
+    }
+
+    $currentNotes      = Get-Notes
+    $currentHighlights = Get-Highlights
+
+    $importedCount = 0
+    $skippedCount  = 0
+    $bakeRefs      = New-Object System.Collections.Generic.List[string]
+
+    foreach ($ref in $importedNotes.Keys) {
+        $useImported = $true
+        if ($resolutions.ContainsKey($ref) -and $resolutions[$ref] -eq "current") {
+            $useImported = $false
+        }
+
+        if ($useImported) {
+            $existingCreated = if ($currentNotes.ContainsKey($ref) -and $currentNotes[$ref].created) { $currentNotes[$ref].created } else { (Get-Date -Format "o") }
+            $currentNotes[$ref] = @{
+                text    = $importedNotes[$ref].text
+                created = $existingCreated
+                updated = (Get-Date -Format "o")
+            }
+            $bakeRefs.Add($ref) | Out-Null
+            $importedCount++
+        } else {
+            $skippedCount++
+        }
+    }
+    Save-Notes -Notes $currentNotes
+
+    foreach ($ref in $importedHighlights.Keys) {
+        $useImported = $true
+        if ($resolutions.ContainsKey("hl:$ref") -and $resolutions["hl:$ref"] -eq "current") {
+            $useImported = $false
+        }
+
+        if ($useImported) {
+            $currentHighlights[$ref] = $importedHighlights[$ref]
+            $importedCount++
+        } else {
+            $skippedCount++
+        }
+    }
+    Save-Highlights -Highlights $currentHighlights
+
+    # Bake imported notes into chapter HTML immediately
+    foreach ($ref in $bakeRefs) {
+        Bake-Note -Ref $ref -NoteText $currentNotes[$ref].text | Out-Null
+    }
+    foreach ($ref in $importedHighlights.Keys) {
+        Bake-Highlight -Ref $ref -Color $currentHighlights[$ref] | Out-Null
+    }
+
+    Write-Host "[IMPORT] Applied $importedCount item(s), skipped $skippedCount" -ForegroundColor Green
+
+    Send-Json -Response $Response -Data @{
+        ok       = $true
+        imported = $importedCount
+        skipped  = $skippedCount
     }
 }
 
@@ -1006,6 +1214,12 @@ try {
             }
             elseif ($path -eq "/api/export-notes" -and $method -eq "GET") {
                 Handle-ExportNotes -Response $response
+            }
+            elseif ($path -eq "/api/import-notes/preview" -and $method -eq "POST") {
+                Handle-ImportPreview -Request $request -Response $response
+            }
+            elseif ($path -eq "/api/import-notes/commit" -and $method -eq "POST") {
+                Handle-ImportCommit -Request $request -Response $response
             }
             elseif ($path -eq "/api/update" -and $method -eq "POST") {
                 Handle-Update -Response $response

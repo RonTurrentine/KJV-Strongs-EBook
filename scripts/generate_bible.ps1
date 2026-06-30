@@ -656,6 +656,10 @@ foreach ($entry in $FlatChapters) {
         <span class="settings-row-icon">&#128190;</span>
         Export Notes
       </div>
+      <div class="settings-row settings-row-clickable" onclick="importNotes()">
+        <span class="settings-row-icon">&#128229;</span>
+        Import Notes
+      </div>
     </div>
     <div class="settings-divider"></div>
     <div class="settings-section">
@@ -832,6 +836,10 @@ foreach ($book in $BookTable) {
         <span class="settings-row-icon">&#128190;</span>
         Export Notes
       </div>
+      <div class="settings-row settings-row-clickable" onclick="importNotes()">
+        <span class="settings-row-icon">&#128229;</span>
+        Import Notes
+      </div>
     </div>
     <div class="settings-divider"></div>
     <div class="settings-section">
@@ -961,6 +969,10 @@ Write-Host "Generating navigate.html..." -ForegroundColor Cyan
       <div class="settings-row settings-row-clickable" onclick="exportNotes()">
         <span class="settings-row-icon">&#128190;</span>
         Export Notes
+      </div>
+      <div class="settings-row settings-row-clickable" onclick="importNotes()">
+        <span class="settings-row-icon">&#128229;</span>
+        Import Notes
       </div>
     </div>
     <div class="settings-divider"></div>
