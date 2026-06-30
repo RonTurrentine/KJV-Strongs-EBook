@@ -625,6 +625,30 @@
     };
 
     /* ============================================================
+       Export Notes
+       ============================================================
+       Downloads notes.json from the server as a timestamped file.
+       The browser's native download mechanism handles the Save As
+       dialog — no custom folder configuration needed.
+       ============================================================ */
+
+    window.exportNotes = function () {
+        if (!isLocalhost) {
+            showToast("Export is only available when running the study server.", "error");
+            return;
+        }
+        var stamp = new Date().toISOString().slice(0, 10);
+        var filename = "kjv-notes-" + stamp + ".json";
+        var a = document.createElement("a");
+        a.href = "/api/export-notes";
+        a.download = "";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast("Notes saved to your Downloads folder as " + filename, "success");
+    };
+
+    /* ============================================================
        Sync to Kindle
        ============================================================ */
 

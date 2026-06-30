@@ -667,6 +667,38 @@ function Handle-Update {
     }
 }
 
+# ── GET /api/export-notes ────────────────────────────────────────
+# Returns notes.json as a downloadable file with a timestamped filename.
+
+function Handle-ExportNotes {
+    param([System.Net.HttpListenerResponse]$Response)
+
+    if (-not (Test-Path $NotesFile)) {
+        Send-Error -Response $Response -StatusCode 404 -Message "No notes file found."
+        return
+    }
+
+    try {
+        $content  = [System.IO.File]::ReadAllBytes($NotesFile)
+        $stamp    = (Get-Date).ToString("yyyy-MM-dd")
+        $filename = "kjv-notes-$stamp.json"
+
+        $Response.StatusCode  = 200
+        $Response.ContentType = "application/json"
+        $Response.AddHeader("Content-Disposition", "attachment; filename=`"$filename`"")
+        $Response.ContentLength64 = $content.Length
+        $Response.OutputStream.Write($content, 0, $content.Length)
+        $Response.OutputStream.Close()
+
+        Write-Host "[EXPORT] Notes exported as $filename ($($content.Length) bytes)" -ForegroundColor Green
+    }
+    catch {
+        Write-Host "[EXPORT ERROR] $_" -ForegroundColor Red
+        Send-Error -Response $Response -StatusCode 500 `
+            -Message "Export failed: $($_.Exception.Message)"
+    }
+}
+
 # ── POST /api/rebake ─────────────────────────────────────────────
 # Re-bakes notes.json and highlights.json into chapter HTML by
 # invoking rebake-notes.ps1 as a subprocess.
@@ -888,6 +920,9 @@ try {
             }
             elseif ($path -eq "/api/rebake" -and $method -eq "POST") {
                 Handle-Rebake -Response $response
+            }
+            elseif ($path -eq "/api/export-notes" -and $method -eq "GET") {
+                Handle-ExportNotes -Response $response
             }
             elseif ($path -eq "/api/update" -and $method -eq "POST") {
                 Handle-Update -Response $response

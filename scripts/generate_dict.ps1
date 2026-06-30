@@ -676,6 +676,10 @@ function Write-IndexPage {
         <span class="settings-row-icon">&#128260;</span>
         Rebake Notes
       </div>
+      <div class="settings-row settings-row-clickable" onclick="exportNotes()">
+        <span class="settings-row-icon">&#128190;</span>
+        Export Notes
+      </div>
     </div>
     <div class="settings-divider"></div>
     <div class="settings-section">

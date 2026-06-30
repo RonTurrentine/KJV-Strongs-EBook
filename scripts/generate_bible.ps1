@@ -402,6 +402,28 @@ try {
     $InstalledSha = ""
 }
 
+# Phase 0b: Determine app version from the most recent git tag.
+# This is the single source of truth for the About page version —
+# no manual file to edit or forget. Whatever you last tagged with
+# `git tag vX.Y.Z` is what shows up automatically.
+Write-Host "Determining version from git tags..." -ForegroundColor Cyan
+$InstalledVersion = "unknown"
+try {
+    Push-Location $PSScriptRoot
+    $rawTag = & git describe --tags --abbrev=0 2>$null
+    Pop-Location
+    if ($LASTEXITCODE -eq 0 -and $rawTag) {
+        # Strip a leading "v" if present (v1.2.0 -> 1.2.0)
+        $InstalledVersion = $rawTag.Trim() -replace '^v', ''
+        Write-Host "  Version: $InstalledVersion (from tag $rawTag)" -ForegroundColor Green
+    } else {
+        Write-Host "  WARNING: No git tags found. About page will show 'unknown'." -ForegroundColor Yellow
+    }
+} catch {
+    Write-Host "  WARNING: Could not run 'git describe' (is git installed?). About page will show 'unknown'." -ForegroundColor Yellow
+    $InstalledVersion = "unknown"
+}
+
 # Phase 1: Load OSIS XML
 Write-Host "Loading OSIS XML from $OsisPath..." -ForegroundColor Cyan
 $osis = [xml](Get-Content -Raw -Path $OsisPath)
@@ -628,6 +650,10 @@ foreach ($entry in $FlatChapters) {
         <span class="settings-row-icon">&#128260;</span>
         Rebake Notes
       </div>
+      <div class="settings-row settings-row-clickable" onclick="exportNotes()">
+        <span class="settings-row-icon">&#128190;</span>
+        Export Notes
+      </div>
     </div>
     <div class="settings-divider"></div>
     <div class="settings-section">
@@ -800,6 +826,10 @@ foreach ($book in $BookTable) {
         <span class="settings-row-icon">&#128260;</span>
         Rebake Notes
       </div>
+      <div class="settings-row settings-row-clickable" onclick="exportNotes()">
+        <span class="settings-row-icon">&#128190;</span>
+        Export Notes
+      </div>
     </div>
     <div class="settings-divider"></div>
     <div class="settings-section">
@@ -868,13 +898,14 @@ if (Test-Path $searchSrc) {
     Write-Host "  WARNING: scripts/search.html not found - skipping." -ForegroundColor Yellow
 }
 
-# Phase 5c: Copy help.html and about.html (static files) — inject SHA
+# Phase 5c: Copy help.html and about.html (static files) — inject SHA and VERSION
 foreach ($staticFile in @('help.html', 'about.html')) {
     $src = Join-Path $PSScriptRoot $staticFile
     if (Test-Path $src) {
         $dest = Join-Path $OutputRoot $staticFile
         $content = Get-Content -Path $src -Raw -Encoding UTF8
         $content = $content -replace 'KJV_SHA_PLACEHOLDER', $InstalledSha
+        $content = $content -replace 'KJV_VERSION_PLACEHOLDER', $InstalledVersion
         Set-Content -Path $dest -Value $content -Encoding UTF8
         Write-Host "  $staticFile copied." -ForegroundColor Green
     } else {
@@ -924,6 +955,10 @@ Write-Host "Generating navigate.html..." -ForegroundColor Cyan
       <div class="settings-row settings-row-clickable" onclick="rebakeNotes()">
         <span class="settings-row-icon">&#128260;</span>
         Rebake Notes
+      </div>
+      <div class="settings-row settings-row-clickable" onclick="exportNotes()">
+        <span class="settings-row-icon">&#128190;</span>
+        Export Notes
       </div>
     </div>
     <div class="settings-divider"></div>
