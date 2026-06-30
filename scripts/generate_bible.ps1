@@ -402,25 +402,27 @@ try {
     $InstalledSha = ""
 }
 
-# Phase 0b: Determine app version from the most recent git tag.
-# This is the single source of truth for the About page version —
-# no manual file to edit or forget. Whatever you last tagged with
-# `git tag vX.Y.Z` is what shows up automatically.
-Write-Host "Determining version from git tags..." -ForegroundColor Cyan
+# Phase 0b: Determine app version from the latest GitHub Release tag.
+# This is the single source of truth for the About page version — no
+# manual file to edit or forget, and (unlike `git describe`) it works
+# identically whether this is a real git clone (dev machine) or a
+# ZIP-extracted install with no .git folder (the Electron launcher's
+# installed copy, or after a ZIP-based "Update Now").
+Write-Host "Determining version from latest GitHub release..." -ForegroundColor Cyan
 $InstalledVersion = "unknown"
 try {
-    Push-Location $PSScriptRoot
-    $rawTag = & git describe --tags --abbrev=0 2>$null
-    Pop-Location
-    if ($LASTEXITCODE -eq 0 -and $rawTag) {
+    $releaseApiUrl = "https://api.github.com/repos/RonTurrentine/KJV-Strongs-EBook/releases/latest"
+    $releaseHeaders = @{ "User-Agent" = "KJV-Strongs-Generator"; "Accept" = "application/vnd.github.v3+json" }
+    $releaseResp = Invoke-RestMethod -Uri $releaseApiUrl -Headers $releaseHeaders -TimeoutSec 10
+    if ($releaseResp.tag_name) {
         # Strip a leading "v" if present (v1.2.0 -> 1.2.0)
-        $InstalledVersion = $rawTag.Trim() -replace '^v', ''
-        Write-Host "  Version: $InstalledVersion (from tag $rawTag)" -ForegroundColor Green
+        $InstalledVersion = $releaseResp.tag_name.Trim() -replace '^v', ''
+        Write-Host "  Version: $InstalledVersion (from release $($releaseResp.tag_name))" -ForegroundColor Green
     } else {
-        Write-Host "  WARNING: No git tags found. About page will show 'unknown'." -ForegroundColor Yellow
+        Write-Host "  WARNING: No published releases found. About page will show 'unknown'." -ForegroundColor Yellow
     }
 } catch {
-    Write-Host "  WARNING: Could not run 'git describe' (is git installed?). About page will show 'unknown'." -ForegroundColor Yellow
+    Write-Host "  WARNING: Could not reach GitHub Releases API (offline?). About page will show 'unknown'." -ForegroundColor Yellow
     $InstalledVersion = "unknown"
 }
 
