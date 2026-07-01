@@ -24,6 +24,67 @@ The launcher will automatically:
 
 ---
 
+## Upgrading from a Version Before v1.2.0
+
+If you installed KJV Strong's Bible **before v1.2.0**, the app does not yet
+know how to detect and clean up an old installation automatically. Starting
+with v1.2.0, this happens for you — but if you're coming from an older
+version, please follow these steps **exactly in order** to upgrade cleanly.
+
+> **Why this is necessary:** Older versions did not check whether a previous
+> installation existed. Simply installing the new version over an old one
+> can leave behind stale files, causing the app to show outdated content or
+> fail to start with a `spawn EPERM` error.
+
+### Step 1 — Back up your notes (recommended)
+
+Before doing anything else, back up your notes so you don't lose them:
+
+1. Open the app
+2. Click the ☰ hamburger menu (top-right)
+3. Click **💾 Export Notes**
+4. A file named `kjv-notes-YYYY-MM-DD.json` will save to your **Downloads** folder
+5. Keep this file safe — you'll use it later to restore your notes
+
+### Step 2 — Uninstall the old app
+
+1. Open **Settings** → **Apps** → **Installed apps** (or **Control Panel** → **Programs and Features**)
+2. Find **KJV Strong's Bible**
+3. Click **Uninstall** and confirm
+
+### Step 3 — Delete the old data folder
+
+This is the step older versions can't do automatically — you'll need to do
+it manually just this once.
+
+1. Press `Win + R` to open the Run dialog
+2. Type exactly: `%LOCALAPPDATA%\KJVStrongs`
+3. Press **Enter** — this opens the old data folder in File Explorer
+4. Go back up one level (click the folder icon in the address bar, or press `Backspace`)
+5. Right-click the **KJVStrongs** folder and choose **Delete**
+
+> If Windows says it can't find that folder, that's fine — it just means
+> there's nothing to clean up. Continue to Step 4.
+
+### Step 4 — Download and install the latest version
+
+1. Go to the [KJV Strong's Bible Launcher Releases page](https://github.com/RonTurrentine/KJV-Strongs-Launcher/releases/latest)
+2. Download **`KJV Strong's Bible Setup [version].exe`**
+3. Run the installer and follow the on-screen prompts
+
+### Step 5 — Restore your notes
+
+1. Once the app finishes setup and opens, click the ☰ hamburger menu
+2. Click **📥 Import Notes**
+3. Select the `kjv-notes-YYYY-MM-DD.json` file you saved in Step 1
+4. Review the summary and click **Apply Import**
+
+You're done! From this point forward (v1.2.0 and later), the app will
+automatically detect version mismatches and offer to back up your notes
+before refreshing — you won't need to repeat these manual steps again.
+
+---
+
 ## Option B — Manual Setup (Developers / Advanced Users)
 
 Use this option if you want to run the tool from source, contribute to development,
