@@ -27,7 +27,30 @@ $Root       = $PSScriptRoot
 $NotesFile       = Join-Path $Root "notes.json"
 $HighlightsFile = Join-Path $Root "highlights.json"
 $SyncState  = Join-Path $Root ".last-sync"
-$AdbPath    = "H:\Android SDK Platform Tools\adb.exe"
+# Locate adb.exe — check PATH first, then common install locations
+$AdbPath = ""
+$adbInPath = Get-Command "adb.exe" -ErrorAction SilentlyContinue
+if ($adbInPath) {
+    $AdbPath = $adbInPath.Source
+} else {
+    $adbCandidates = @(
+        "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe",
+        "$env:ProgramFiles\Android\platform-tools\adb.exe",
+        "${env:ProgramFiles(x86)}\Android\platform-tools\adb.exe",
+        "$env:USERPROFILE\AppData\Local\Android\Sdk\platform-tools\adb.exe",
+        "C:\Android SDK Platform Tools\adb.exe",
+        "C:\Android\platform-tools\adb.exe"
+    )
+    # Also search all mounted drive letters
+    $drives = (Get-PSDrive -PSProvider FileSystem | Select-Object -ExpandProperty Root)
+    foreach ($drive in $drives) {
+        $adbCandidates += "${drive}Android SDK Platform Tools\adb.exe"
+        $adbCandidates += "${drive}Android\platform-tools\adb.exe"
+    }
+    foreach ($candidate in $adbCandidates) {
+        if (Test-Path $candidate) { $AdbPath = $candidate; break }
+    }
+}
 $KindlePath = "/data/local/tmp"
 $BaseUrl    = "http://localhost:${Port}/"
 
@@ -718,9 +741,8 @@ function Handle-Update {
                 & pwsh -NoProfile -NonInteractive -File $RebakeScript -ProjectRoot $Root 2>&1 | Out-Null
             }
 
-            # Read the SHA that generate_bible.ps1 baked into pages — include it
-            # in the done response so notes.js can update its in-memory SHA and
-            # suppress the update badge from reappearing after the page reloads.
+            # Read the SHA that generate_bible.ps1 baked into pages so notes.js
+            # can suppress the update badge from reappearing after reload.
             $newSha = ""
             $shaFile = Join-Path $Root "installed-sha.txt"
             if (Test-Path $shaFile) {
@@ -1016,8 +1038,8 @@ function Handle-UsbConnect {
 
     try {
         # Check a device is connected first
-        $devOutput = & $AdbPath devices 2>&1 | Out-String
-        $hasDevice = ($devOutput -match "	device$")
+        $devLines  = & $AdbPath devices 2>&1
+        $hasDevice = ($devLines | Where-Object { $_ -match "\tdevice" }).Count -gt 0
 
         if (-not $hasDevice) {
             Send-Json -Response $Response -Data @{
