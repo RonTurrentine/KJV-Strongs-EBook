@@ -959,6 +959,47 @@
        or traveling.
        ============================================================ */
 
+    function showUsbErrorModal(errorMsg, allowRetry) {
+        var overlay = document.createElement("div");
+        overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;";
+
+        var box = document.createElement("div");
+        box.style.cssText = "background:#1e1e2e;border:1px solid #c0392b;border-radius:10px;padding:24px 28px;max-width:360px;width:90%;text-align:center;";
+
+        var icon = document.createElement("div");
+        icon.textContent = "\u26A0\uFE0F";
+        icon.style.cssText = "font-size:2rem;margin-bottom:10px;";
+
+        var msg = document.createElement("p");
+        msg.textContent = errorMsg;
+        msg.style.cssText = "color:#e0e0e0;font-size:0.92rem;line-height:1.5;margin:0 0 18px;";
+
+        var btnRow = document.createElement("div");
+        btnRow.style.cssText = "display:flex;gap:10px;justify-content:center;";
+
+        function closeOverlay() { document.body.removeChild(overlay); }
+
+        if (allowRetry) {
+            var retryBtn = document.createElement("button");
+            retryBtn.textContent = "Retry";
+            retryBtn.className = "btn btn-primary";
+            retryBtn.onclick = function () { closeOverlay(); window.connectViaUsb(); };
+            btnRow.appendChild(retryBtn);
+        }
+
+        var closeBtn = document.createElement("button");
+        closeBtn.textContent = "Dismiss";
+        closeBtn.className = "btn";
+        closeBtn.onclick = closeOverlay;
+        btnRow.appendChild(closeBtn);
+
+        box.appendChild(icon);
+        box.appendChild(msg);
+        box.appendChild(btnRow);
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+    }
+
     window.connectViaUsb = function () {
         if (!isLocalhost) {
             showToast("USB connect must be triggered from the PC browser.", "error");
@@ -967,7 +1008,7 @@
 
         showToast("Connecting phone via USB...", "");
 
-        ajax("POST", "/api/usb-connect", null, function (status, data) {
+        ajax("POST", pcServerOrigin + "/api/usb-connect", null, function (status, data) {
             if (status === 200 && data && data.ok) {
                 showToast(
                     "\uD83D\uDD0C USB connected! On your phone, open Chrome and go to http://localhost:" +
@@ -976,7 +1017,7 @@
                 );
             } else {
                 var err = (data && data.error) ? data.error : "USB connection failed.";
-                showToast("\u26A0\uFE0F " + err, "error");
+                showUsbErrorModal(err, true);
             }
         });
     };

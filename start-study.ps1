@@ -371,10 +371,33 @@ function Handle-DeleteNote {
     Send-Json -Response $Response -Data @{ ok = $true; unbaked = $unbaked }
 }
 
+# ── Locate adb.exe (called at runtime so removable drives are mounted) ──
+function Resolve-AdbPath {
+    $adbInPath = Get-Command "adb.exe" -ErrorAction SilentlyContinue
+    if ($adbInPath) { return $adbInPath.Source }
+    $candidates = @(
+        "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe",
+        "$env:ProgramFiles\Android\platform-tools\adb.exe",
+        "$env:USERPROFILE\AppData\Local\Android\Sdk\platform-tools\adb.exe",
+        "C:\Android SDK Platform Tools\adb.exe",
+        "C:\Android\platform-tools\adb.exe"
+    )
+    $drives = (Get-PSDrive -PSProvider FileSystem -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Root)
+    foreach ($drive in $drives) {
+        $candidates += "${drive}Android SDK Platform Tools\adb.exe"
+        $candidates += "${drive}Android\platform-tools\adb.exe"
+    }
+    foreach ($c in $candidates) { if (Test-Path $c) { return $c } }
+    return ""
+}
+
 # ── GET /api/kindle-status ─────────────────────────────────────
 function Get-KindleStatus {
     try {
-        $adbPath = 'H:\Android SDK Platform Tools\adb.exe'
+        $adbPath = Resolve-AdbPath
+        if (-not $adbPath -or -not (Test-Path $adbPath)) {
+            return @{ connected = $false; error = "ADB not found" }
+        }
         $output  = & $adbPath devices 2>&1
         $lines   = $output -split "`n" | Where-Object { $_ -match '\S' }
         # Look for device line (not "List of devices" header, not "offline")
@@ -1007,26 +1030,6 @@ function Handle-ImportCommit {
 # Runs `adb reverse tcp:8080 tcp:8080` so the phone can reach the
 # PC server at localhost:8080 over a USB cable (no WiFi needed).
 
-function Resolve-AdbPath {
-    # Resolve at call time so removable/network drives are guaranteed mounted
-    $adbInPath = Get-Command "adb.exe" -ErrorAction SilentlyContinue
-    if ($adbInPath) { return $adbInPath.Source }
-    $candidates = @(
-        "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe",
-        "$env:ProgramFiles\Android\platform-tools\adb.exe",
-        "$env:USERPROFILE\AppData\Local\Android\Sdk\platform-tools\adb.exe",
-        "C:\Android SDK Platform Tools\adb.exe",
-        "C:\Android\platform-tools\adb.exe"
-    )
-    $drives = (Get-PSDrive -PSProvider FileSystem -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Root)
-    foreach ($drive in $drives) {
-        $candidates += "${drive}Android SDK Platform Tools\adb.exe"
-        $candidates += "${drive}Android\platform-tools\adb.exe"
-    }
-    foreach ($c in $candidates) { if (Test-Path $c) { return $c } }
-    return ""
-}
-
 function Handle-UsbConnect {
     param([System.Net.HttpListenerResponse]$Response)
 
@@ -1046,11 +1049,36 @@ function Handle-UsbConnect {
         $devLines  = & $AdbPath devices 2>&1
         Write-Host "[USB] adb devices output: $($devLines -join ' | ')" -ForegroundColor Cyan
         $hasDevice = ($devLines | Where-Object { $_ -match "`tdevice" }).Count -gt 0
+        $isOffline = ($devLines | Where-Object { $_ -match "`toffline" }).Count -gt 0
+
+        # If device is offline, attempt auto-recovery via adb kill/start-server
+        if (-not $hasDevice -and $isOffline) {
+            Write-Host "[USB] Device offline — attempting adb server restart..." -ForegroundColor Yellow
+            & $AdbPath kill-server 2>&1 | Out-Null
+            Start-Sleep -Milliseconds 1500
+            & $AdbPath start-server 2>&1 | Out-Null
+            Start-Sleep -Milliseconds 1500
+            $devLines  = & $AdbPath devices 2>&1
+            Write-Host "[USB] adb devices after restart: $($devLines -join ' | ')" -ForegroundColor Cyan
+            $hasDevice = ($devLines | Where-Object { $_ -match "`tdevice" }).Count -gt 0
+            $isOffline = ($devLines | Where-Object { $_ -match "`toffline" }).Count -gt 0
+        }
 
         if (-not $hasDevice) {
-            Send-Json -Response $Response -Data @{
-                ok    = $false
-                error = "No Android device detected via USB. Check cable and enable USB debugging on your phone."
+            if ($isOffline) {
+                # Device seen but still offline after recovery attempt
+                Send-Json -Response $Response -Data @{
+                    ok      = $false
+                    offline = $true
+                    error   = "Your phone is connected but ADB is offline. Try unplugging and replugging the USB cable, then tap Allow when your phone asks to authorize USB debugging."
+                }
+            } else {
+                # No device seen at all
+                Send-Json -Response $Response -Data @{
+                    ok      = $false
+                    offline = $false
+                    error   = "No Android device detected via USB. Check your cable, make sure USB Debugging is enabled in Developer Options, and try a different USB port on your PC."
+                }
             }
             return
         }
