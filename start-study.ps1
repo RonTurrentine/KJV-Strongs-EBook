@@ -27,30 +27,9 @@ $Root       = $PSScriptRoot
 $NotesFile       = Join-Path $Root "notes.json"
 $HighlightsFile = Join-Path $Root "highlights.json"
 $SyncState  = Join-Path $Root ".last-sync"
-# Locate adb.exe — check PATH first, then common install locations
+# ADB path is resolved dynamically at call time inside Handle-UsbConnect
+# so that removable drives (e.g. H:\) are guaranteed to be mounted.
 $AdbPath = ""
-$adbInPath = Get-Command "adb.exe" -ErrorAction SilentlyContinue
-if ($adbInPath) {
-    $AdbPath = $adbInPath.Source
-} else {
-    $adbCandidates = @(
-        "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe",
-        "$env:ProgramFiles\Android\platform-tools\adb.exe",
-        "${env:ProgramFiles(x86)}\Android\platform-tools\adb.exe",
-        "$env:USERPROFILE\AppData\Local\Android\Sdk\platform-tools\adb.exe",
-        "C:\Android SDK Platform Tools\adb.exe",
-        "C:\Android\platform-tools\adb.exe"
-    )
-    # Also search all mounted drive letters
-    $drives = (Get-PSDrive -PSProvider FileSystem | Select-Object -ExpandProperty Root)
-    foreach ($drive in $drives) {
-        $adbCandidates += "${drive}Android SDK Platform Tools\adb.exe"
-        $adbCandidates += "${drive}Android\platform-tools\adb.exe"
-    }
-    foreach ($candidate in $adbCandidates) {
-        if (Test-Path $candidate) { $AdbPath = $candidate; break }
-    }
-}
 $KindlePath = "/data/local/tmp"
 $BaseUrl    = "http://localhost:${Port}/"
 
@@ -419,11 +398,14 @@ function Handle-SyncKindle {
 
     Write-Host "[SYNC] Starting Kindle sync..." -ForegroundColor Magenta
 
+    # Resolve ADB at call time (removable drives may not be mounted at startup)
+    $AdbPath = Resolve-AdbPath
+
     # Check ADB exists
-    if (-not (Test-Path $AdbPath)) {
-        Write-Host "  [ERROR] ADB not found at: $AdbPath" -ForegroundColor Red
+    if (-not $AdbPath -or -not (Test-Path $AdbPath)) {
+        Write-Host "  [ERROR] ADB not found" -ForegroundColor Red
         Send-Error -Response $Response -StatusCode 500 `
-            -Message "ADB not found at $AdbPath"
+            -Message "ADB not found. Please install Android SDK Platform Tools and ensure adb.exe is accessible."
         return
     }
 
@@ -1025,13 +1007,36 @@ function Handle-ImportCommit {
 # Runs `adb reverse tcp:8080 tcp:8080` so the phone can reach the
 # PC server at localhost:8080 over a USB cable (no WiFi needed).
 
+function Resolve-AdbPath {
+    # Resolve at call time so removable/network drives are guaranteed mounted
+    $adbInPath = Get-Command "adb.exe" -ErrorAction SilentlyContinue
+    if ($adbInPath) { return $adbInPath.Source }
+    $candidates = @(
+        "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe",
+        "$env:ProgramFiles\Android\platform-tools\adb.exe",
+        "$env:USERPROFILE\AppData\Local\Android\Sdk\platform-tools\adb.exe",
+        "C:\Android SDK Platform Tools\adb.exe",
+        "C:\Android\platform-tools\adb.exe"
+    )
+    $drives = (Get-PSDrive -PSProvider FileSystem -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Root)
+    foreach ($drive in $drives) {
+        $candidates += "${drive}Android SDK Platform Tools\adb.exe"
+        $candidates += "${drive}Android\platform-tools\adb.exe"
+    }
+    foreach ($c in $candidates) { if (Test-Path $c) { return $c } }
+    return ""
+}
+
 function Handle-UsbConnect {
     param([System.Net.HttpListenerResponse]$Response)
 
-    if (-not (Test-Path $AdbPath)) {
+    $AdbPath = Resolve-AdbPath
+    Write-Host "[USB] Resolved AdbPath: '$AdbPath'" -ForegroundColor Cyan
+
+    if (-not $AdbPath -or -not (Test-Path $AdbPath)) {
         Send-Json -Response $Response -Data @{
             ok      = $false
-            error   = "ADB not found at $AdbPath. Install Android SDK Platform Tools."
+            error   = "ADB not found. Please install Android SDK Platform Tools and ensure adb.exe is accessible."
         }
         return
     }
@@ -1039,7 +1044,8 @@ function Handle-UsbConnect {
     try {
         # Check a device is connected first
         $devLines  = & $AdbPath devices 2>&1
-        $hasDevice = ($devLines | Where-Object { $_ -match "\tdevice" }).Count -gt 0
+        Write-Host "[USB] adb devices output: $($devLines -join ' | ')" -ForegroundColor Cyan
+        $hasDevice = ($devLines | Where-Object { $_ -match "`tdevice" }).Count -gt 0
 
         if (-not $hasDevice) {
             Send-Json -Response $Response -Data @{
