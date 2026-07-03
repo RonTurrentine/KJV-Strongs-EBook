@@ -27,8 +27,20 @@ param(
     [string]$HebrewPath  = 'StrongHebrewG.xml',
     [string]$GreekPath   = 'strongsgreek.xml',
     [string]$OutDir      = 'dict',
-    [string]$IndexDir    = 'indexes'
+    [string]$IndexDir    = 'indexes',
+    [string]$StatusFile  = ''
 )
+
+# Helper: write progress to status file if one was provided (used by Update Now)
+function Write-DictStatus {
+    param([int]$Percent, [string]$Detail)
+    if ($StatusFile -and (Test-Path (Split-Path $StatusFile -Parent))) {
+        try {
+            $s = @{ step='dict'; percent=$Percent; detail=$Detail; done=$false; error=$false; ts=(Get-Date).ToString('o') }
+            $s | ConvertTo-Json -Compress | Set-Content -Path $StatusFile -Encoding UTF8
+        } catch { }
+    }
+}
 
 # Load Concordance Index
 $ConcordancePath = Join-Path $PSScriptRoot "..\concordance.json"
@@ -941,7 +953,12 @@ foreach ($entry in $entries) {
     })
 
     $count++
-    if ($count % 500 -eq 0) { Write-Host "  Hebrew: $count entries written..." }
+    if ($count % 500 -eq 0) {
+        Write-Host "  Hebrew: $count entries written..."
+        # Hebrew spans 65%-76% of overall update bar
+        $pct = 65 + [int](($count / $entries.Count) * 11)
+        Write-DictStatus -Percent $pct -Detail "Generating Hebrew lexicon ($count / $($entries.Count))..."
+    }
 }
 Write-Host "Hebrew done - $count pages written."
 
@@ -1012,7 +1029,12 @@ foreach ($entry in $gEntries) {
     })
 
     $count++
-    if ($count % 500 -eq 0) { Write-Host "  Greek: $count entries written..." }
+    if ($count % 500 -eq 0) {
+        Write-Host "  Greek: $count entries written..."
+        # Greek spans 77%-89% of overall update bar
+        $pct = 77 + [int](($count / $gEntries.Count) * 12)
+        Write-DictStatus -Percent $pct -Detail "Generating Greek lexicon ($count / $($gEntries.Count))..."
+    }
 }
 Write-Host "Greek done - $count pages written."
 

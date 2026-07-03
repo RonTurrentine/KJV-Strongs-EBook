@@ -665,8 +665,8 @@ function Handle-Update {
         param($Root, $GenerateBibleScript, $GenerateDictScript, $RebakeScript, $StatusFile)
 
         function Write-Status {
-            param($Step, $Percent, $Detail, $Done = $false, $Err = $false, $ErrMsg = "")
-            $s = @{ step=$Step; percent=$Percent; detail=$Detail; done=$Done; error=$Err; errorMessage=$ErrMsg; ts=(Get-Date).ToString("o") }
+            param($Step, $Percent, $Detail, $Done = $false, $Err = $false, $ErrMsg = "", $NewSha = "")
+            $s = @{ step=$Step; percent=$Percent; detail=$Detail; done=$Done; error=$Err; errorMessage=$ErrMsg; newSha=$NewSha; ts=(Get-Date).ToString("o") }
             $s | ConvertTo-Json -Compress | Set-Content -Path $StatusFile -Encoding UTF8
         }
 
@@ -708,17 +708,26 @@ function Handle-Update {
 
             Write-Status "bible" 25 "Generating Bible chapters..."
 
-            $bibleOutput = & pwsh -NoProfile -NonInteractive -File $GenerateBibleScript -OutputRoot $Root 2>&1 | Out-String
+            $bibleOutput = & pwsh -NoProfile -NonInteractive -File $GenerateBibleScript -OutputRoot $Root -StatusFile $StatusFile 2>&1 | Out-String
             Write-Status "dict" 65 "Generating dictionary pages..."
 
-            $dictOutput = & pwsh -NoProfile -NonInteractive -File $GenerateDictScript 2>&1 | Out-String
+            $dictOutput = & pwsh -NoProfile -NonInteractive -File $GenerateDictScript -OutDir (Join-Path $Root "dict") -IndexDir (Join-Path $Root "indexes") -StatusFile $StatusFile 2>&1 | Out-String
             Write-Status "rebake" 90 "Rebaking your notes..."
 
             if (Test-Path $RebakeScript) {
                 & pwsh -NoProfile -NonInteractive -File $RebakeScript -ProjectRoot $Root 2>&1 | Out-Null
             }
 
-            Write-Status "complete" 100 "Update complete!" $true
+            # Read the SHA that generate_bible.ps1 baked into pages — include it
+            # in the done response so notes.js can update its in-memory SHA and
+            # suppress the update badge from reappearing after the page reloads.
+            $newSha = ""
+            $shaFile = Join-Path $Root "installed-sha.txt"
+            if (Test-Path $shaFile) {
+                try { $newSha = (Get-Content $shaFile -Raw -Encoding UTF8).Trim() } catch { }
+            }
+
+            Write-Status "complete" 100 "Update complete!" $true $false "" $newSha
         }
         catch {
             Write-Status "error" 0 "" $true $true $_.Exception.Message

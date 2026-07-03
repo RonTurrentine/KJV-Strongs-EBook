@@ -31,8 +31,20 @@
 param(
     [string]$OsisPath   = 'kjv.osis.xml',
     [string]$OutputRoot = '.',
-    [string]$BookFilter = ''
+    [string]$BookFilter = '',
+    [string]$StatusFile = ''
 )
+
+# Helper: write progress to status file if one was provided (used by Update Now)
+function Write-GenStatus {
+    param([int]$Percent, [string]$Detail)
+    if ($StatusFile -and (Test-Path (Split-Path $StatusFile -Parent))) {
+        try {
+            $s = @{ step='bible'; percent=$Percent; detail=$Detail; done=$false; error=$false; ts=(Get-Date).ToString('o') }
+            $s | ConvertTo-Json -Compress | Set-Content -Path $StatusFile -Encoding UTF8
+        } catch { }
+    }
+}
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -785,6 +797,9 @@ $($refItems.ToString())    </ul>
     $doneChapters++
     if ($doneChapters % 50 -eq 0 -or $doneChapters -eq $totalChapters) {
         Write-Host "  $doneChapters / $totalChapters chapters done..." -ForegroundColor Gray
+        # Progress: bible phase spans 25%-64% of overall update bar
+        $pct = 25 + [int](($doneChapters / $totalChapters) * 39)
+        Write-GenStatus -Percent $pct -Detail "Generating Bible chapters ($doneChapters / $totalChapters)..."
     }
 }
 
@@ -1297,6 +1312,13 @@ $gitignorePath = Join-Path $OutputRoot ".gitignore"
 $gitignoreContent = if (Test-Path $gitignorePath) { Get-Content $gitignorePath -Raw } else { "" }
 if ($gitignoreContent -notmatch "concordance") {
     Add-Content -Path $gitignorePath -Value "`nconcordance.json"
+}
+
+# Write installed SHA to sidecar file so the server can return it in the
+# update-done response — prevents the update badge reappearing after reload.
+if ($InstalledSha) {
+    $shaPath = Join-Path $OutputRoot 'installed-sha.txt'
+    try { $InstalledSha | Set-Content -Path $shaPath -Encoding UTF8 -NoNewline } catch { }
 }
 
 # Done
