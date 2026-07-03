@@ -608,6 +608,8 @@ foreach ($entry in $FlatChapters) {
   <meta name="color-scheme" content="dark">
   <meta name="kjv-sha" content="$InstalledSha">
   <link rel="icon" type="image/x-icon" href="../../BiblePencil.ico">
+  <link rel="manifest" href="../../manifest.json">
+  <meta name="theme-color" content="#00bcd4">
   <title>$($book.FullName) $chNum -- KJV</title>
   <link rel="stylesheet" href="../../css/style.css">
 </head>
@@ -648,6 +650,10 @@ foreach ($entry in $FlatChapters) {
         <span class="settings-row-icon">&#9889;</span>
         Sync to Kindle
       </div>
+      <div class="settings-row settings-row-clickable" onclick="connectViaUsb()">
+        <span class="settings-row-icon">&#128241;</span>
+        Connect Phone via USB
+      </div>
       <div class="settings-row settings-row-clickable" onclick="rebakeNotes()">
         <span class="settings-row-icon">&#128260;</span>
         Rebake Notes
@@ -660,6 +666,19 @@ foreach ($entry in $FlatChapters) {
         <span class="settings-row-icon">&#128229;</span>
         Import Notes
       </div>
+    </div>
+    <div class="settings-divider"></div>
+    <div class="settings-section">
+      <p class="settings-section-label">OFFLINE ACCESS</p>
+      <div class="settings-row settings-row-clickable" id="offline-bible-row" onclick="downloadOffline('bible')">
+        <span class="settings-row-icon">&#128214;</span>
+        <span id="offline-bible-label">Download Bible Text for Offline</span>
+      </div>
+      <div class="settings-row settings-row-clickable" id="offline-lexicon-row" onclick="downloadOffline('lexicon')">
+        <span class="settings-row-icon">&#128218;</span>
+        <span id="offline-lexicon-label">Download Lexicon for Offline</span>
+      </div>
+      <p class="settings-row-note">&#9888; Search always requires internet — it isn't available offline.</p>
     </div>
     <div class="settings-divider"></div>
     <div class="settings-section">
@@ -699,6 +718,11 @@ foreach ($entry in $FlatChapters) {
   <script src="../../js/bookmarks.js"></script>
   <script src="../../js/sticky-header.js"></script>
   <script src="../../js/notes.js"></script>
+  <script>
+  if ("serviceWorker" in navigator && (location.protocol === "http:" || location.protocol === "https:")) {
+      navigator.serviceWorker.register("/sw.js").catch(function () {});
+  }
+  </script>
 
 </body>
 </html>
@@ -798,6 +822,8 @@ foreach ($book in $BookTable) {
   <meta name="color-scheme" content="dark">
   <meta name="kjv-sha" content="$InstalledSha">
   <link rel="icon" type="image/x-icon" href="BiblePencil.ico">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#00bcd4">
   <title>KJV Bible with Strong's Concordance</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -828,6 +854,10 @@ foreach ($book in $BookTable) {
         <span class="settings-row-icon">&#9889;</span>
         Sync to Kindle
       </div>
+      <div class="settings-row settings-row-clickable" onclick="connectViaUsb()">
+        <span class="settings-row-icon">&#128241;</span>
+        Connect Phone via USB
+      </div>
       <div class="settings-row settings-row-clickable" onclick="rebakeNotes()">
         <span class="settings-row-icon">&#128260;</span>
         Rebake Notes
@@ -840,6 +870,19 @@ foreach ($book in $BookTable) {
         <span class="settings-row-icon">&#128229;</span>
         Import Notes
       </div>
+    </div>
+    <div class="settings-divider"></div>
+    <div class="settings-section">
+      <p class="settings-section-label">OFFLINE ACCESS</p>
+      <div class="settings-row settings-row-clickable" id="offline-bible-row" onclick="downloadOffline('bible')">
+        <span class="settings-row-icon">&#128214;</span>
+        <span id="offline-bible-label">Download Bible Text for Offline</span>
+      </div>
+      <div class="settings-row settings-row-clickable" id="offline-lexicon-row" onclick="downloadOffline('lexicon')">
+        <span class="settings-row-icon">&#128218;</span>
+        <span id="offline-lexicon-label">Download Lexicon for Offline</span>
+      </div>
+      <p class="settings-row-note">&#9888; Search always requires internet — it isn't available offline.</p>
     </div>
     <div class="settings-divider"></div>
     <div class="settings-section">
@@ -888,6 +931,9 @@ $($ntLinks.ToString())        </ul>
           var btn = document.getElementById("search-nav-btn");
           if (btn) { btn.style.display = "none"; }
       }
+      if ("serviceWorker" in navigator && (p === "http:" || p === "https:")) {
+          navigator.serviceWorker.register("/sw.js").catch(function () {});
+      }
   })();
   </script>
 </body>
@@ -923,6 +969,19 @@ foreach ($staticFile in @('help.html', 'about.html')) {
     }
 }
 
+# Phase 5d: Copy PWA files — manifest, service worker, and icons.
+# These enable "Add to Home Screen" on phones/tablets and offline caching.
+Write-Host "Copying PWA files (manifest, service worker, icons)..." -ForegroundColor Cyan
+foreach ($pwaFile in @('manifest.json', 'sw.js', 'icon-192.png', 'icon-512.png')) {
+    $src = Join-Path $PSScriptRoot $pwaFile
+    if (Test-Path $src) {
+        Copy-Item -Path $src -Destination (Join-Path $OutputRoot $pwaFile) -Force
+        Write-Host "  $pwaFile copied." -ForegroundColor Green
+    } else {
+        Write-Host "  WARNING: scripts/$pwaFile not found - skipping." -ForegroundColor Yellow
+    }
+}
+
 # Phase 6: Generate navigate.html
 Write-Host "Generating navigate.html..." -ForegroundColor Cyan
 
@@ -935,6 +994,8 @@ Write-Host "Generating navigate.html..." -ForegroundColor Cyan
   <meta name="color-scheme" content="dark">
   <meta name="kjv-sha" content="KJV_SHA_PLACEHOLDER">
   <link rel="icon" type="image/x-icon" href="BiblePencil.ico">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#00bcd4">
   <title>Go To -- KJV</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -962,6 +1023,10 @@ Write-Host "Generating navigate.html..." -ForegroundColor Cyan
         <span class="settings-row-icon">&#9889;</span>
         Sync to Kindle
       </div>
+      <div class="settings-row settings-row-clickable" onclick="connectViaUsb()">
+        <span class="settings-row-icon">&#128241;</span>
+        Connect Phone via USB
+      </div>
       <div class="settings-row settings-row-clickable" onclick="rebakeNotes()">
         <span class="settings-row-icon">&#128260;</span>
         Rebake Notes
@@ -974,6 +1039,19 @@ Write-Host "Generating navigate.html..." -ForegroundColor Cyan
         <span class="settings-row-icon">&#128229;</span>
         Import Notes
       </div>
+    </div>
+    <div class="settings-divider"></div>
+    <div class="settings-section">
+      <p class="settings-section-label">OFFLINE ACCESS</p>
+      <div class="settings-row settings-row-clickable" id="offline-bible-row" onclick="downloadOffline('bible')">
+        <span class="settings-row-icon">&#128214;</span>
+        <span id="offline-bible-label">Download Bible Text for Offline</span>
+      </div>
+      <div class="settings-row settings-row-clickable" id="offline-lexicon-row" onclick="downloadOffline('lexicon')">
+        <span class="settings-row-icon">&#128218;</span>
+        <span id="offline-lexicon-label">Download Lexicon for Offline</span>
+      </div>
+      <p class="settings-row-note">&#9888; Search always requires internet — it isn't available offline.</p>
     </div>
     <div class="settings-divider"></div>
     <div class="settings-section">
@@ -1106,6 +1184,11 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
   <script src="js/fontsize.js"></script>
   <script src="js/notes.js"></script>
   <script src="js/sticky-header.js"></script>
+  <script>
+  if ("serviceWorker" in navigator && (location.protocol === "http:" || location.protocol === "https:")) {
+      navigator.serviceWorker.register("/sw.js").catch(function () {});
+  }
+  </script>
   <script>
   var selectedBookIdx = -1;
   function populateBooks() {

@@ -990,6 +990,323 @@ function Handle-ImportCommit {
     }
 }
 
+# ── POST /api/usb-connect ────────────────────────────────────────
+# Runs `adb reverse tcp:8080 tcp:8080` so the phone can reach the
+# PC server at localhost:8080 over a USB cable (no WiFi needed).
+
+function Handle-UsbConnect {
+    param([System.Net.HttpListenerResponse]$Response)
+
+    if (-not (Test-Path $AdbPath)) {
+        Send-Json -Response $Response -Data @{
+            ok      = $false
+            error   = "ADB not found at $AdbPath. Install Android SDK Platform Tools."
+        }
+        return
+    }
+
+    try {
+        # Check a device is connected first
+        $devOutput = & $AdbPath devices 2>&1 | Out-String
+        $hasDevice = ($devOutput -match "	device$")
+
+        if (-not $hasDevice) {
+            Send-Json -Response $Response -Data @{
+                ok    = $false
+                error = "No Android device detected via USB. Check cable and enable USB debugging on your phone."
+            }
+            return
+        }
+
+        # Run adb reverse to forward port
+        $result = & $AdbPath reverse tcp:$Port tcp:$Port 2>&1 | Out-String
+
+        Write-Host "[USB] adb reverse tcp:$Port tcp:$Port -> $($result.Trim())" -ForegroundColor Cyan
+
+        Send-Json -Response $Response -Data @{
+            ok      = $true
+            message = "USB connected! Open Chrome on your phone and go to http://localhost:$Port/"
+            port    = $Port
+        }
+    }
+    catch {
+        Send-Json -Response $Response -Data @{
+            ok    = $false
+            error = $_.Exception.Message
+        }
+    }
+}
+
+# ── POST /api/sync-notes ─────────────────────────────────────────
+# Called by the phone when it connects to the PC's WiFi.
+# Receives the phone's notes, highlights, and tombstones.
+# Returns a diff/conflict report WITHOUT writing anything yet.
+# The phone then either auto-commits (no conflicts) or shows
+# the conflict-resolution modal before calling /api/sync-notes/commit.
+#
+# Also stores a pending sync token in a temp file so the commit
+# endpoint can apply the correct merged result.
+
+$SyncTokenFile = Join-Path $Root ".sync-token.json"
+
+function Handle-SyncNotes {
+    param(
+        [System.Net.HttpListenerRequest]$Request,
+        [System.Net.HttpListenerResponse]$Response
+    )
+
+    $reader = New-Object System.IO.StreamReader($Request.InputStream, $Request.ContentEncoding)
+    $body = $reader.ReadToEnd()
+    $reader.Close()
+
+    try { $payload = $body | ConvertFrom-Json }
+    catch {
+        Send-Error -Response $Response -StatusCode 400 -Message "Invalid JSON"
+        return
+    }
+
+    $lastSyncAt = if ($payload.lastSyncAt) { $payload.lastSyncAt } else { "" }
+
+    # Load PC's current notes/highlights
+    $pcNotes      = Get-Notes
+    $pcHighlights = Get-Highlights
+
+    # Parse phone data into hashtables
+    $phoneNotes      = @{}
+    $phoneHighlights = @{}
+    $phoneTombstones = @{}
+
+    if ($payload.phoneNotes) {
+        $payload.phoneNotes.PSObject.Properties | ForEach-Object { $phoneNotes[$_.Name] = $_.Value }
+    }
+    if ($payload.phoneHighlights) {
+        $payload.phoneHighlights.PSObject.Properties | ForEach-Object { $phoneHighlights[$_.Name] = $_.Value }
+    }
+    if ($payload.phoneTombstones) {
+        $payload.phoneTombstones.PSObject.Properties | ForEach-Object { $phoneTombstones[$_.Name] = $_.Value }
+    }
+
+    # Build the union of all refs to consider
+    $allNoteRefs = (@($pcNotes.Keys) + @($phoneNotes.Keys) + @($phoneTombstones.Keys | Where-Object { $_ -notlike "hl:*" })) | Sort-Object -Unique
+    $allHlRefs   = (@($pcHighlights.Keys) + @($phoneHighlights.Keys) + @($phoneTombstones.Keys | Where-Object { $_ -like "hl:*" } | ForEach-Object { $_ -replace '^hl:', '' })) | Sort-Object -Unique
+
+    # Classify each note ref — build the merged result and detect conflicts
+    $mergedNotes  = @{}
+    $noteConflicts = @()
+    $noteStats = @{ auto = 0; conflicts = 0 }
+
+    foreach ($ref in $allNoteRefs) {
+        $pc    = if ($pcNotes.ContainsKey($ref))      { $pcNotes[$ref] }      else { $null }
+        $phone = if ($phoneNotes.ContainsKey($ref))   { $phoneNotes[$ref] }  else { $null }
+        $tomb  = if ($phoneTombstones.ContainsKey($ref)) { $phoneTombstones[$ref] } else { $null }
+
+        if ($pc -and $phone) {
+            $pcUpdated    = if ($pc.updated)    { $pc.updated }    else { "" }
+            $phoneUpdated = if ($phone.updated) { $phone.updated } else { "" }
+            $pcText    = if ($pc.text)    { $pc.text }    else { "" }
+            $phoneText = if ($phone.text) { $phone.text } else { "" }
+
+            if ($pcText -eq $phoneText) {
+                # Identical — keep as-is
+                $mergedNotes[$ref] = $pc
+                $noteStats.auto++
+            } elseif ($tomb) {
+                # Phone deleted this note (tombstone) — PC still has it; deletion wins if newer
+                if ($tomb.deletedAt -gt $pcUpdated) {
+                    # Tombstone is newer — delete from PC
+                    $noteStats.auto++
+                } else {
+                    # PC edit is newer — keep PC version; flag conflict
+                    $noteConflicts += @{ ref = $ref; currentText = $pcText; importedText = "[deleted on phone]"; pcUpdated = $pcUpdated; phoneUpdated = $tomb.deletedAt }
+                    $mergedNotes[$ref] = $pc
+                    $noteStats.conflicts++
+                }
+            } elseif ($pcUpdated -gt $phoneUpdated) {
+                # PC is newer — auto-resolve to PC
+                $mergedNotes[$ref] = $pc
+                $noteStats.auto++
+            } elseif ($phoneUpdated -gt $pcUpdated) {
+                # Phone is newer — auto-resolve to phone
+                $mergedNotes[$ref] = @{ text = $phoneText; created = $phone.created; updated = $phone.updated }
+                $noteStats.auto++
+            } else {
+                # Same timestamp, different text — true conflict
+                $noteConflicts += @{ ref = $ref; currentText = $pcText; importedText = $phoneText; pcUpdated = $pcUpdated; phoneUpdated = $phoneUpdated }
+                $mergedNotes[$ref] = $pc
+                $noteStats.conflicts++
+            }
+        } elseif ($tomb -and -not $pc) {
+            # Already deleted on phone and not on PC — nothing to do
+            $noteStats.auto++
+        } elseif ($tomb -and $pc) {
+            # Phone deleted, PC has it — tombstone wins if newer
+            if ($tomb.deletedAt -gt $pc.updated) {
+                # Delete from PC
+                $noteStats.auto++
+            } else {
+                # PC edit after deletion — conflict
+                $noteConflicts += @{ ref = $ref; currentText = $pc.text; importedText = "[deleted on phone]" }
+                $mergedNotes[$ref] = $pc
+                $noteStats.conflicts++
+            }
+        } elseif ($pc -and -not $phone) {
+            # Only on PC — add to phone
+            $mergedNotes[$ref] = $pc
+            $noteStats.auto++
+        } elseif ($phone -and -not $pc) {
+            # Only on phone — add to PC
+            $mergedNotes[$ref] = @{ text = $phone.text; created = $phone.created; updated = $phone.updated }
+            $noteStats.auto++
+        }
+    }
+
+    # Classify each highlight ref
+    $mergedHighlights = @{}
+    $hlConflicts = @()
+
+    foreach ($ref in $allHlRefs) {
+        $pcColor    = if ($pcHighlights.ContainsKey($ref))    { $pcHighlights[$ref] }    else { $null }
+        $phoneColor = if ($phoneHighlights.ContainsKey($ref)) { $phoneHighlights[$ref] } else { $null }
+        $hlTomb     = if ($phoneTombstones.ContainsKey("hl:$ref")) { $phoneTombstones["hl:$ref"] } else { $null }
+
+        if ($pcColor -and $phoneColor) {
+            if ($pcColor -eq $phoneColor) {
+                $mergedHighlights[$ref] = $pcColor
+            } else {
+                # Different colors — conflict
+                $hlConflicts += @{ ref = $ref; currentColor = $pcColor; importedColor = $phoneColor }
+                $mergedHighlights[$ref] = $pcColor
+            }
+        } elseif ($hlTomb -and $pcColor) {
+            # Phone deleted highlight, PC has it — flag conflict
+            $hlConflicts += @{ ref = $ref; currentColor = $pcColor; importedColor = "[removed on phone]" }
+            $mergedHighlights[$ref] = $pcColor
+        } elseif ($pcColor) {
+            $mergedHighlights[$ref] = $pcColor
+        } elseif ($phoneColor) {
+            $mergedHighlights[$ref] = $phoneColor
+        }
+    }
+
+    # Generate a sync token and store the pending merge result
+    $syncToken = [System.Guid]::NewGuid().ToString()
+    $pending = @{
+        token          = $syncToken
+        mergedNotes    = $mergedNotes
+        mergedHighlights = $mergedHighlights
+        noteConflicts  = $noteConflicts
+        hlConflicts    = $hlConflicts
+        createdAt      = (Get-Date -Format "o")
+    }
+    $pending | ConvertTo-Json -Depth 10 | Set-Content -Path $SyncTokenFile -Encoding UTF8
+
+    Send-Json -Response $Response -Data @{
+        ok        = $true
+        syncToken = $syncToken
+        autoResolved = $noteStats.auto
+        conflicts = @{
+            notes      = $noteConflicts
+            highlights = $hlConflicts
+        }
+    }
+}
+
+# ── POST /api/sync-notes/commit ───────────────────────────────────
+# Applies the sync merge using user's conflict resolutions.
+# Body: { syncToken: "...", resolutions: { "Gen.1.1": "imported"|"current" } }
+
+function Handle-SyncCommit {
+    param(
+        [System.Net.HttpListenerRequest]$Request,
+        [System.Net.HttpListenerResponse]$Response
+    )
+
+    $reader = New-Object System.IO.StreamReader($Request.InputStream, $Request.ContentEncoding)
+    $body = $reader.ReadToEnd()
+    $reader.Close()
+
+    try { $payload = $body | ConvertFrom-Json }
+    catch {
+        Send-Error -Response $Response -StatusCode 400 -Message "Invalid JSON"
+        return
+    }
+
+    # Load and validate the pending sync token
+    if (-not (Test-Path $SyncTokenFile)) {
+        Send-Error -Response $Response -StatusCode 400 -Message "No pending sync found"
+        return
+    }
+
+    $pending = Get-Content -Path $SyncTokenFile -Raw -Encoding UTF8 | ConvertFrom-Json
+    if ($pending.token -ne $payload.syncToken) {
+        Send-Error -Response $Response -StatusCode 400 -Message "Invalid sync token"
+        return
+    }
+
+    # Parse resolutions
+    $resolutions = @{}
+    if ($payload.resolutions) {
+        $payload.resolutions.PSObject.Properties | ForEach-Object { $resolutions[$_.Name] = $_.Value }
+    }
+
+    # Apply resolutions to conflicts
+    $mergedNotes      = @{}
+    $mergedHighlights = @{}
+    $importedCount    = 0
+
+    # Notes
+    $pending.mergedNotes.PSObject.Properties | ForEach-Object {
+        $ref = $_.Name
+        $val = $_.Value
+        if ($resolutions.ContainsKey($ref) -and $resolutions[$ref] -eq "current") {
+            # User chose to keep PC version — use existing PC note
+            $existing = Get-Notes
+            if ($existing.ContainsKey($ref)) { $mergedNotes[$ref] = $existing[$ref] }
+        } else {
+            $mergedNotes[$ref] = $val
+        }
+        $importedCount++
+    }
+
+    # Highlights
+    $pending.mergedHighlights.PSObject.Properties | ForEach-Object {
+        $ref = $_.Name
+        $color = $_.Value
+        if ($resolutions.ContainsKey("hl:$ref") -and $resolutions["hl:$ref"] -eq "current") {
+            $existing = Get-Highlights
+            if ($existing.ContainsKey($ref)) { $mergedHighlights[$ref] = $existing[$ref] }
+        } else {
+            $mergedHighlights[$ref] = $color
+        }
+        $importedCount++
+    }
+
+    # Save merged results to PC
+    Save-Notes -Notes $mergedNotes
+    Save-Highlights -Highlights $mergedHighlights
+
+    # Rebake all notes into HTML
+    foreach ($ref in $mergedNotes.Keys) {
+        Bake-Note -Ref $ref -NoteText $mergedNotes[$ref].text | Out-Null
+    }
+    foreach ($ref in $mergedHighlights.Keys) {
+        Bake-Highlight -Ref $ref -Color $mergedHighlights[$ref] | Out-Null
+    }
+
+    # Clean up pending token
+    Remove-Item -Path $SyncTokenFile -Force -ErrorAction SilentlyContinue
+
+    Write-Host "[SYNC] Committed sync: $importedCount item(s)" -ForegroundColor Green
+
+    Send-Json -Response $Response -Data @{
+        ok               = $true
+        imported         = $importedCount
+        mergedNotes      = $mergedNotes
+        mergedHighlights = $mergedHighlights
+        syncedAt         = (Get-Date -Format "o")
+    }
+}
+
 # ── POST /api/rebake ─────────────────────────────────────────────
 # Re-bakes notes.json and highlights.json into chapter HTML by
 # invoking rebake-notes.ps1 as a subprocess.
@@ -1220,6 +1537,15 @@ try {
             }
             elseif ($path -eq "/api/import-notes/commit" -and $method -eq "POST") {
                 Handle-ImportCommit -Request $request -Response $response
+            }
+            elseif ($path -eq "/api/sync-notes" -and $method -eq "POST") {
+                Handle-SyncNotes -Request $request -Response $response
+            }
+            elseif ($path -eq "/api/sync-notes/commit" -and $method -eq "POST") {
+                Handle-SyncCommit -Request $request -Response $response
+            }
+            elseif ($path -eq "/api/usb-connect" -and $method -eq "POST") {
+                Handle-UsbConnect -Response $response
             }
             elseif ($path -eq "/api/update" -and $method -eq "POST") {
                 Handle-Update -Response $response

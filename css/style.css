@@ -2125,3 +2125,89 @@ body.strongs-hidden .verse {
     opacity: 0.5;
     cursor: not-allowed;
 }
+
+/* ── Phone Sync Banner ───────────────────────────────────────────── */
+
+.sync-banner {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 3000;
+    padding: 10px 16px;
+    font-size: 0.88em;
+    text-align: center;
+    box-sizing: border-box;
+    line-height: 1.5;
+}
+
+.sync-banner-connected {
+    display: block;
+    background: #1a2a1a;
+    border-bottom: 1px solid #2a4a2a;
+    color: #8bc34a;
+}
+
+.sync-banner-syncing {
+    display: block;
+    background: #1a1a2e;
+    border-bottom: 1px solid #2a3a4a;
+    color: #00b7eb;
+}
+
+.sync-banner-offline {
+    display: block;
+    background: #2a1a1a;
+    border-bottom: 1px solid #4a2a2a;
+    color: #ef9a9a;
+}
+
+.sync-banner-error {
+    display: block;
+    background: #2a1010;
+    border-bottom: 1px solid #7f0000;
+    color: #ef9a9a;
+}
+
+.sync-banner-hidden {
+    display: none;
+}
+
+.sync-banner-btn {
+    background: #00b7eb;
+    color: #000;
+    border: none;
+    padding: 4px 14px;
+    font-size: 0.9em;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.sync-banner-dismiss {
+    background: transparent;
+    color: inherit;
+    border: 1px solid currentColor;
+    padding: 2px 8px;
+    font-size: 0.85em;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 6px;
+    opacity: 0.7;
+    vertical-align: middle;
+}
+
+.sync-banner-dismiss:hover {
+    opacity: 1;
+}
+
+/* Push page content down when banner is showing */
+body:has(.sync-banner-connected),
+body:has(.sync-banner-syncing),
+body:has(.sync-banner-offline),
+body:has(.sync-banner-error) {
+    padding-top: 44px;
+}

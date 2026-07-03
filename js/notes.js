@@ -44,6 +44,24 @@
         || loc.hostname === "127.0.0.1");
     var isFileUrl = (loc.protocol === "file:");
 
+    /* Phone mode: browser on a phone/tablet connecting to the PC
+       server over WiFi. The hostname is the PC's LAN IP, not localhost.
+       In phone mode, notes go to localStorage and sync with the PC
+       when connected. Pencil buttons are visible just like localhost. */
+    var isPhoneMode = (!isLocalhost && !isFileUrl
+        && loc.protocol === "http:"
+        && loc.port === "8080");
+
+    /* The URL of the PC server — used for sync calls from the phone.
+       On localhost (PC browser), this is just "/". On phone mode,
+       it's the full http://[pc-ip]:8080/ origin we're already on. */
+    var pcServerOrigin = (isLocalhost || isPhoneMode)
+        ? (loc.protocol + "//" + loc.host)
+        : null;
+
+    /* Note-taking is available on PC (localhost) or phone (phone mode) */
+    var canTakeNotes = (isLocalhost || isPhoneMode);
+
     /* -- Extract page context from URL --------------------------  */
     /* Parses the current page path to determine book and chapter.
        Example: /books/01-Gen/1.html -> osisBook="Gen", chapter=1  */
@@ -88,7 +106,80 @@
         xhr.send(body !== null ? body : null);
     }
 
-    /* -- Toast notification -------------------------------------  */
+    /* ============================================================
+       Phone-Side Note Storage (localStorage)
+       ============================================================
+       On phone mode (or when PC is unreachable), notes and highlights
+       are stored in the browser's localStorage so they persist between
+       sessions without any server. Keys:
+         "kjv-phone-notes"      → { "Gen.1.1": { text, created, updated }, ... }
+         "kjv-phone-highlights" → { "Gen.1.1": "yellow", ... }
+         "kjv-phone-tombstones" → { "Gen.1.1": { deleted: true, deletedAt: ... } }
+         "kjv-last-sync"        → ISO timestamp of last successful sync with PC
+       ============================================================ */
+
+    var LS_NOTES      = "kjv-phone-notes";
+    var LS_HIGHLIGHTS = "kjv-phone-highlights";
+    var LS_TOMBSTONES = "kjv-phone-tombstones";
+    var LS_LAST_SYNC  = "kjv-last-sync";
+
+    function lsGet(key) {
+        try {
+            var v = localStorage.getItem(key);
+            return v ? JSON.parse(v) : {};
+        } catch (e) { return {}; }
+    }
+
+    function lsSet(key, val) {
+        try { localStorage.setItem(key, JSON.stringify(val)); return true; }
+        catch (e) { return false; }
+    }
+
+    /* Phone note CRUD — all go to localStorage */
+
+    function phoneGetNotes() { return lsGet(LS_NOTES); }
+
+    function phoneSaveNote(ref, text) {
+        var notes = phoneGetNotes();
+        var now = new Date().toISOString();
+        notes[ref] = {
+            text:    text,
+            created: (notes[ref] && notes[ref].created) ? notes[ref].created : now,
+            updated: now
+        };
+        /* Remove any tombstone for this ref if re-creating */
+        var tombs = lsGet(LS_TOMBSTONES);
+        if (tombs[ref]) { delete tombs[ref]; lsSet(LS_TOMBSTONES, tombs); }
+        lsSet(LS_NOTES, notes);
+    }
+
+    function phoneDeleteNote(ref) {
+        var notes = phoneGetNotes();
+        var now = new Date().toISOString();
+        if (notes[ref]) { delete notes[ref]; lsSet(LS_NOTES, notes); }
+        /* Record tombstone so sync knows this was a deliberate deletion */
+        var tombs = lsGet(LS_TOMBSTONES);
+        tombs[ref] = { deleted: true, deletedAt: now };
+        lsSet(LS_TOMBSTONES, tombs);
+    }
+
+    function phoneGetHighlights() { return lsGet(LS_HIGHLIGHTS); }
+
+    function phoneSaveHighlight(ref, color) {
+        var highs = phoneGetHighlights();
+        if (color) {
+            highs[ref] = color;
+        } else {
+            delete highs[ref];
+            /* tombstone for highlights uses "hl:" prefix */
+            var tombs = lsGet(LS_TOMBSTONES);
+            tombs["hl:" + ref] = { deleted: true, deletedAt: new Date().toISOString() };
+            lsSet(LS_TOMBSTONES, tombs);
+        }
+        lsSet(LS_HIGHLIGHTS, highs);
+    }
+
+    /* Toast notification -------------------------------------  */
 
     var toastEl = null;
     var toastTimer = null;
@@ -322,7 +413,7 @@
     /* -- Open the note modal ------------------------------------  */
 
     window.openNoteModal = function (ref) {
-        if (!isLocalhost) { return; }
+        if (!canTakeNotes) { return; }
 
         createModal();
 
@@ -354,16 +445,26 @@
         updatePickerUI(selectedColor);
         previewHighlight(ref, selectedColor);
 
-        /* Fetch existing note from server */
-        ajax("GET", "/api/notes", null, function (status, data) {
-            if (status === 200 && data && data[ref]) {
-                modalTextarea.value = data[ref].text || "";
+        if (isPhoneMode) {
+            /* Phone mode: load from localStorage */
+            var phoneNs = phoneGetNotes();
+            if (phoneNs[ref]) {
+                modalTextarea.value = phoneNs[ref].text || "";
                 modalDeleteBtn.style.display = "inline-block";
             }
-            /* Show modal */
             addClass(modal, "is-open");
             modalTextarea.focus();
-        });
+        } else {
+            /* PC mode: fetch from server */
+            ajax("GET", "/api/notes", null, function (status, data) {
+                if (status === 200 && data && data[ref]) {
+                    modalTextarea.value = data[ref].text || "";
+                    modalDeleteBtn.style.display = "inline-block";
+                }
+                addClass(modal, "is-open");
+                modalTextarea.focus();
+            });
+        }
     };
 
     /* -- Close modal --------------------------------------------  */
@@ -423,30 +524,40 @@
         var hlChanged = (hlColor !== hlOriginal);
 
         if (hlChanged) {
-            if (hlColor) {
-                var hlPayload = JSON.stringify({ ref: ref, color: hlColor });
-                ajax("POST", "/api/highlights", hlPayload, function (st) {
-                    if (st === 200) {
-                        highlights[ref] = hlColor;
-                    }
-                });
+            if (isPhoneMode) {
+                phoneSaveHighlight(ref, hlColor);
+                highlights[ref] = hlColor || null;
             } else {
-                ajax("DELETE", "/api/highlights/" + encodeURIComponent(ref), null, function (st) {
-                    if (st === 200) {
-                        delete highlights[ref];
-                    }
-                });
+                if (hlColor) {
+                    var hlPayload = JSON.stringify({ ref: ref, color: hlColor });
+                    ajax("POST", "/api/highlights", hlPayload, function (st) {
+                        if (st === 200) { highlights[ref] = hlColor; }
+                    });
+                } else {
+                    ajax("DELETE", "/api/highlights/" + encodeURIComponent(ref), null, function (st) {
+                        if (st === 200) { delete highlights[ref]; }
+                    });
+                }
             }
         }
 
         if (!text) {
-            /* No note text — just close, highlight already saved above */
             closeNoteModal(true);
             if (hlChanged) {
                 showToast("Highlight updated", "success");
             } else {
                 showToast("Note is empty", "error");
             }
+            return;
+        }
+
+        if (isPhoneMode) {
+            /* Phone mode: write to localStorage immediately */
+            phoneSaveNote(ref, text);
+            closeNoteModal(true);
+            updateVerseIndicator(ref, true);
+            refreshBakedNote(ref, text);
+            showToast("Note saved \uD83D\uDCF1 (syncs when on your PC\u2019s WiFi)", "success");
             return;
         }
 
@@ -469,8 +580,16 @@
 
     function deleteNote() {
         if (!currentRef) { return; }
-
         var ref = currentRef;
+
+        if (isPhoneMode) {
+            phoneDeleteNote(ref);
+            closeNoteModal(true);
+            updateVerseIndicator(ref, false);
+            clearBakedNote(ref);
+            showToast("Note deleted \uD83D\uDCF1", "success");
+            return;
+        }
 
         ajax("DELETE", "/api/notes/" + encodeURIComponent(ref), null,
             function (status, data) {
@@ -832,6 +951,37 @@
     };
 
     /* ============================================================
+       Connect Phone via USB (ADB reverse port forwarding)
+       ============================================================
+       Runs `adb reverse tcp:8080 tcp:8080` on the PC so the phone
+       can reach the study server at http://localhost:8080 over a
+       USB cable — no WiFi needed. Great for use at work, church,
+       or traveling.
+       ============================================================ */
+
+    window.connectViaUsb = function () {
+        if (!isLocalhost) {
+            showToast("USB connect must be triggered from the PC browser.", "error");
+            return;
+        }
+
+        showToast("Connecting phone via USB...", "");
+
+        ajax("POST", "/api/usb-connect", null, function (status, data) {
+            if (status === 200 && data && data.ok) {
+                showToast(
+                    "\uD83D\uDD0C USB connected! On your phone, open Chrome and go to http://localhost:" +
+                    (data.port || 8080) + "/",
+                    "success"
+                );
+            } else {
+                var err = (data && data.error) ? data.error : "USB connection failed.";
+                showToast("\u26A0\uFE0F " + err, "error");
+            }
+        });
+    };
+
+    /* ============================================================
        Sync to Kindle
        ============================================================ */
 
@@ -999,6 +1149,233 @@
     }
 
     /* ============================================================
+       Phone ↔ PC Sync System
+       ============================================================
+       When on phone mode (connecting to PC over WiFi):
+       - Notes and highlights are stored in localStorage
+       - On page load, check if PC server is reachable
+       - If reachable, offer to sync (or auto-sync if no conflicts)
+       - Sync uses the same conflict-resolution UI as Import Notes
+
+       When PC server is unreachable (offline/away):
+       - Notes continue saving to localStorage silently
+       - Sync banner shows "offline" state
+       ============================================================ */
+
+    if (isPhoneMode || isLocalhost) {
+        (function () {
+
+            var SYNC_BANNER_ID = "phone-sync-banner";
+            var pcReachable = false;
+            var syncCheckDone = false;
+
+            /* Check if the PC server is reachable */
+            function checkPcReachable(cb) {
+                var xhr2;
+                try { xhr2 = new XMLHttpRequest(); }
+                catch (e) { cb(false); return; }
+                xhr2.open("GET", "/api/notes", true);
+                xhr2.timeout = 3000;
+                xhr2.onreadystatechange = function () {
+                    if (xhr2.readyState === 4) {
+                        cb(xhr2.status === 200);
+                    }
+                };
+                xhr2.ontimeout = function () { cb(false); };
+                xhr2.onerror  = function () { cb(false); };
+                try { xhr2.send(null); } catch (e) { cb(false); }
+            }
+
+            /* Create the sync banner that floats at the top of the page */
+            function createSyncBanner() {
+                if (document.getElementById(SYNC_BANNER_ID)) { return; }
+                var banner = document.createElement("div");
+                banner.id = SYNC_BANNER_ID;
+                banner.className = "sync-banner";
+                document.body.insertBefore(banner, document.body.firstChild);
+            }
+
+            function setSyncBanner(state, detail) {
+                createSyncBanner();
+                var banner = document.getElementById(SYNC_BANNER_ID);
+                if (!banner) { return; }
+                banner.className = "sync-banner sync-banner-" + state;
+                banner.innerHTML = detail;
+            }
+
+            function hideSyncBanner() {
+                var banner = document.getElementById(SYNC_BANNER_ID);
+                if (banner) { banner.className = "sync-banner sync-banner-hidden"; }
+            }
+
+            /* Count pending (unsynced) phone notes */
+            function countPendingNotes() {
+                var lastSync = localStorage.getItem(LS_LAST_SYNC) || "";
+                var notes = phoneGetNotes();
+                var highs = phoneGetHighlights();
+                var tombs = lsGet(LS_TOMBSTONES);
+                var count = 0;
+                var key;
+                for (key in notes) {
+                    if (!notes.hasOwnProperty(key)) { continue; }
+                    if (!lastSync || notes[key].updated > lastSync) { count++; }
+                }
+                for (key in highs) {
+                    if (!highs.hasOwnProperty(key)) { continue; }
+                    count++;
+                }
+                for (key in tombs) {
+                    if (!tombs.hasOwnProperty(key)) { continue; }
+                    if (!lastSync || tombs[key].deletedAt > lastSync) { count++; }
+                }
+                return count;
+            }
+
+            /* Show sync available banner */
+            function showSyncAvailableBanner(pendingCount) {
+                var msg = "\uD83D\uDCF6 Connected to your PC.";
+                if (pendingCount > 0) {
+                    msg += " <strong>" + pendingCount + " unsynced note(s)</strong> ready to sync.";
+                    msg += ' &nbsp;<button class="sync-banner-btn" onclick="syncWithPc()">Sync Now</button>';
+                    msg += ' &nbsp;<button class="sync-banner-dismiss" onclick="dismissSyncBanner()">&#10005;</button>';
+                } else {
+                    msg += " Notes are up to date.";
+                    msg += ' &nbsp;<button class="sync-banner-dismiss" onclick="dismissSyncBanner()">&#10005;</button>';
+                }
+                setSyncBanner("connected", msg);
+            }
+
+            window.dismissSyncBanner = function () { hideSyncBanner(); };
+
+            /* ── Main sync function ───────────────────────────── */
+            window.syncWithPc = function () {
+                setSyncBanner("syncing", "\uD83D\uDD04 Syncing with PC...");
+
+                var phoneNotes      = phoneGetNotes();
+                var phoneHighlights = phoneGetHighlights();
+                var phoneTombstones = lsGet(LS_TOMBSTONES);
+                var lastSync        = localStorage.getItem(LS_LAST_SYNC) || "";
+
+                var payload = JSON.stringify({
+                    phoneNotes:      phoneNotes,
+                    phoneHighlights: phoneHighlights,
+                    phoneTombstones: phoneTombstones,
+                    lastSyncAt:      lastSync
+                });
+
+                ajax("POST", "/api/sync-notes", payload, function (status, data) {
+                    if (status !== 200 || !data || !data.ok) {
+                        setSyncBanner("error",
+                            "\u26A0\uFE0F Sync failed. " +
+                            '<button class="sync-banner-btn" onclick="syncWithPc()">Retry</button> ' +
+                            '<button class="sync-banner-dismiss" onclick="dismissSyncBanner()">&#10005;</button>');
+                        return;
+                    }
+
+                    if (data.conflicts && (data.conflicts.notes.length > 0 || data.conflicts.highlights.length > 0)) {
+                        /* Show conflict resolution modal reusing import UI */
+                        setSyncBanner("connected", "\uD83D\uDCF6 Connected — please resolve conflicts below.");
+                        showSyncConflictModal(data);
+                    } else {
+                        /* No conflicts — apply the merged result directly */
+                        applySyncResult(data, null);
+                    }
+                });
+            };
+
+            function applySyncResult(data, resolutions) {
+                var payload = JSON.stringify({
+                    resolutions: resolutions || {},
+                    syncToken:   data.syncToken
+                });
+
+                ajax("POST", "/api/sync-notes/commit", payload, function (status, result) {
+                    if (status === 200 && result && result.ok) {
+                        /* Update phone localStorage with merged data */
+                        if (result.mergedNotes)      { lsSet(LS_NOTES,      result.mergedNotes); }
+                        if (result.mergedHighlights) { lsSet(LS_HIGHLIGHTS, result.mergedHighlights); }
+                        /* Clear tombstones after successful sync */
+                        lsSet(LS_TOMBSTONES, {});
+                        /* Record sync timestamp */
+                        localStorage.setItem(LS_LAST_SYNC, new Date().toISOString());
+                        setSyncBanner("connected",
+                            "\u2705 Sync complete! " +
+                            result.imported + " item(s) updated. " +
+                            '<button class="sync-banner-dismiss" onclick="dismissSyncBanner()">&#10005;</button>');
+                        showToast("Synced with PC!", "success");
+                    } else {
+                        setSyncBanner("error",
+                            "\u26A0\uFE0F Sync commit failed. " +
+                            '<button class="sync-banner-btn" onclick="syncWithPc()">Retry</button>');
+                    }
+                });
+            }
+
+            /* Conflict resolution modal for sync (reuses import modal UI) */
+            function showSyncConflictModal(data) {
+                createImportModal();
+                var modal = document.getElementById("import-modal");
+                var summaryEl = document.getElementById("import-summary");
+                var conflictsEl = document.getElementById("import-conflicts");
+                var applyBtn = document.getElementById("import-apply-btn");
+
+                var noteConflicts = data.conflicts.notes || [];
+                var hlConflicts   = data.conflicts.highlights || [];
+
+                summaryEl.innerHTML =
+                    '<p class="import-line import-line-conflict">' +
+                    '\u26A0\uFE0F ' + (noteConflicts.length + hlConflicts.length) +
+                    ' conflict(s) found between your phone and PC notes. ' +
+                    'Choose which version to keep for each:</p>';
+
+                var conflictsHtml = "";
+                noteConflicts.forEach(function (c) { conflictsHtml += renderNoteConflict(c); });
+                hlConflicts.forEach(function (c)   { conflictsHtml += renderHighlightConflict(c); });
+                conflictsEl.innerHTML = conflictsHtml;
+
+                if (applyBtn) {
+                    applyBtn.textContent = "Apply & Sync";
+                    applyBtn.disabled = false;
+                    applyBtn.onclick = function () {
+                        var resolutions = {};
+                        var rows = document.querySelectorAll(".import-conflict-row");
+                        for (var i = 0; i < rows.length; i++) {
+                            var row = rows[i];
+                            var ref = row.getAttribute("data-ref");
+                            var kind = row.getAttribute("data-kind");
+                            var checked = row.querySelector('input[type="radio"]:checked');
+                            var value = checked ? checked.value : "imported";
+                            var key = (kind === "highlight") ? ("hl:" + ref) : ref;
+                            resolutions[key] = value;
+                        }
+                        removeClass(modal, "is-open");
+                        applySyncResult(data, resolutions);
+                    };
+                }
+
+                addClass(modal, "is-open");
+            }
+
+            /* On page load: check PC reachability and show appropriate banner */
+            if (isPhoneMode) {
+                checkPcReachable(function (reachable) {
+                    pcReachable = reachable;
+                    syncCheckDone = true;
+                    if (reachable) {
+                        var pending = countPendingNotes();
+                        showSyncAvailableBanner(pending);
+                    } else {
+                        setSyncBanner("offline",
+                            "\uD83D\uDCF5 Offline mode \u2014 notes saved to your phone. " +
+                            "Connect to your home WiFi to sync with your PC.");
+                    }
+                });
+            }
+
+        })();
+    }
+
+    /* ============================================================
        Update Check — Cross Icon Notification
        ============================================================
        On every page load (localhost only), silently checks GitHub
@@ -1157,29 +1534,52 @@
 
     if (!isChapterPage) { return; }
 
-    if (isLocalhost) {
-        /* Add is-localhost to body — CSS uses this to show pencil buttons and sync btn */
+    if (canTakeNotes) {
+        /* Add is-localhost to body — CSS uses this to show pencil buttons */
         addClass(document.body, "is-localhost");
 
-        /* Start Kindle status polling every 5 seconds */
-        pollKindleStatus();
-        setInterval(pollKindleStatus, 5000);
+        if (isLocalhost) {
+            /* PC mode: Start Kindle status polling every 5 seconds */
+            pollKindleStatus();
+            setInterval(pollKindleStatus, 5000);
 
-        /* Load highlights from server and apply to current page */
-        ajax("GET", "/api/highlights", null, function (status, data) {
-            if (status === 200 && data) {
-                highlights = data;
-                for (var ref in highlights) {
-                    if (!highlights.hasOwnProperty(ref)) { continue; }
-                    var parts = ref.split(".");
-                    if (parts[0] === osisBook && parseInt(parts[1], 10) === chapterNum) {
-                        applyHighlightClass("verse-" + parts[2], highlights[ref]);
+            /* Load highlights from server and apply to current page */
+            ajax("GET", "/api/highlights", null, function (status, data) {
+                if (status === 200 && data) {
+                    highlights = data;
+                    for (var ref in highlights) {
+                        if (!highlights.hasOwnProperty(ref)) { continue; }
+                        var parts = ref.split(".");
+                        if (parts[0] === osisBook && parseInt(parts[1], 10) === chapterNum) {
+                            applyHighlightClass("verse-" + parts[2], highlights[ref]);
+                        }
                     }
                 }
+            });
+        } else if (isPhoneMode) {
+            /* Phone mode: load highlights from localStorage */
+            var phoneHighs = phoneGetHighlights();
+            highlights = phoneHighs;
+            for (var pRef in phoneHighs) {
+                if (!phoneHighs.hasOwnProperty(pRef)) { continue; }
+                var pParts = pRef.split(".");
+                if (pParts[0] === osisBook && parseInt(pParts[1], 10) === chapterNum) {
+                    applyHighlightClass("verse-" + pParts[2], phoneHighs[pRef]);
+                }
             }
-        });
 
-        /* PC study mode: pencil buttons are active, show sync button */
+            /* Also show phone notes from localStorage (baked notes won't be present
+               since the PC hasn't baked phone-only notes into HTML yet) */
+            var phoneNs = phoneGetNotes();
+            for (var pNRef in phoneNs) {
+                if (!phoneNs.hasOwnProperty(pNRef)) { continue; }
+                var pNParts = pNRef.split(".");
+                if (pNParts[0] === osisBook && parseInt(pNParts[1], 10) === chapterNum) {
+                    updateVerseIndicator(pNRef, true);
+                    refreshBakedNote(pNRef, phoneNs[pNRef].text);
+                }
+            }
+        }
 
         /* Mark note buttons that have existing baked notes */
         var noteDivs = document.getElementsByTagName("div");
@@ -1187,7 +1587,6 @@
             var div = noteDivs[i];
             if (div.className && div.className.indexOf("verse-note") !== -1
                 && div.id && div.innerHTML && div.innerHTML.replace(/\s/g, "") !== "") {
-                /* This verse has a baked note — mark its button */
                 var idMatch = div.id.match(/note-verse-(\d+)/);
                 if (idMatch) {
                     var vNum = idMatch[1];
@@ -1208,7 +1607,6 @@
         var syncBtns = document.getElementsByClassName
             ? document.getElementsByClassName("sync-btn")
             : [];
-        /* Fallback for old browsers without getElementsByClassName */
         if (syncBtns.length === 0) {
             var allBtns = document.getElementsByTagName("button");
             for (var k = 0; k < allBtns.length; k++) {
@@ -1223,7 +1621,7 @@
         }
 
     } else {
-        /* File:// mode: hide all pencil buttons, show only baked notes */
+        /* File:// or Kindle mode: hide all pencil buttons, show only baked notes */
         var allButtons = document.getElementsByTagName("button");
         for (var n = 0; n < allButtons.length; n++) {
             if (allButtons[n].className.indexOf("note-btn") !== -1) {

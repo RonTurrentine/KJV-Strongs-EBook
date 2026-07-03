@@ -548,6 +548,8 @@ function Write-DictPage {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark">
   <link rel="icon" type="image/x-icon" href="../../BiblePencil.ico">
+  <link rel="manifest" href="../../manifest.json">
+  <meta name="theme-color" content="#00bcd4">
   <title>$titleText</title>
   <link rel="stylesheet" href="$cssPath">
 </head>
@@ -645,6 +647,8 @@ function Write-IndexPage {
   <meta name="color-scheme" content="dark">
   <meta name="kjv-sha" content="$Sha">
   <link rel="icon" type="image/x-icon" href="../BiblePencil.ico">
+  <link rel="manifest" href="../manifest.json">
+  <meta name="theme-color" content="#00bcd4">
   <title>$titleEsc</title>
   <link rel="stylesheet" href="$cssPath">
 </head>
@@ -672,6 +676,10 @@ function Write-IndexPage {
         <span class="settings-row-icon">&#9889;</span>
         Sync to Kindle
       </div>
+      <div class="settings-row settings-row-clickable" onclick="connectViaUsb()">
+        <span class="settings-row-icon">&#128241;</span>
+        Connect Phone via USB
+      </div>
       <div class="settings-row settings-row-clickable" onclick="rebakeNotes()">
         <span class="settings-row-icon">&#128260;</span>
         Rebake Notes
@@ -684,6 +692,19 @@ function Write-IndexPage {
         <span class="settings-row-icon">&#128229;</span>
         Import Notes
       </div>
+    </div>
+    <div class="settings-divider"></div>
+    <div class="settings-section">
+      <p class="settings-section-label">OFFLINE ACCESS</p>
+      <div class="settings-row settings-row-clickable" id="offline-bible-row" onclick="downloadOffline('bible')">
+        <span class="settings-row-icon">&#128214;</span>
+        <span id="offline-bible-label">Download Bible Text for Offline</span>
+      </div>
+      <div class="settings-row settings-row-clickable" id="offline-lexicon-row" onclick="downloadOffline('lexicon')">
+        <span class="settings-row-icon">&#128218;</span>
+        <span id="offline-lexicon-label">Download Lexicon for Offline</span>
+      </div>
+      <p class="settings-row-note">&#9888; Search always requires internet — it isn't available offline.</p>
     </div>
     <div class="settings-divider"></div>
     <div class="settings-section">
@@ -837,6 +858,11 @@ render();
   <script src="../js/fontsize.js"></script>
   <script src="../js/notes.js"></script>
   <script src="../js/sticky-header.js"></script>
+  <script>
+  if ("serviceWorker" in navigator && (location.protocol === "http:" || location.protocol === "https:")) {
+      navigator.serviceWorker.register("/sw.js").catch(function () {});
+  }
+  </script>
 $ConcordanceHtml
 $ConcordanceInlineJs
 </body>
