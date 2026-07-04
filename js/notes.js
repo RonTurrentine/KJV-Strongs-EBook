@@ -456,7 +456,7 @@
             modalTextarea.focus();
         } else {
             /* PC mode: fetch from server */
-            ajax("GET", "/api/notes", null, function (status, data) {
+            ajax("GET", pcServerOrigin + "/api/notes", null, function (status, data) {
                 if (status === 200 && data && data[ref]) {
                     modalTextarea.value = data[ref].text || "";
                     modalDeleteBtn.style.display = "inline-block";
@@ -530,11 +530,11 @@
             } else {
                 if (hlColor) {
                     var hlPayload = JSON.stringify({ ref: ref, color: hlColor });
-                    ajax("POST", "/api/highlights", hlPayload, function (st) {
+                    ajax("POST", pcServerOrigin + "/api/highlights", hlPayload, function (st) {
                         if (st === 200) { highlights[ref] = hlColor; }
                     });
                 } else {
-                    ajax("DELETE", "/api/highlights/" + encodeURIComponent(ref), null, function (st) {
+                    ajax("DELETE", pcServerOrigin + "/api/highlights/" + encodeURIComponent(ref), null, function (st) {
                         if (st === 200) { delete highlights[ref]; }
                     });
                 }
@@ -563,7 +563,7 @@
 
         var payload = JSON.stringify({ ref: ref, text: text });
 
-        ajax("POST", "/api/notes", payload, function (status, data) {
+        ajax("POST", pcServerOrigin + "/api/notes", payload, function (status, data) {
             if (status === 200 && data && data.ok) {
                 closeNoteModal(true);
                 updateVerseIndicator(ref, true);
@@ -591,7 +591,7 @@
             return;
         }
 
-        ajax("DELETE", "/api/notes/" + encodeURIComponent(ref), null,
+        ajax("DELETE", pcServerOrigin + "/api/notes/" + encodeURIComponent(ref), null,
             function (status, data) {
                 if (status === 200 && data && data.ok) {
                     closeNoteModal(true);
@@ -731,7 +731,7 @@
         if (!isLocalhost) { return; }
         showToast("Rebaking notes...", "");
 
-        ajax("POST", "/api/rebake", null, function (status, data) {
+        ajax("POST", pcServerOrigin + "/api/rebake", null, function (status, data) {
             if (status === 200 && data && data.ok) {
                 var msg = "Rebaked " + (data.notesRebaked || 0) + " notes, "
                         + (data.highlightsRebaked || 0) + " highlights";
@@ -819,7 +819,7 @@
 
     function requestImportPreview(bundle) {
         showToast("Comparing with your current notes...", "");
-        ajax("POST", "/api/import-notes/preview", JSON.stringify(bundle), function (status, data) {
+        ajax("POST", pcServerOrigin + "/api/import-notes/preview", JSON.stringify(bundle), function (status, data) {
             if (status === 200 && data && data.ok) {
                 showImportPreviewModal(data);
             } else {
@@ -938,7 +938,7 @@
 
         var payload = JSON.stringify({ bundle: importedBundle, resolutions: resolutions });
 
-        ajax("POST", "/api/import-notes/commit", payload, function (status, data) {
+        ajax("POST", pcServerOrigin + "/api/import-notes/commit", payload, function (status, data) {
             if (status === 200 && data && data.ok) {
                 showToast("Imported " + data.imported + " item(s)" + (data.skipped ? ", skipped " + data.skipped : ""), "success");
                 closeImportModal();
@@ -1056,7 +1056,7 @@
         addClass(syncModal, "is-open");
         var syncStart = new Date().getTime();
 
-        ajax("POST", "/api/sync-kindle", null, function (status, data) {
+        ajax("POST", pcServerOrigin + "/api/sync-kindle", null, function (status, data) {
             var elapsed = new Date().getTime() - syncStart;
             var delay = Math.max(0, 2000 - elapsed);
             setTimeout(function () {
@@ -1090,7 +1090,7 @@
             document.body.appendChild(syncModal);
         }
         addClass(syncModal, "is-open");
-        ajax("POST", "/api/test-sync", null, function (status, data) {
+        ajax("POST", pcServerOrigin + "/api/test-sync", null, function (status, data) {
             removeClass(syncModal, "is-open");
             if (status === 200 && data) {
                 showToast("TEST: Pushed " + (data.pushed || 0) + " file(s)", "success");
@@ -1136,7 +1136,7 @@
     }
 
     function pollKindleStatus() {
-        ajax("GET", "/api/kindle-status", null, function (status, data) {
+        ajax("GET", pcServerOrigin + "/api/kindle-status", null, function (status, data) {
             if (status === 200 && data) {
                 updateSyncButton(data.connected === true);
             }
@@ -1313,7 +1313,7 @@
                     lastSyncAt:      lastSync
                 });
 
-                ajax("POST", "/api/sync-notes", payload, function (status, data) {
+                ajax("POST", pcServerOrigin + "/api/sync-notes", payload, function (status, data) {
                     if (status !== 200 || !data || !data.ok) {
                         setSyncBanner("error",
                             "\u26A0\uFE0F Sync failed. " +
@@ -1339,7 +1339,7 @@
                     syncToken:   data.syncToken
                 });
 
-                ajax("POST", "/api/sync-notes/commit", payload, function (status, result) {
+                ajax("POST", pcServerOrigin + "/api/sync-notes/commit", payload, function (status, result) {
                     if (status === 200 && result && result.ok) {
                         /* Update phone localStorage with merged data */
                         if (result.mergedNotes)      { lsSet(LS_NOTES,      result.mergedNotes); }
@@ -1514,7 +1514,7 @@
                 var pollTimer = null;
 
                 function poll() {
-                    ajax("GET", "/api/update-status", null, function (status, data) {
+                    ajax("GET", pcServerOrigin + "/api/update-status", null, function (status, data) {
                         if (status !== 200 || !data) { return; }
 
                         if (bar) { bar.style.width = (data.percent || 0) + "%"; }
@@ -1546,7 +1546,7 @@
                 /* Kick off the update — server responds immediately and
                    runs the actual work in a background job. We then poll
                    /api/update-status every 1.5s for live progress. */
-                ajax("POST", "/api/update", null, function (status, data) {
+                ajax("POST", pcServerOrigin + "/api/update", null, function (status, data) {
                     if (status === 200 && data && data.started) {
                         pollTimer = setInterval(poll, 1500);
                         poll(); /* immediate first check */
@@ -1609,7 +1609,7 @@
             setInterval(pollKindleStatus, 5000);
 
             /* Load highlights from server and apply to current page */
-            ajax("GET", "/api/highlights", null, function (status, data) {
+            ajax("GET", pcServerOrigin + "/api/highlights", null, function (status, data) {
                 if (status === 200 && data) {
                     highlights = data;
                     for (var ref in highlights) {
