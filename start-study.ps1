@@ -1467,7 +1467,7 @@ function Handle-StaticFile {
 # Main Server Loop
 # ================================================================
 
-# Create HTTP listener
+# Create HTTP listener on localhost.
 $listener = New-Object System.Net.HttpListener
 $listener.Prefixes.Add($BaseUrl)
 
@@ -1521,9 +1521,23 @@ try {
         $method = $request.HttpMethod
         $path   = $request.Url.AbsolutePath
 
+        # ── IP Allowlist ──────────────────────────────────────────────
+        # Allow localhost (127.x) and local LAN subnet (192.168.x.x and 10.x.x.x).
+        # Reject everything else with 403 to prevent access from outside the network.
+        $remoteIp = $request.RemoteEndPoint.Address.ToString()
+        $isAllowed = $remoteIp -match "^127\." -or          # loopback
+                     $remoteIp -match "^192\.168\." -or     # class C private
+                     $remoteIp -match "^10\." -or           # class A private
+                     $remoteIp -match "^172\.(1[6-9]|2[0-9]|3[01])\."  # class B private
+        if (-not $isAllowed) {
+            Write-Host "  [BLOCKED] Request from $remoteIp rejected." -ForegroundColor Red
+            Send-Error -Response $response -StatusCode 403 -Message "Forbidden"
+            continue
+        }
+
         # Log request
         $timestamp = Get-Date -Format "HH:mm:ss"
-        Write-Host "[$timestamp] $method $path" -ForegroundColor Gray
+        Write-Host "[$timestamp] $method $path from $remoteIp" -ForegroundColor Gray
 
         try {
             # ── Route API requests ────────────────────────────────
