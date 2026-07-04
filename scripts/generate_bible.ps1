@@ -998,6 +998,16 @@ foreach ($pwaFile in @('manifest.json', 'sw.js', 'icon-192.png', 'icon-512.png')
     }
 }
 
+# Inject the installed SHA into sw.js so each update gets a unique cache version
+# name — this forces the service worker to discard stale cached pages on update.
+$swDest = Join-Path $OutputRoot 'sw.js'
+if (Test-Path $swDest) {
+    $swContent = Get-Content $swDest -Raw -Encoding UTF8
+    $swContent = $swContent -replace 'KJV_SHA_PLACEHOLDER', $InstalledSha
+    Set-Content -Path $swDest -Value $swContent -Encoding UTF8 -NoNewline
+    Write-Host "  sw.js SHA injected: $($InstalledSha.Substring(0,7))..." -ForegroundColor Green
+}
+
 # Phase 6: Generate navigate.html
 Write-Host "Generating navigate.html..." -ForegroundColor Cyan
 

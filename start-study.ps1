@@ -1029,15 +1029,15 @@ function Handle-ImportCommit {
 
 function Get-LanIp {
     try {
-        # Prefer the first non-loopback IPv4 address on an active adapter
+        # Prefer DHCP IPv4 addresses, exclude loopback (127.x) and link-local (169.254.x)
         $ip = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
-              Where-Object { $_.IPAddress -notmatch "^127\." -and $_.PrefixOrigin -ne "WellKnown" } |
-              Sort-Object { $_.InterfaceMetric } |
+              Where-Object { $_.IPAddress -notmatch "^127\." -and $_.IPAddress -notmatch "^169\.254\." } |
+              Sort-Object { if ($_.PrefixOrigin -eq "Dhcp") { 0 } else { 1 } } |
               Select-Object -First 1 -ExpandProperty IPAddress
         if (-not $ip) {
-            # Fallback: use DNS resolution of hostname
+            # Fallback: DNS resolution of hostname
             $ip = [System.Net.Dns]::GetHostAddresses([System.Net.Dns]::GetHostName()) |
-                  Where-Object { $_.AddressFamily -eq "InterNetwork" -and $_.ToString() -notmatch "^127\." } |
+                  Where-Object { $_.AddressFamily -eq "InterNetwork" -and $_.ToString() -notmatch "^127\." -and $_.ToString() -notmatch "^169\.254\." } |
                   Select-Object -First 1 |
                   ForEach-Object { $_.ToString() }
         }
