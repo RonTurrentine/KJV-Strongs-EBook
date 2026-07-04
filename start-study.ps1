@@ -27,9 +27,7 @@ $Root       = $PSScriptRoot
 $NotesFile       = Join-Path $Root "notes.json"
 $HighlightsFile = Join-Path $Root "highlights.json"
 $SyncState  = Join-Path $Root ".last-sync"
-# ADB path is resolved dynamically at call time inside Handle-UsbConnect
-# so that removable drives (e.g. H:\) are guaranteed to be mounted.
-$AdbPath = ""
+$AdbPath = "" # Resolved dynamically by Resolve-AdbPath (used for Kindle sync)
 $KindlePath = "/data/local/tmp"
 $BaseUrl    = "http://localhost:${Port}/"
 
@@ -1026,78 +1024,43 @@ function Handle-ImportCommit {
     }
 }
 
-# ── POST /api/usb-connect ────────────────────────────────────────
-# Runs `adb reverse tcp:8080 tcp:8080` so the phone can reach the
-# PC server at localhost:8080 over a USB cable (no WiFi needed).
+# ── GET /api/local-url ───────────────────────────────────────────
+# Returns the PC's LAN IP so the phone can connect via WiFi QR code.
 
-function Handle-UsbConnect {
-    param([System.Net.HttpListenerResponse]$Response)
-
-    $AdbPath = Resolve-AdbPath
-    Write-Host "[USB] Resolved AdbPath: '$AdbPath'" -ForegroundColor Cyan
-
-    if (-not $AdbPath -or -not (Test-Path $AdbPath)) {
-        Send-Json -Response $Response -Data @{
-            ok      = $false
-            error   = "ADB not found. Please install Android SDK Platform Tools and ensure adb.exe is accessible."
-        }
-        return
-    }
-
+function Get-LanIp {
     try {
-        # Check a device is connected first
-        $devLines  = & $AdbPath devices 2>&1
-        Write-Host "[USB] adb devices output: $($devLines -join ' | ')" -ForegroundColor Cyan
-        $hasDevice = ($devLines | Where-Object { $_ -match "`tdevice" }).Count -gt 0
-        $isOffline = ($devLines | Where-Object { $_ -match "`toffline" }).Count -gt 0
-
-        # If device is offline, attempt auto-recovery via adb kill/start-server
-        if (-not $hasDevice -and $isOffline) {
-            Write-Host "[USB] Device offline — attempting adb server restart..." -ForegroundColor Yellow
-            & $AdbPath kill-server 2>&1 | Out-Null
-            Start-Sleep -Milliseconds 1500
-            & $AdbPath start-server 2>&1 | Out-Null
-            Start-Sleep -Milliseconds 1500
-            $devLines  = & $AdbPath devices 2>&1
-            Write-Host "[USB] adb devices after restart: $($devLines -join ' | ')" -ForegroundColor Cyan
-            $hasDevice = ($devLines | Where-Object { $_ -match "`tdevice" }).Count -gt 0
-            $isOffline = ($devLines | Where-Object { $_ -match "`toffline" }).Count -gt 0
+        # Prefer the first non-loopback IPv4 address on an active adapter
+        $ip = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+              Where-Object { $_.IPAddress -notmatch "^127\." -and $_.PrefixOrigin -ne "WellKnown" } |
+              Sort-Object { $_.InterfaceMetric } |
+              Select-Object -First 1 -ExpandProperty IPAddress
+        if (-not $ip) {
+            # Fallback: use DNS resolution of hostname
+            $ip = [System.Net.Dns]::GetHostAddresses([System.Net.Dns]::GetHostName()) |
+                  Where-Object { $_.AddressFamily -eq "InterNetwork" -and $_.ToString() -notmatch "^127\." } |
+                  Select-Object -First 1 |
+                  ForEach-Object { $_.ToString() }
         }
-
-        if (-not $hasDevice) {
-            if ($isOffline) {
-                # Device seen but still offline after recovery attempt
-                Send-Json -Response $Response -Data @{
-                    ok      = $false
-                    offline = $true
-                    error   = "Your phone is connected but ADB is offline. Try unplugging and replugging the USB cable, then tap Allow when your phone asks to authorize USB debugging."
-                }
-            } else {
-                # No device seen at all
-                Send-Json -Response $Response -Data @{
-                    ok      = $false
-                    offline = $false
-                    error   = "No Android device detected via USB. Check your cable, make sure USB Debugging is enabled in Developer Options, and try a different USB port on your PC."
-                }
-            }
-            return
-        }
-
-        # Run adb reverse to forward port
-        $result = & $AdbPath reverse tcp:$Port tcp:$Port 2>&1 | Out-String
-
-        Write-Host "[USB] adb reverse tcp:$Port tcp:$Port -> $($result.Trim())" -ForegroundColor Cyan
-
-        Send-Json -Response $Response -Data @{
-            ok      = $true
-            message = "USB connected! Open Chrome on your phone and go to http://localhost:$Port/"
-            port    = $Port
-        }
+        return $ip
+    } catch {
+        return $null
     }
-    catch {
+}
+
+function Handle-LocalUrl {
+    param([System.Net.HttpListenerResponse]$Response)
+    $ip = Get-LanIp
+    if ($ip) {
+        Send-Json -Response $Response -Data @{
+            ok  = $true
+            url = "http://${ip}:${Port}/"
+            ip  = $ip
+            port = $Port
+        }
+    } else {
         Send-Json -Response $Response -Data @{
             ok    = $false
-            error = $_.Exception.Message
+            error = "Could not detect local IP address. Make sure your PC is connected to WiFi or Ethernet."
         }
     }
 }
@@ -1609,8 +1572,8 @@ try {
             elseif ($path -eq "/api/sync-notes/commit" -and $method -eq "POST") {
                 Handle-SyncCommit -Request $request -Response $response
             }
-            elseif ($path -eq "/api/usb-connect" -and $method -eq "POST") {
-                Handle-UsbConnect -Response $response
+            elseif ($path -eq "/api/local-url" -and $method -eq "GET") {
+                Handle-LocalUrl -Response $response
             }
             elseif ($path -eq "/api/update" -and $method -eq "POST") {
                 Handle-Update -Response $response

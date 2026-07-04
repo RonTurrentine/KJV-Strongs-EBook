@@ -951,78 +951,87 @@
     };
 
     /* ============================================================
-       Connect Phone via USB (ADB reverse port forwarding)
-       ============================================================
-       Runs `adb reverse tcp:8080 tcp:8080` on the PC so the phone
-       can reach the study server at http://localhost:8080 over a
-       USB cable — no WiFi needed. Great for use at work, church,
-       or traveling.
+       Sync Phone via QR Code (WiFi)
        ============================================================ */
 
-    function showUsbErrorModal(errorMsg, allowRetry) {
-        var overlay = document.createElement("div");
-        overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;";
-
-        var box = document.createElement("div");
-        box.style.cssText = "background:#1e1e2e;border:1px solid #c0392b;border-radius:10px;padding:24px 28px;max-width:360px;width:90%;text-align:center;";
-
-        var icon = document.createElement("div");
-        icon.textContent = "\u26A0\uFE0F";
-        icon.style.cssText = "font-size:2rem;margin-bottom:10px;";
-
-        var msg = document.createElement("p");
-        msg.textContent = errorMsg;
-        msg.style.cssText = "color:#e0e0e0;font-size:0.92rem;line-height:1.5;margin:0 0 18px;";
-
-        var btnRow = document.createElement("div");
-        btnRow.style.cssText = "display:flex;gap:10px;justify-content:center;";
-
-        function closeOverlay() { document.body.removeChild(overlay); }
-
-        if (allowRetry) {
-            var retryBtn = document.createElement("button");
-            retryBtn.textContent = "Retry";
-            retryBtn.className = "btn btn-primary";
-            retryBtn.onclick = function () { closeOverlay(); window.connectViaUsb(); };
-            btnRow.appendChild(retryBtn);
-        }
-
-        var closeBtn = document.createElement("button");
-        closeBtn.textContent = "Dismiss";
-        closeBtn.className = "btn";
-        closeBtn.onclick = closeOverlay;
-        btnRow.appendChild(closeBtn);
-
-        box.appendChild(icon);
-        box.appendChild(msg);
-        box.appendChild(btnRow);
-        overlay.appendChild(box);
-        document.body.appendChild(overlay);
-    }
-
-    window.connectViaUsb = function () {
+    window.syncViaQr = function () {
         if (!isLocalhost) {
-            showToast("USB connect must be triggered from the PC browser.", "error");
+            showToast("QR sync must be triggered from the PC app.", "error");
             return;
         }
 
-        showToast("Connecting phone via USB...", "");
-
-        ajax("POST", pcServerOrigin + "/api/usb-connect", null, function (status, data) {
+        ajax("GET", pcServerOrigin + "/api/local-url", null, function (status, data) {
             if (status === 200 && data && data.ok) {
-                showToast(
-                    "\uD83D\uDD0C USB connected! On your phone, open Chrome and go to http://localhost:" +
-                    (data.port || 8080) + "/",
-                    "success"
-                );
+                showQrModal(data.url);
             } else {
-                var err = (data && data.error) ? data.error : "USB connection failed.";
-                showUsbErrorModal(err, true);
+                var err = (data && data.error) ? data.error : "Could not detect local IP address.";
+                showToast("⚠️ " + err, "error");
             }
         });
     };
 
-    /* ============================================================
+    function showQrModal(url) {
+        function buildModal() {
+            var overlay = document.createElement("div");
+            overlay.id = "qr-overlay";
+            overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;";
+
+            var box = document.createElement("div");
+            box.style.cssText = "background:#1e1e2e;border:1px solid #00bcd4;border-radius:12px;padding:28px 32px;max-width:340px;width:92%;text-align:center;";
+
+            var title = document.createElement("h3");
+            title.textContent = "Sync Phone via QR Code";
+            title.style.cssText = "color:#00bcd4;margin:0 0 8px;font-size:1.1rem;";
+
+            var note = document.createElement("p");
+            note.textContent = "Your phone must be on the same WiFi network as your PC app for this to work.";
+            note.style.cssText = "color:#aaa;font-size:0.82rem;margin:0 0 16px;line-height:1.4;";
+
+            var qrWrap = document.createElement("div");
+            qrWrap.id = "qr-code-canvas";
+            qrWrap.style.cssText = "display:flex;justify-content:center;margin-bottom:14px;background:#fff;padding:12px;border-radius:8px;";
+
+            var urlLabel = document.createElement("p");
+            urlLabel.textContent = url;
+            urlLabel.style.cssText = "color:#888;font-size:0.75rem;word-break:break-all;margin:0 0 18px;";
+
+            var closeBtn = document.createElement("button");
+            closeBtn.textContent = "Close";
+            closeBtn.className = "btn";
+            closeBtn.onclick = function () { document.body.removeChild(overlay); };
+
+            box.appendChild(title);
+            box.appendChild(note);
+            box.appendChild(qrWrap);
+            box.appendChild(urlLabel);
+            box.appendChild(closeBtn);
+            overlay.appendChild(box);
+            document.body.appendChild(overlay);
+
+            new QRCode(qrWrap, {
+                text: url,
+                width: 200,
+                height: 200,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        }
+
+        if (typeof QRCode !== "undefined") {
+            buildModal();
+        } else {
+            var s = document.createElement("script");
+            s.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
+            s.onload = buildModal;
+            s.onerror = function () {
+                showToast("⚠️ Could not load QR library. Try visiting: " + url, "error");
+            };
+            document.head.appendChild(s);
+        }
+    }
+
+        /* ============================================================
        Sync to Kindle
        ============================================================ */
 

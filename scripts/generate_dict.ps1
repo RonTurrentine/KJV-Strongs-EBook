@@ -27,20 +27,8 @@ param(
     [string]$HebrewPath  = 'StrongHebrewG.xml',
     [string]$GreekPath   = 'strongsgreek.xml',
     [string]$OutDir      = 'dict',
-    [string]$IndexDir    = 'indexes',
-    [string]$StatusFile  = ''
+    [string]$IndexDir    = 'indexes'
 )
-
-# Helper: write progress to status file if one was provided (used by Update Now)
-function Write-DictStatus {
-    param([int]$Percent, [string]$Detail)
-    if ($StatusFile -and (Test-Path (Split-Path $StatusFile -Parent))) {
-        try {
-            $s = @{ step='dict'; percent=$Percent; detail=$Detail; done=$false; error=$false; ts=(Get-Date).ToString('o') }
-            $s | ConvertTo-Json -Compress | Set-Content -Path $StatusFile -Encoding UTF8
-        } catch { }
-    }
-}
 
 # Load Concordance Index
 $ConcordancePath = Join-Path $PSScriptRoot "..\concordance.json"
@@ -688,9 +676,9 @@ function Write-IndexPage {
         <span class="settings-row-icon">&#9889;</span>
         Sync to Kindle
       </div>
-      <div class="settings-row settings-row-clickable" onclick="connectViaUsb()">
-        <span class="settings-row-icon">&#128241;</span>
-        Connect Phone via USB
+      <div class="settings-row settings-row-clickable" onclick="syncViaQr()">
+        <span class="settings-row-icon">&#128247;</span>
+        Sync Phone via QR Code
       </div>
       <div class="settings-row settings-row-clickable" onclick="rebakeNotes()">
         <span class="settings-row-icon">&#128260;</span>
@@ -953,12 +941,7 @@ foreach ($entry in $entries) {
     })
 
     $count++
-    if ($count % 500 -eq 0) {
-        Write-Host "  Hebrew: $count entries written..."
-        # Hebrew spans 65%-76% of overall update bar
-        $pct = 65 + [int](($count / $entries.Count) * 11)
-        Write-DictStatus -Percent $pct -Detail "Generating Hebrew lexicon ($count / $($entries.Count))..."
-    }
+    if ($count % 500 -eq 0) { Write-Host "  Hebrew: $count entries written..." }
 }
 Write-Host "Hebrew done - $count pages written."
 
@@ -1029,12 +1012,7 @@ foreach ($entry in $gEntries) {
     })
 
     $count++
-    if ($count % 500 -eq 0) {
-        Write-Host "  Greek: $count entries written..."
-        # Greek spans 77%-89% of overall update bar
-        $pct = 77 + [int](($count / $gEntries.Count) * 12)
-        Write-DictStatus -Percent $pct -Detail "Generating Greek lexicon ($count / $($gEntries.Count))..."
-    }
+    if ($count % 500 -eq 0) { Write-Host "  Greek: $count entries written..." }
 }
 Write-Host "Greek done - $count pages written."
 
