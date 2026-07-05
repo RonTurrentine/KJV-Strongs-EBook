@@ -30,6 +30,198 @@ $SyncState  = Join-Path $Root ".last-sync"
 $AdbPath = "" # Resolved dynamically by Resolve-AdbPath (used for Kindle sync)
 $KindlePath = "/data/local/tmp"
 $BaseUrl    = "http://localhost:${Port}/"
+$LanPort    = $Port + 1   # 8081 — used by TcpListener proxy for phone WiFi sync
+
+# ── LAN Proxy (TcpListener — bypasses HTTP.sys, no elevation needed) ─────────
+# Compiled LAZILY after the HttpListener is already running and responding,
+# so that C# compilation time never delays server startup or causes Electron
+# launcher timeouts. The proxy is compiled on the first main-loop iteration.
+$lanProxyAvailable = $false
+$lanProxyInitialized = $false
+
+function Initialize-LanProxy {
+    if ($script:lanProxyInitialized) { return }
+    $script:lanProxyInitialized = $true
+
+    Write-Host "  Compiling LAN proxy..." -ForegroundColor Gray
+    try {
+        Add-Type -TypeDefinition @'
+#pragma warning disable 4014
+using System;
+using System.IO;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+
+public class LanProxy
+{
+    private TcpListener _listener;
+    private int _targetPort;
+    private CancellationTokenSource _cts;
+    private Task _acceptTask;
+    private bool _running;
+
+    public LanProxy(int listenPort, int targetPort)
+    {
+        _listener = new TcpListener(IPAddress.Any, listenPort);
+        _targetPort = targetPort;
+        _cts = new CancellationTokenSource();
+    }
+
+    public bool Start()
+    {
+        try
+        {
+            _listener.Start();
+            _running = true;
+            _acceptTask = Task.Run(() => AcceptLoop());
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    public void Stop()
+    {
+        _running = false;
+        _cts.Cancel();
+        try { _listener.Stop(); } catch { }
+    }
+
+    private async Task AcceptLoop()
+    {
+        while (_running && !_cts.IsCancellationRequested)
+        {
+            TcpClient client = null;
+            try
+            {
+                client = await _listener.AcceptTcpClientAsync();
+                var c = client;
+                _ = Task.Run(() => HandleClient(c));
+            }
+            catch (ObjectDisposedException) { break; }
+            catch { if (!_running) break; }
+        }
+    }
+
+    private async Task HandleClient(TcpClient client)
+    {
+        TcpClient upstream = null;
+        try
+        {
+            client.ReceiveTimeout = 30000;
+            client.SendTimeout = 30000;
+
+            var clientStream = client.GetStream();
+
+            var buffer = new byte[16384];
+            int bytesRead = await clientStream.ReadAsync(buffer, 0, buffer.Length);
+            if (bytesRead == 0) { client.Close(); return; }
+
+            int headerEnd = -1;
+            for (int i = 0; i < bytesRead - 3; i++)
+            {
+                if (buffer[i] == 13 && buffer[i+1] == 10 &&
+                    buffer[i+2] == 13 && buffer[i+3] == 10)
+                {
+                    headerEnd = i + 4;
+                    break;
+                }
+            }
+
+            byte[] toSend;
+
+            if (headerEnd > 0)
+            {
+                string headers = Encoding.ASCII.GetString(buffer, 0, headerEnd);
+                headers = Regex.Replace(headers,
+                    @"(?i)Host:\s*[^\r\n]+",
+                    "Host: localhost:" + _targetPort);
+                byte[] modifiedHeaders = Encoding.ASCII.GetBytes(headers);
+                int bodyBytesInChunk = bytesRead - headerEnd;
+                toSend = new byte[modifiedHeaders.Length + bodyBytesInChunk];
+                Array.Copy(modifiedHeaders, 0, toSend, 0, modifiedHeaders.Length);
+                if (bodyBytesInChunk > 0)
+                    Array.Copy(buffer, headerEnd, toSend, modifiedHeaders.Length, bodyBytesInChunk);
+            }
+            else
+            {
+                toSend = new byte[bytesRead];
+                Array.Copy(buffer, 0, toSend, 0, bytesRead);
+            }
+
+            upstream = new TcpClient();
+            await upstream.ConnectAsync(IPAddress.Loopback, _targetPort);
+            var upstreamStream = upstream.GetStream();
+
+            await upstreamStream.WriteAsync(toSend, 0, toSend.Length);
+            await upstreamStream.FlushAsync();
+
+            var toServer = RelayAsync(clientStream, upstreamStream, _cts.Token);
+            var toClient = RelayAsync(upstreamStream, clientStream, _cts.Token);
+
+            await Task.WhenAny(toServer, toClient);
+        }
+        catch { }
+        finally
+        {
+            try { client.Close(); } catch { }
+            try { if (upstream != null) upstream.Close(); } catch { }
+        }
+    }
+
+    private async Task RelayAsync(NetworkStream from, NetworkStream to, CancellationToken ct)
+    {
+        var buf = new byte[8192];
+        try
+        {
+            int n;
+            while (!ct.IsCancellationRequested &&
+                   (n = await from.ReadAsync(buf, 0, buf.Length)) > 0)
+            {
+                await to.WriteAsync(buf, 0, n);
+                await to.FlushAsync();
+            }
+        }
+        catch { }
+    }
+}
+'@
+        $script:lanProxyAvailable = $true
+        Write-Host "  LAN proxy compiled successfully." -ForegroundColor Green
+    } catch {
+        Write-Host "  [WARN] LAN proxy compilation failed: $($_.Exception.Message)" -ForegroundColor Yellow
+        Write-Host "  Phone WiFi sync will not be available. Server works normally." -ForegroundColor Yellow
+        $script:lanProxyAvailable = $false
+    }
+
+    # Start the proxy if compilation succeeded
+    if ($script:lanProxyAvailable) {
+        try {
+            $script:lanProxy = New-Object LanProxy -ArgumentList $LanPort, $Port
+            $started = $script:lanProxy.Start()
+            if ($started) {
+                $lanIp = Get-LanIp
+                if ($lanIp) {
+                    Write-Host "  LAN proxy running at:  http://${lanIp}:${LanPort}/" -ForegroundColor Green
+                } else {
+                    Write-Host "  LAN proxy running on port $LanPort (no LAN IP detected)" -ForegroundColor Yellow
+                }
+            } else {
+                Write-Host "  LAN proxy could not bind port $LanPort (in use?)" -ForegroundColor Yellow
+                $script:lanProxy = $null
+            }
+        } catch {
+            Write-Host "  [WARN] LAN proxy start failed: $_" -ForegroundColor Yellow
+            $script:lanProxy = $null
+        }
+    }
+}  # end Initialize-LanProxy
 
 # ── MIME Types ───────────────────────────────────────────────────
 
@@ -1050,12 +1242,13 @@ function Get-LanIp {
 function Handle-LocalUrl {
     param([System.Net.HttpListenerResponse]$Response)
     $ip = Get-LanIp
+    $lprt = $Port + 1    # LAN proxy port (8081)
     if ($ip) {
         Send-Json -Response $Response -Data @{
-            ok  = $true
-            url = "http://${ip}:${Port}/"
-            ip  = $ip
-            port = $Port
+            ok   = $true
+            url  = "http://${ip}:${lprt}/"
+            ip   = $ip
+            port = $lprt
         }
     } else {
         Send-Json -Response $Response -Data @{
@@ -1510,6 +1703,11 @@ if ($env:KJV_LAUNCHER -ne "1") {
 
 Write-Host ""
 
+# ── LAN Proxy startup moved to lazy-init inside main loop ────────
+# (See Initialize-LanProxy function — called on first loop iteration)
+$lanProxy = $null
+Write-Host ""
+
 # Main request loop
 try {
     while ($listener.IsListening) {
@@ -1517,6 +1715,16 @@ try {
         $context  = $listener.GetContext()
         $request  = $context.Request
         $response = $context.Response
+
+        # ── Lazy-init LAN proxy on first loop iteration ──
+        # By this point, the HttpListener has already responded to at
+        # least one request (Electron's readiness poll), so the launcher
+        # knows the server is alive. Now we can safely spend 2-10 seconds
+        # compiling the C# proxy without causing a timeout.
+        if (-not $lanProxyInitialized) {
+            # Don't block this request — handle it first, compile after
+            # (the flag is set inside Initialize-LanProxy)
+        }
 
         $method = $request.HttpMethod
         $path   = $request.Url.AbsolutePath
@@ -1613,11 +1821,22 @@ try {
                 # Response may already be closed
             }
         }
+
+        # ── Lazy-init LAN proxy AFTER the first request completes ──
+        # This ensures Electron's readiness poll gets a response BEFORE
+        # we spend time compiling C#. Only runs once.
+        if (-not $lanProxyInitialized) {
+            Initialize-LanProxy
+        }
     }
 }
 finally {
     Write-Host ""
     Write-Host "Shutting down server..." -ForegroundColor Yellow
+    if ($lanProxy) {
+        try { $lanProxy.Stop() } catch { }
+        Write-Host "  LAN proxy stopped." -ForegroundColor Gray
+    }
     $listener.Stop()
     $listener.Close()
     Write-Host "Server stopped." -ForegroundColor Green

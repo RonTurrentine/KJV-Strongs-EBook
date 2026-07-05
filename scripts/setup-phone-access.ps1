@@ -1,23 +1,30 @@
 # ================================================================
-# setup-phone-access.ps1 — One-time setup for phone WiFi sync
+# setup-phone-access.ps1 — One-time firewall setup for phone WiFi sync
 # ================================================================
-# Run this script once (as Administrator) to enable your phone
-# to connect to the KJV Strong's Bible app via WiFi QR code.
+# Run this script once (as Administrator) to allow your phone to
+# connect to the KJV Strong's Bible app via WiFi QR code.
 #
 # What it does:
-#   1. Detects your PC's local network IP address
-#   2. Registers an HTTP listener reservation for that IP (netsh)
-#   3. Adds a Windows Firewall rule to allow inbound on port 8080
+#   Adds a Windows Firewall rule to allow inbound TCP on port 8081
+#   (the LAN proxy port — raw TcpListener, no HTTP.sys involved).
+#
+# No netsh urlacl registration needed! The LAN proxy uses raw TCP
+# sockets, bypassing HTTP.sys entirely.
 #
 # This only needs to be run once. Settings persist across reboots.
-# If your IP changes (DHCP), run this script again.
 # ================================================================
 
 #Requires -RunAsAdministrator
 
-$Port = 8080
+$LanPort = 8081
 
-# Detect LAN IP
+Write-Host ""
+Write-Host "  ============================================" -ForegroundColor Cyan
+Write-Host "  Phone WiFi Sync Setup" -ForegroundColor Cyan
+Write-Host "  ============================================" -ForegroundColor Cyan
+Write-Host ""
+
+# Detect LAN IP for display
 function Get-LanIp {
     try {
         $ip = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
@@ -25,63 +32,63 @@ function Get-LanIp {
               Sort-Object { if ($_.PrefixOrigin -eq "Dhcp") { 0 } else { 1 } } |
               Select-Object -First 1 -ExpandProperty IPAddress
         return $ip
-    } catch {
-        return $null
-    }
+    } catch { return $null }
 }
 
 $lanIp = Get-LanIp
-if (-not $lanIp) {
-    Write-Host "ERROR: Could not detect local IP address. Make sure you are connected to WiFi or Ethernet." -ForegroundColor Red
-    exit 1
+if ($lanIp) {
+    Write-Host "  Detected LAN IP: $lanIp" -ForegroundColor Green
+} else {
+    Write-Host "  WARNING: Could not detect LAN IP." -ForegroundColor Yellow
 }
 
-$lanPrefix = "http://${lanIp}:${Port}/"
+# Remove any old netsh urlacl registrations for port 8080 (cleanup from previous attempts)
 Write-Host ""
-Write-Host "  Detected LAN IP: $lanIp" -ForegroundColor Cyan
-Write-Host ""
-
-# Step 1: Register netsh urlacl
-Write-Host "  Step 1: Registering HTTP listener for $lanPrefix..." -ForegroundColor Yellow
-$existing = & netsh http show urlacl url=$lanPrefix 2>&1 | Out-String
-if ($existing -match [regex]::Escape($lanPrefix)) {
-    Write-Host "          Already registered. Skipping." -ForegroundColor Green
-} else {
-    $result = & netsh http add urlacl url=$lanPrefix user=Everyone 2>&1
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "          Registered successfully." -ForegroundColor Green
-    } else {
-        Write-Host "          WARNING: $result" -ForegroundColor Yellow
+Write-Host "  Cleaning up any old HTTP.sys registrations..." -ForegroundColor Yellow
+$oldUrls = @(
+    "http://192.168.86.39:8080/",
+    "http://+:8080/",
+    "http://*:8080/"
+)
+foreach ($url in $oldUrls) {
+    $check = & netsh http show urlacl url=$url 2>&1 | Out-String
+    if ($check -match [regex]::Escape($url)) {
+        & netsh http delete urlacl url=$url 2>&1 | Out-Null
+        Write-Host "  Removed old reservation: $url" -ForegroundColor Gray
     }
 }
 
-# Step 2: Add Windows Firewall rule
-$ruleName = "KJV Strong's Bible - Phone WiFi Sync (port $Port)"
-Write-Host "  Step 2: Adding Windows Firewall rule for port $Port..." -ForegroundColor Yellow
+# Add Windows Firewall rule for the LAN proxy port (8081)
+$ruleName = "KJV Strong's Bible - Phone WiFi Sync (port $LanPort)"
+Write-Host ""
+Write-Host "  Adding firewall rule for port $LanPort..." -ForegroundColor Yellow
+
 $existingRule = Get-NetFirewallRule -DisplayName $ruleName -ErrorAction SilentlyContinue
 if ($existingRule) {
-    Write-Host "          Rule already exists. Skipping." -ForegroundColor Green
+    Write-Host "  Rule already exists. Skipping." -ForegroundColor Green
 } else {
     New-NetFirewallRule -DisplayName $ruleName `
         -Direction Inbound `
         -Protocol TCP `
-        -LocalPort $Port `
+        -LocalPort $LanPort `
         -Action Allow `
         -Profile Private `
-        -Description "Allows phones on the local WiFi network to connect to KJV Strong's Bible for note syncing." `
+        -Description "Allows phones on the local WiFi to connect to KJV Strong's Bible for note syncing via LAN proxy on port $LanPort." `
         | Out-Null
-    Write-Host "          Firewall rule added successfully." -ForegroundColor Green
+    Write-Host "  Firewall rule added successfully." -ForegroundColor Green
 }
 
 Write-Host ""
 Write-Host "  ============================================" -ForegroundColor Green
-Write-Host "  Phone access setup complete!" -ForegroundColor Green
+Write-Host "  Setup complete!" -ForegroundColor Green
 Write-Host "  ============================================" -ForegroundColor Green
 Write-Host ""
-Write-Host "  Your phone can now connect to:" -ForegroundColor Cyan
-Write-Host "  $lanPrefix" -ForegroundColor White
-Write-Host ""
-Write-Host "  Open the KJV Strong's Bible app, click the" -ForegroundColor Gray
-Write-Host "  hamburger menu, and choose 'Sync Phone via" -ForegroundColor Gray
-Write-Host "  QR Code' to get started." -ForegroundColor Gray
+if ($lanIp) {
+    Write-Host "  Your phone can connect to:" -ForegroundColor Cyan
+    Write-Host "  http://${lanIp}:${LanPort}/" -ForegroundColor White
+    Write-Host ""
+}
+Write-Host "  No netsh urlacl registration needed!" -ForegroundColor Gray
+Write-Host "  The LAN proxy uses raw TCP sockets," -ForegroundColor Gray
+Write-Host "  bypassing HTTP.sys entirely." -ForegroundColor Gray
 Write-Host ""
