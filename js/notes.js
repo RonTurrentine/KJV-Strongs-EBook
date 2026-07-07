@@ -1236,6 +1236,10 @@
                Banners with something actually actionable (pending items,
                or a first-ever sync) still show every time regardless. */
             var SYNC_BANNER_SHOWN_KEY = "kjv-sync-banner-shown-session";
+            /* Same idea as above, but for the "you're offline" banner —
+               this was missing from the original once-per-session fix,
+               which only covered the connected/up-to-date case. */
+            var OFFLINE_BANNER_SHOWN_KEY = "kjv-offline-banner-shown-session";
             var pcReachable = false;
             var syncCheckDone = false;
 
@@ -1465,10 +1469,15 @@
                             }
                         }
                     } else {
-                        setSyncBanner("offline",
-                            "\uD83D\uDCF5 Offline mode \u2014 notes saved to your phone. " +
-                            "Connect to your home WiFi to sync with your PC." +
-                            ' &nbsp;<button class="sync-banner-dismiss" onclick="dismissSyncBanner()">&#10005;</button>');
+                        var offlineAlreadyShown = false;
+                        try { offlineAlreadyShown = !!sessionStorage.getItem(OFFLINE_BANNER_SHOWN_KEY); } catch (e) { }
+                        if (!offlineAlreadyShown) {
+                            setSyncBanner("offline",
+                                "\uD83D\uDCF5 Offline mode \u2014 notes saved to your phone. " +
+                                "Connect to your home WiFi to sync with your PC." +
+                                ' &nbsp;<button class="sync-banner-dismiss" onclick="dismissSyncBanner()">&#10005;</button>');
+                            try { sessionStorage.setItem(OFFLINE_BANNER_SHOWN_KEY, "1"); } catch (e) { }
+                        }
                     }
                 });
             }
@@ -1696,6 +1705,10 @@
 
         function buildChapterUrlList() {
             var urls = [];
+            /* The "Go To" navigation picker -- previously never included
+               in the bulk download, so it always showed "hasn't been
+               downloaded" even after a full successful download. */
+            urls.push("/navigate.html");
             if (typeof BIBLE_DATA === "undefined") { return urls; }
             for (var i = 0; i < BIBLE_DATA.length; i++) {
                 var book = BIBLE_DATA[i];
@@ -1709,6 +1722,10 @@
         function buildDictUrlList() {
             var urls = [];
             var i;
+            /* Hebrew/Greek index pages -- same gap as navigate.html above,
+               these are the pages the "Hebrew"/"Greek" nav buttons link to. */
+            urls.push("/indexes/strongs-hebrew-index.html");
+            urls.push("/indexes/strongs-greek-index.html");
             /* Strong's Hebrew: H0001-H8674, Greek: G0001-G5624. Any
                numbers without a generated page will simply 404 and be
                skipped — that doesn't throw off the percentage, since
