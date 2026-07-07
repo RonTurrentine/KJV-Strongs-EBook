@@ -69,6 +69,24 @@
     /* Note-taking is available on PC (localhost) or phone (phone mode) */
     var canTakeNotes = (isLocalhost || isPhoneMode);
 
+    /* Search requires a live connection to the PC server (which in turn
+       proxies to the live Bible SuperSearch API) -- it can never work at
+       all from a Kindle file:// origin, and on a phone it only works
+       when the phone can actually currently reach the PC over WiFi.
+       Hides the "Search" nav link (only present on index.html) in those
+       cases; a real-time friendly error (shown by search.js if an actual
+       search request fails) covers the PC case instead of a permanent
+       static warning nobody asked to see every time they open the menu. */
+    function setSearchVisibility(visible) {
+        var btn = document.getElementById("search-nav-btn");
+        if (btn) { btn.style.display = visible ? "" : "none"; }
+    }
+
+    if (isFileUrl) {
+        /* Kindle: never has network access of any kind, hide immediately. */
+        setSearchVisibility(false);
+    }
+
     /* -- Extract page context from URL --------------------------  */
     /* Parses the current page path to determine book and chapter.
        Example: /books/01-Gen/1.html -> osisBook="Gen", chapter=1  */
@@ -1452,6 +1470,7 @@
                 checkPcReachable(function (reachable) {
                     pcReachable = reachable;
                     syncCheckDone = true;
+                    setSearchVisibility(reachable);
                     if (reachable) {
                         var pending = countPendingNotes();
                         var neverSynced = !localStorage.getItem(LS_LAST_SYNC);
@@ -1905,6 +1924,19 @@
     if (isPhoneMode) {
         var qrSyncRow = document.querySelector('[onclick="syncViaQr()"]');
         if (qrSyncRow) { qrSyncRow.style.display = "none"; }
+    }
+
+    /* "Download for Offline" only makes sense on the phone -- the PC
+       already IS the server, with instant zero-latency access to
+       everything on disk, so there's no scenario where the PC itself
+       needs to work "offline" from itself. Mirror image of the QR-row
+       hiding above (that one only makes sense on the PC side). Hides
+       the whole section (not just the two rows), so the "OFFLINE
+       ACCESS" label doesn't end up floating alone with nothing under it. */
+    if (isLocalhost) {
+        var offlineBibleRow = document.getElementById("offline-bible-row");
+        var offlineSection = offlineBibleRow ? offlineBibleRow.closest(".settings-section") : null;
+        if (offlineSection) { offlineSection.style.display = "none"; }
     }
 
     if (!isChapterPage) { return; }

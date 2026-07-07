@@ -608,6 +608,17 @@ function Send-Response {
     )
     $Response.StatusCode = $StatusCode
     $Response.ContentType = $ContentType
+    # IMPORTANT: without these, browsers are free to apply their own
+    # default caching heuristics to every response (chapter pages,
+    # help.html, everything) -- this was very likely the real cause of
+    # "why am I still seeing old content after regenerating," not the
+    # service worker. A plain reload was silently reusing a cached
+    # response without even asking the server; only a hard refresh
+    # (Ctrl+Shift+R, which bypasses the browser's HTTP cache entirely)
+    # actually revalidated. Force revalidation on every request instead.
+    $Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate")
+    $Response.Headers.Add("Pragma", "no-cache")
+    $Response.Headers.Add("Expires", "0")
     if ($Body -and $Body.Length -gt 0) {
         $Response.ContentLength64 = $Body.Length
         $Response.OutputStream.Write($Body, 0, $Body.Length)

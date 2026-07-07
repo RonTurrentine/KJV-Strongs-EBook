@@ -121,7 +121,7 @@
         <li><strong>◀C / C▶</strong> — jump to the previous or next chapter</li>
         <li><strong>Go To</strong> — jump directly to any book, chapter, and verse</li>
         <li><strong>Hebrew / Greek</strong> — browse the full Strong's lexicon index</li>
-        <li><strong>Search</strong> — search the full KJV text (PC only, requires internet)</li>
+        <li><strong>Search</strong> — search the full KJV text (requires a live connection to your PC — see "English Word Search" below)</li>
       </ul>
     </div>
 
@@ -196,14 +196,16 @@
     <!-- ── Search ─────────────────────────────────────────────── -->
     <div class="help-section">
       <h2>&#128269; English Word Search</h2>
-      <p>The Search page lets you search the full KJV text for any English word or phrase. It is powered by the free Bible SuperSearch API and requires an internet connection.</p>
+      <p>The Search page lets you search the full KJV text for any English word or phrase. It is powered by the free Bible SuperSearch API.</p>
       <ul>
         <li><strong>Scope</strong> — search the whole Bible, a specific book, or any combination of categories (Torah, Historical, Poetic/Wisdom, Prophetic, Gospels, Acts, Paul's Epistles, General Epistles, Revelation)</li>
         <li><strong>Results per page</strong> — choose 50, 100, 200, or All</li>
         <li>Click any result to jump directly to that verse</li>
         <li>Results are remembered when you navigate to a verse and come back</li>
-        <li>Not available on Kindle Fire</li>
       </ul>
+      <p><strong>On your PC:</strong> Search works whenever the KJV Strong's Bible app is running <em>and</em> your PC has an internet connection (it calls the Bible SuperSearch API, which is a separate live web service, not something built into the app itself). If your PC is offline, you'll see a friendly error explaining the search service isn't reachable right now.</p>
+      <p><strong>On your phone:</strong> every search request is sent to your PC, which forwards it to the live search service — so Search only works while your phone is connected to your <strong>home WiFi</strong> with your PC's KJV Strong's Bible app running. Having cellular data or any other internet connection on your phone isn't enough by itself, since the connection that matters is specifically to your PC, not just to the internet in general. If you're away from home, the "Search" button and this notice are hidden automatically — everything else (chapters, dictionary entries, your notes) keeps working normally from what you've downloaded for offline use.</p>
+      <p>Not available on Kindle Fire.</p>
     </div>
 
     <!-- ── Kindle Fire ────────────────────────────────────────── -->

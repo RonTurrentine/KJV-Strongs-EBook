@@ -589,9 +589,22 @@
 
     function showError(err) {
         statusEl.innerHTML = "";
+        var errStr = String(err);
+        /* "Timeout", "No XHR", and "HTTP 0" are the typical signatures of
+           a genuine connectivity failure (the request never reached the
+           service at all) -- as opposed to "Parse error" or "Unexpected
+           response", which mean the service responded but something else
+           went wrong. Worth different wording since only the first case
+           is actually about internet connectivity. */
+        var isConnectivityFailure = (errStr === "Timeout" || errStr === "No XHR" || errStr === "HTTP 0");
+
+        var message = isConnectivityFailure
+            ? "The Bible SuperSearch service is unavailable at the moment. Please check your internet connection and try again."
+            : "Something went wrong with your search. Please try again.";
+
         resultsEl.innerHTML = '<div class="search-error">'
-            + '<p>Search unavailable &mdash; check your internet connection.</p>'
-            + '<p class="search-error-detail">' + escapeHtml(String(err)) + '</p></div>';
+            + '<p>' + message + '</p>'
+            + '<p class="search-error-detail">' + escapeHtml(errStr) + '</p></div>';
         paginEl.innerHTML = "";
     }
 

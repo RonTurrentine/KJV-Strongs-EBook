@@ -75,27 +75,36 @@ self.addEventListener("fetch", function (event) {
     if (event.request.method !== "GET") { return; }
     if (isNeverCache(url)) { return; } /* let it hit network normally */
 
+    /* Stale-while-revalidate: if we have a cached copy, serve it
+       INSTANTLY (offline/fast behavior is completely unchanged) -- but
+       also always kick off a background fetch to refresh the cache for
+       NEXT time. This matters because pure "cache-first" (the old
+       strategy) ignores Cache-Control headers entirely once something is
+       cached -- a page stays stale forever regardless of what the server
+       says, until the cache name itself changes (which depends on a
+       SHA-injection step that isn't reliably working). This way, content
+       self-heals within one extra normal reload after being updated,
+       without depending on that mechanism at all. */
     event.respondWith(
-        caches.match(event.request).then(function (cached) {
-            if (cached) { return cached; }
+        caches.open(CACHE_VERSION).then(function (cache) {
+            return cache.match(event.request).then(function (cached) {
+                var networkFetch = fetch(event.request).then(function (response) {
+                    if (response && response.status === 200) {
+                        cache.put(event.request, response.clone());
+                    }
+                    return response;
+                }).catch(function () {
+                    if (cached) { return cached; }
+                    /* Offline and not cached — nothing we can do for this URL */
+                    return new Response(
+                        "<html><body style='background:#0a0a0a;color:#ccc;font-family:sans-serif;padding:40px;text-align:center;'>" +
+                        "<h2>Offline</h2><p>This page hasn't been downloaded for offline use yet.</p>" +
+                        "<p><a href='/index.html' style='color:#00bcd4;'>Go to Home</a></p></body></html>",
+                        { headers: { "Content-Type": "text/html" }, status: 503 }
+                    );
+                });
 
-            return fetch(event.request).then(function (response) {
-                /* Cache-on-visit: store a copy for next time we're offline */
-                if (response && response.status === 200) {
-                    var responseClone = response.clone();
-                    caches.open(CACHE_VERSION).then(function (cache) {
-                        cache.put(event.request, responseClone);
-                    });
-                }
-                return response;
-            }).catch(function () {
-                /* Offline and not cached — nothing we can do for this URL */
-                return new Response(
-                    "<html><body style='background:#0a0a0a;color:#ccc;font-family:sans-serif;padding:40px;text-align:center;'>" +
-                    "<h2>Offline</h2><p>This page hasn't been downloaded for offline use yet.</p>" +
-                    "<p><a href='/index.html' style='color:#00bcd4;'>Go to Home</a></p></body></html>",
-                    { headers: { "Content-Type": "text/html" }, status: 503 }
-                );
+                return cached || networkFetch;
             });
         })
     );

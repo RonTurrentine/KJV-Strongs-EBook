@@ -716,7 +716,6 @@ function Write-IndexPage {
         <span class="settings-row-icon">&#128218;</span>
         <span id="offline-lexicon-label">Download Lexicon for Offline</span>
       </div>
-      <p class="settings-row-note">&#9888; Search always requires internet — it isn't available offline.</p>
     </div>
     <div class="settings-divider"></div>
     <div class="settings-section">
