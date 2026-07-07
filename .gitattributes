@@ -1,0 +1,5 @@
+# kjv.osis.xml is master source data, not something hand-edited line by
+# line -- tell git to leave its line endings alone entirely, rather than
+# normalizing/converting them on checkout (which was causing spurious
+# "modified" status with no real content change).
+kjv.osis.xml -text

@@ -154,6 +154,59 @@ button.btn:hover {
 }
 
 
+/* ── Chapter Nav: two-row layout on narrow (phone) screens ───────
+   PC/tablet keep the single-row float layout above. Below this
+   breakpoint, the title and buttons could overflow the fixed-height
+   header and get clipped by `overflow: hidden` (invisible buttons).
+   Stacking them into two rows keeps the same total header height
+   (90px) so .chapter-content's padding-top doesn't need to change. */
+
+@media (max-width: 600px) {
+  .chapter-nav h1,
+  .chapter-nav .book-chapter {
+    float: none;
+    width: 100%;
+    max-width: 100%;
+    height: 36px;
+    line-height: 36px;
+    font-size: 1.1em;
+    font-weight: bold;
+    padding: 0 10px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .chapter-nav .nav-buttons {
+    float: none;
+    display: block;
+    width: 100%;
+    height: 54px;
+    line-height: normal;
+    padding: 2px 4px;
+    text-align: center;
+    white-space: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .chapter-nav .nav-buttons .btn,
+  .chapter-nav a.btn,
+  .chapter-nav button.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    min-height: 36px;
+    min-width: 34px;
+    line-height: 1;
+    padding: 3px 6px;
+    font-size: 11px;
+    margin: 1px;
+  }
+}
+
 /* ── Nav (non-fixed contexts) ──────────────────────────────────── */
 
 .nav {

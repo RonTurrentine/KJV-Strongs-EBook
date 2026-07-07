@@ -22,7 +22,7 @@
      page; fetches and caches a whole list of URLs proactively
    ================================================================ */
 
-const CACHE_VERSION = "kjv-cache-KJV_SHA_PLACEHOLDER";
+const CACHE_VERSION = "kjv-cache-2e536807d8cba1ce08fe5aa4eff82f331289570e";
 const APP_SHELL = [
     "/index.html",
     "/manifest.json",

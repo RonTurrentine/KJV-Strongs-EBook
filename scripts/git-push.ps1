@@ -38,15 +38,33 @@ git add start-study.ps1
 git add start-study.bat
 git add BiblePencil.ico
 git add .gitignore
+git add .gitattributes
+
+# PWA / offline support files (root-level, not covered by css/js/scripts/
+# above -- these were being silently missed by this script previously)
+git add sw.js
+git add manifest.json
+git add icon-192.png
+git add icon-512.png
+git add about.html
+git add help.html
+
+# search.html changes infrequently but IS a real, hand-maintained page
+# (not purely generated output) -- stage it explicitly so real edits to
+# it (like this week's settings-dropdown/PWA additions) actually get
+# committed, rather than relying on someone remembering to add it by hand.
+git add search.html
 
 # Documentation
 git add README.md
 git add WINDOWS-SETUP.md
 git add MAC-SETUP.md
+git add PROJECT-CONTEXT.md
 
-# Note: books/, dict/, indexes/, index.html, navigate.html, search.html
-# are generated files — they are gitignored and pushed separately if needed.
-# SESSION-NOTES.md and highlights.json are personal files — not committed here.
+# Note: books/, dict/, indexes/, index.html, navigate.html are generated
+# output — they are gitignored and pushed separately if needed.
+# notes.json, highlights.json, SESSION-NOTES.md are personal files — not
+# committed here (also gitignored as a safety net -- see .gitignore).
 
 Write-Host "Committing with message: $Message" -ForegroundColor Cyan
 git commit -m $Message

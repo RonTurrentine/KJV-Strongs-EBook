@@ -47,10 +47,17 @@
     /* Phone mode: browser on a phone/tablet connecting to the PC
        server over WiFi. The hostname is the PC's LAN IP, not localhost.
        In phone mode, notes go to localStorage and sync with the PC
-       when connected. Pencil buttons are visible just like localhost. */
+       when connected. Pencil buttons are visible just like localhost.
+
+       Note: this used to also require loc.port === "8080", but that
+       broke once the LAN TCP proxy (start-study.ps1, port = base+1,
+       e.g. 8081) became the real path phones connect through. Since
+       this app is only ever served on localhost (the PC itself) or a
+       LAN address (anything reaching it over WiFi), the port number
+       doesn't actually matter for this decision — any non-localhost,
+       non-file HTTP(S) origin is phone mode. */
     var isPhoneMode = (!isLocalhost && !isFileUrl
-        && loc.protocol === "http:"
-        && loc.port === "8080");
+        && (loc.protocol === "http:" || loc.protocol === "https:"));
 
     /* The URL of the PC server — used for sync calls from the phone.
        On localhost (PC browser), this is just "/". On phone mode,
@@ -122,6 +129,11 @@
     var LS_HIGHLIGHTS = "kjv-phone-highlights";
     var LS_TOMBSTONES = "kjv-phone-tombstones";
     var LS_LAST_SYNC  = "kjv-last-sync";
+    /* Snapshot of highlights as of the last successful sync. Highlights
+       are stored as plain color strings (no per-item timestamp like
+       notes have), so this snapshot is how we tell "already synced"
+       highlights apart from new/changed ones for the pending-count. */
+    var LS_SYNCED_HIGHLIGHTS = "kjv-synced-highlights-snapshot";
 
     function lsGet(key) {
         try {
@@ -1216,6 +1228,14 @@
         (function () {
 
             var SYNC_BANNER_ID = "phone-sync-banner";
+            /* Tracks whether the "up to date, nothing pending" banner has
+               already been shown once this session — used to avoid
+               repeating it on every page navigation. Uses sessionStorage
+               (not localStorage) so it resets on a fresh browsing session
+               but persists across chapter/page navigations within one.
+               Banners with something actually actionable (pending items,
+               or a first-ever sync) still show every time regardless. */
+            var SYNC_BANNER_SHOWN_KEY = "kjv-sync-banner-shown-session";
             var pcReachable = false;
             var syncCheckDone = false;
 
@@ -1225,7 +1245,7 @@
                 try { xhr2 = new XMLHttpRequest(); }
                 catch (e) { cb(false); return; }
                 xhr2.open("GET", "/api/notes", true);
-                xhr2.timeout = 3000;
+                xhr2.timeout = 6000;
                 xhr2.onreadystatechange = function () {
                     if (xhr2.readyState === 4) {
                         cb(xhr2.status === 200);
@@ -1263,6 +1283,7 @@
                 var lastSync = localStorage.getItem(LS_LAST_SYNC) || "";
                 var notes = phoneGetNotes();
                 var highs = phoneGetHighlights();
+                var syncedHighs = lsGet(LS_SYNCED_HIGHLIGHTS);
                 var tombs = lsGet(LS_TOMBSTONES);
                 var count = 0;
                 var key;
@@ -1272,7 +1293,10 @@
                 }
                 for (key in highs) {
                     if (!highs.hasOwnProperty(key)) { continue; }
-                    count++;
+                    /* Only count if this highlight is new or changed since
+                       the last successful sync — not every highlight that
+                       merely still exists. */
+                    if (syncedHighs[key] !== highs[key]) { count++; }
                 }
                 for (key in tombs) {
                     if (!tombs.hasOwnProperty(key)) { continue; }
@@ -1281,17 +1305,25 @@
                 return count;
             }
 
-            /* Show sync available banner */
-            function showSyncAvailableBanner(pendingCount) {
+            /* Show sync available banner.
+               Note: pendingCount only reflects changes made ON THE PHONE
+               since the last sync — it has no way to know whether the PC
+               has notes/highlights the phone doesn't have yet (e.g. the
+               very first time a phone connects to a PC that already has
+               notes). So "Sync Now" must always be offered, not just
+               when local pendingCount > 0, or there'd be no way to pull
+               down existing PC data on a fresh phone. */
+            function showSyncAvailableBanner(pendingCount, neverSynced) {
                 var msg = "\uD83D\uDCF6 Connected to your PC.";
                 if (pendingCount > 0) {
                     msg += " <strong>" + pendingCount + " unsynced note(s)</strong> ready to sync.";
-                    msg += ' &nbsp;<button class="sync-banner-btn" onclick="syncWithPc()">Sync Now</button>';
-                    msg += ' &nbsp;<button class="sync-banner-dismiss" onclick="dismissSyncBanner()">&#10005;</button>';
+                } else if (neverSynced) {
+                    msg += " Tap Sync to pull down any notes already on your PC.";
                 } else {
                     msg += " Notes are up to date.";
-                    msg += ' &nbsp;<button class="sync-banner-dismiss" onclick="dismissSyncBanner()">&#10005;</button>';
                 }
+                msg += ' &nbsp;<button class="sync-banner-btn" onclick="syncWithPc()">Sync Now</button>';
+                msg += ' &nbsp;<button class="sync-banner-dismiss" onclick="dismissSyncBanner()">&#10005;</button>';
                 setSyncBanner("connected", msg);
             }
 
@@ -1344,6 +1376,11 @@
                         /* Update phone localStorage with merged data */
                         if (result.mergedNotes)      { lsSet(LS_NOTES,      result.mergedNotes); }
                         if (result.mergedHighlights) { lsSet(LS_HIGHLIGHTS, result.mergedHighlights); }
+                        /* Snapshot the highlights as they stand right after this
+                           sync, so future pending-counts only flag genuinely
+                           new/changed highlights, not the same synced ones
+                           over and over. */
+                        lsSet(LS_SYNCED_HIGHLIGHTS, result.mergedHighlights || phoneGetHighlights());
                         /* Clear tombstones after successful sync */
                         lsSet(LS_TOMBSTONES, {});
                         /* Record sync timestamp */
@@ -1413,11 +1450,25 @@
                     syncCheckDone = true;
                     if (reachable) {
                         var pending = countPendingNotes();
-                        showSyncAvailableBanner(pending);
+                        var neverSynced = !localStorage.getItem(LS_LAST_SYNC);
+                        var alreadyShownThisSession = false;
+                        try { alreadyShownThisSession = !!sessionStorage.getItem(SYNC_BANNER_SHOWN_KEY); } catch (e) { }
+
+                        /* Always show when there's something actionable (pending
+                           changes, or this phone has never synced yet). Only
+                           suppress the repeat "nothing to do" banner once it's
+                           already been shown this session. */
+                        if (pending > 0 || neverSynced || !alreadyShownThisSession) {
+                            showSyncAvailableBanner(pending, neverSynced);
+                            if (pending === 0 && !neverSynced) {
+                                try { sessionStorage.setItem(SYNC_BANNER_SHOWN_KEY, "1"); } catch (e) { }
+                            }
+                        }
                     } else {
                         setSyncBanner("offline",
                             "\uD83D\uDCF5 Offline mode \u2014 notes saved to your phone. " +
-                            "Connect to your home WiFi to sync with your PC.");
+                            "Connect to your home WiFi to sync with your PC." +
+                            ' &nbsp;<button class="sync-banner-dismiss" onclick="dismissSyncBanner()">&#10005;</button>');
                     }
                 });
             }
@@ -1595,6 +1646,248 @@
             xhr.send(null);
 
         })();
+    }
+
+    /* ============================================================
+       Download for Offline — Bulk Caching via Service Worker
+       ============================================================
+       Two independent downloads, each with their own button in the
+       hamburger menu:
+         - downloadOffline()  -> Bible chapter text only
+         - downloadLexicon()  -> Strong's Hebrew + Greek dictionary only
+       Only one runs at a time (starting one while the other is
+       running just re-shows its progress rather than colliding).
+
+       Progress is reported every 50 chapter pages / every 500
+       dictionary pages, matching generate_bible.ps1's own build-time
+       cadence. Uses the same modal chrome/CSS as the "Update
+       Available" modal for a consistent look.
+
+       Resume: the service worker checks its cache before re-fetching
+       each URL, so re-running a download after an interruption (WiFi
+       drop, tab closed, etc.) skips everything already saved and
+       only fetches what's missing.
+       ============================================================ */
+
+    (function () {
+
+        var bulkJob = null; /* { jobId, kind } or null when idle */
+        var wakeLockRef = null;
+
+        function requestWakeLock() {
+            if (!("wakeLock" in navigator)) { return; }
+            navigator.wakeLock.request("screen").then(function (lock) {
+                wakeLockRef = lock;
+            }).catch(function () { /* not critical — download still works without it */ });
+        }
+
+        function releaseWakeLock() {
+            if (wakeLockRef) {
+                try { wakeLockRef.release(); } catch (e) { }
+                wakeLockRef = null;
+            }
+        }
+
+        function pad4(n) {
+            var s = "" + n;
+            while (s.length < 4) { s = "0" + s; }
+            return s;
+        }
+
+        function buildChapterUrlList() {
+            var urls = [];
+            if (typeof BIBLE_DATA === "undefined") { return urls; }
+            for (var i = 0; i < BIBLE_DATA.length; i++) {
+                var book = BIBLE_DATA[i];
+                for (var j = 0; j < book.chapters.length; j++) {
+                    urls.push("/books/" + book.folder + "/" + (j + 1) + ".html");
+                }
+            }
+            return urls;
+        }
+
+        function buildDictUrlList() {
+            var urls = [];
+            var i;
+            /* Strong's Hebrew: H0001-H8674, Greek: G0001-G5624. Any
+               numbers without a generated page will simply 404 and be
+               skipped — that doesn't throw off the percentage, since
+               it's counted against attempts, not successes. */
+            for (i = 1; i <= 8674; i++) {
+                urls.push("/dict/hebrew/h" + pad4(i) + ".html");
+            }
+            for (i = 1; i <= 5624; i++) {
+                urls.push("/dict/greek/g" + pad4(i) + ".html");
+            }
+            return urls;
+        }
+
+        function ensureModalShell() {
+            if (document.getElementById("download-modal")) { return; }
+            var modal = document.createElement("div");
+            modal.id = "download-modal";
+            modal.className = "update-modal";
+            modal.innerHTML =
+                '<div class="update-modal-box">' +
+                '  <div class="update-modal-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="18" viewBox="0 0 16 18" fill="currentColor"><path d="M7 0h2v10.5l3-3 1.4 1.4L8 13.3 2.6 8.9 4 7.5l3 3V0z"/><rect x="0" y="15" width="16" height="3"/></svg></div>' +
+                '  <h2 class="update-modal-title" id="download-modal-title"></h2>' +
+                '  <p class="update-modal-msg" id="download-modal-msg"></p>' +
+                '  <div class="update-modal-progress is-visible" id="download-progress">' +
+                '    <div class="update-progress-bar-wrap"><div class="update-progress-bar" id="download-progress-bar"></div></div>' +
+                '    <span id="download-progress-detail">Starting download...</span>' +
+                '  </div>' +
+                '  <div class="update-modal-btns" id="download-btns"></div>' +
+                '</div>';
+            document.body.appendChild(modal);
+        }
+
+        /* Resets the modal's content for a fresh run — needed because the
+           same modal shell is reused across chapters/dictionary/repeat runs. */
+        function resetModalContent(title, message) {
+            ensureModalShell();
+            var titleEl = document.getElementById("download-modal-title");
+            var msgEl = document.getElementById("download-modal-msg");
+            var bar = document.getElementById("download-progress-bar");
+            var detail = document.getElementById("download-progress-detail");
+            var btns = document.getElementById("download-btns");
+            if (titleEl) { titleEl.textContent = title; }
+            if (msgEl) { msgEl.textContent = message; }
+            if (bar) { bar.style.width = "0%"; }
+            if (detail) { detail.textContent = "Starting download..."; }
+            if (btns) {
+                btns.innerHTML = '<button class="update-later-btn" id="download-cancel-btn" onclick="cancelBulkDownload()">Cancel</button>';
+            }
+        }
+
+        function showDoneButton() {
+            var btns = document.getElementById("download-btns");
+            if (btns) {
+                btns.innerHTML = '<button class="update-later-btn" onclick="closeDownloadModal()">Close</button>';
+            }
+        }
+
+        window.closeDownloadModal = function () {
+            var modal = document.getElementById("download-modal");
+            if (modal) { removeClass(modal, "is-open"); }
+        };
+
+        window.cancelBulkDownload = function () {
+            if (!bulkJob) { window.closeDownloadModal(); return; }
+            var detail = document.getElementById("download-progress-detail");
+            if (detail) { detail.textContent = "Cancelling..."; }
+            if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({ type: "cancel-job", jobId: bulkJob.jobId });
+            }
+        };
+
+        function runBulkDownload(kind, title, urls, reportEvery) {
+            if (!("serviceWorker" in navigator)) {
+                showToast("This browser doesn't support offline downloads.", "error");
+                return;
+            }
+            if (!navigator.serviceWorker.controller) {
+                showToast("Still setting up offline support — reload the page and try again in a moment.", "error");
+                return;
+            }
+
+            var message = "Saving " + urls.length + " pages so this device can be used without WiFi. " +
+                "Stay connected to your home WiFi while this runs — leaving the network will interrupt the download " +
+                "(you can safely re-run it later to pick up where it left off).";
+
+            if (bulkJob) {
+                /* Something's already downloading — just re-show its modal
+                   rather than starting a second, colliding job. */
+                var existingModal = document.getElementById("download-modal");
+                if (existingModal) { addClass(existingModal, "is-open"); }
+                showToast("A download is already in progress.", "info");
+                return;
+            }
+
+            resetModalContent(title, message);
+            var modal = document.getElementById("download-modal");
+            addClass(modal, "is-open");
+            requestWakeLock();
+
+            var bar = document.getElementById("download-progress-bar");
+            var detail = document.getElementById("download-progress-detail");
+            var total = urls.length;
+            var jobId = kind + "-" + (new Date()).getTime();
+            bulkJob = { jobId: jobId, kind: kind };
+
+            function setProgress(done, label) {
+                var pct = total > 0 ? Math.floor((done / total) * 100) : 100;
+                if (bar) { bar.style.width = pct + "%"; }
+                if (detail) { detail.textContent = label + " (" + pct + "%)"; }
+            }
+
+            function onMessage(event) {
+                var data = event.data;
+                if (!data || data.type !== "cache-progress" || data.jobId !== jobId) { return; }
+
+                if (data.cancelled) {
+                    navigator.serviceWorker.removeEventListener("message", onMessage);
+                    releaseWakeLock();
+                    bulkJob = null;
+                    setProgress(data.done, "Cancelled — " + data.done + " of " + total + " saved");
+                    showDoneButton();
+                    return;
+                }
+
+                setProgress(data.done, "Downloading: " + data.done + " of " + total);
+
+                if (data.complete) {
+                    navigator.serviceWorker.removeEventListener("message", onMessage);
+                    releaseWakeLock();
+                    bulkJob = null;
+                    setProgress(total, "Download complete! " + total + " pages saved for offline use");
+                    showDoneButton();
+                }
+            }
+
+            navigator.serviceWorker.addEventListener("message", onMessage);
+            navigator.serviceWorker.controller.postMessage({
+                type: "cache-urls", urls: urls, jobId: jobId, reportEvery: reportEvery
+            });
+        }
+
+        function loadBibleDataIfNeeded(callback) {
+            if (typeof BIBLE_DATA !== "undefined") { callback(); return; }
+            var existing = document.getElementById("bible-data-script");
+            if (existing) {
+                existing.addEventListener("load", callback);
+                return;
+            }
+            var script = document.createElement("script");
+            script.id = "bible-data-script";
+            script.src = "/js/bible-data.js";
+            script.onload = callback;
+            script.onerror = function () {
+                showToast("Could not load Bible book/chapter list — try reloading the page and trying again.", "error");
+            };
+            document.head.appendChild(script);
+        }
+
+        window.downloadOffline = function (kind) {
+            if (kind === "lexicon") {
+                runBulkDownload("dictionary", "Downloading Lexicon", buildDictUrlList(), 500);
+            } else {
+                loadBibleDataIfNeeded(function () {
+                    runBulkDownload("chapters", "Downloading Bible Text", buildChapterUrlList(), 50);
+                });
+            }
+        };
+
+    })();
+
+    /* "Sync Phone via QR Code" is how the PC side initiates a phone
+       connection — it doesn't make sense to show once you're already
+       running on the phone itself. It has no id in the generated HTML
+       (unlike other rows), so target it by its onclick attribute
+       instead of touching generate_bible.ps1 and regenerating every
+       page across the whole site for one menu row. */
+    if (isPhoneMode) {
+        var qrSyncRow = document.querySelector('[onclick="syncViaQr()"]');
+        if (qrSyncRow) { qrSyncRow.style.display = "none"; }
     }
 
     if (!isChapterPage) { return; }

@@ -142,6 +142,24 @@ public class LanProxy
                 headers = Regex.Replace(headers,
                     @"(?i)Host:\s*[^\r\n]+",
                     "Host: localhost:" + _targetPort);
+                // Force connection close: RelayAsync only forwards raw bytes for the
+                // rest of this connection's life and never rewrites the Host header
+                // again. If the client reuses this socket (HTTP keep-alive) for a
+                // later request, that later request would carry the original LAN
+                // Host header straight through to HttpListener, which HTTP.sys
+                // rejects with 400 (host doesn't match the registered prefix).
+                // Closing after every response forces a new connection (and a
+                // fresh rewrite) per request.
+                if (Regex.IsMatch(headers, @"(?im)^Connection:\s*[^\r\n]+"))
+                {
+                    headers = Regex.Replace(headers,
+                        @"(?im)^Connection:\s*[^\r\n]+",
+                        "Connection: close");
+                }
+                else
+                {
+                    headers = Regex.Replace(headers, @"\r\n\r\n$", "\r\nConnection: close\r\n\r\n");
+                }
                 byte[] modifiedHeaders = Encoding.ASCII.GetBytes(headers);
                 int bodyBytesInChunk = bytesRead - headerEnd;
                 toSend = new byte[modifiedHeaders.Length + bodyBytesInChunk];
@@ -165,7 +183,7 @@ public class LanProxy
             var toServer = RelayAsync(clientStream, upstreamStream, _cts.Token);
             var toClient = RelayAsync(upstreamStream, clientStream, _cts.Token);
 
-            await Task.WhenAny(toServer, toClient);
+            await Task.WhenAll(toServer, toClient);
         }
         catch { }
         finally
@@ -275,13 +293,153 @@ $BookTable = @{
 # Helper Functions
 # ================================================================
 
+# ── UTC timestamp matching JS's toISOString() format ───────────
+# IMPORTANT: PowerShell's `Get-Date -Format "o"` (the old call this
+# replaces) uses the machine's LOCAL timezone (e.g. "...-05:00"),
+# while JavaScript's `new Date().toISOString()` (used everywhere on
+# the phone side — notes, highlights, lastSync) is ALWAYS UTC with a
+# "Z" suffix. The sync logic compares these timestamps as plain
+# strings ("$pcUpdated -gt $phoneUpdated" / "notes[key].updated > lastSync"),
+# which only gives correct chronological ordering when both sides
+# use the identical timezone convention. Mixing local-offset and
+# UTC-Z timestamps silently breaks that comparison by exactly the
+# timezone offset — this is why synced notes could look permanently
+# "newer" than the last sync no matter how many times you synced.
+# Use this helper everywhere a note/highlight timestamp is generated
+# on the PC side, instead of `Get-Date -Format "o"` directly.
+function Get-UtcTimestamp {
+    return (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+}
+
+# ── Convert a legacy local-timezone timestamp string to UTC-Z ──
+# Used to migrate notes.json entries that were saved before the
+# Get-UtcTimestamp fix (i.e. still in "...-05:00" style format)
+# so timestamp string comparisons against the phone's UTC-Z
+# timestamps are valid going forward.
+$MigrationLogFile = Join-Path $Root "migration-warnings.log"
+
+# ── Normalize a note timestamp to a canonical UTC string ───────
+# IMPORTANT: ConvertFrom-Json -AsHashtable silently auto-parses
+# ISO-8601-looking JSON string values into real .NET [DateTime]
+# objects — it does NOT keep them as plain strings. When that
+# DateTime is later passed to something expecting a string (e.g. a
+# [string] function parameter), PowerShell silently re-stringifies
+# it using DateTime's bare default format ("06/21/2026 21:43:27") —
+# with NO "Z", NO offset, no timezone information at all. If that
+# ambiguous string is then re-parsed, DateTimeOffset::Parse has no
+# choice but to assume the machine's LOCAL timezone to fill in the
+# missing offset, silently shifting an already-correct UTC value by
+# the local UTC offset (this is exactly what caused already-fixed
+# timestamps to keep drifting further on every subsequent load).
+#
+# The fix: work directly with the actual runtime type and its Kind,
+# never relying on an implicit string coercion of a DateTime object.
+function Get-NormalizedTimestamp {
+    param($Value)
+
+    if ($null -eq $Value) { return $Value }
+
+    if ($Value -is [DateTime]) {
+        switch ($Value.Kind) {
+            "Utc" {
+                return $Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+            }
+            "Local" {
+                return $Value.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+            }
+            default {
+                # Unspecified Kind: treat as local wall-clock (matches how
+                # the original "-05:00"-style values, once auto-parsed,
+                # tend to come through) and convert accordingly.
+                $asLocal = [DateTime]::SpecifyKind($Value, [DateTimeKind]::Local)
+                return $asLocal.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+            }
+        }
+    }
+
+    # Not a DateTime object — treat as a plain string.
+    $str = [string]$Value
+    if ($str -match 'Z$') {
+        # Already a correct UTC string — return unchanged. Do NOT
+        # re-parse-and-reformat even a matching string, to keep this
+        # function strictly idempotent no matter how many times it runs.
+        return $str
+    }
+    return (ConvertTo-UtcTimestamp -TimestampString $str)
+}
+
+function ConvertTo-UtcTimestamp {
+    param([string]$TimestampString)
+    try {
+        # Explicit invariant-culture parsing is the .NET-recommended way
+        # to reliably parse ISO 8601 timestamps regardless of the
+        # system's locale/culture settings, rather than relying on
+        # Parse()'s culture-dependent default behavior.
+        $dto = [System.DateTimeOffset]::Parse(
+            $TimestampString,
+            [System.Globalization.CultureInfo]::InvariantCulture,
+            [System.Globalization.DateTimeStyles]::RoundtripKind
+        )
+        return $dto.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+    } catch {
+        # IMPORTANT: do NOT fall back to "now" here. Silently replacing an
+        # unparseable-but-real historical timestamp with the current
+        # moment destroys genuine note history — that's exactly what
+        # happened the first time this function shipped with a "now"
+        # fallback. Leave the original value untouched.
+        #
+        # Also: Write-Host output is invisible here, since the Electron
+        # shell hides this script's console from the user entirely. Log
+        # to a plain text file instead so a parse failure is actually
+        # discoverable rather than silently swallowed.
+        try {
+            $logLine = "[$(Get-Date -Format 'o')] Could not parse timestamp '$TimestampString': $($_.Exception.Message)"
+            Add-Content -Path $MigrationLogFile -Value $logLine -Encoding UTF8
+        } catch { }
+        return $TimestampString
+    }
+}
+
+# ── One-time notes.json timestamp migration ────────────────────
+# IMPORTANT: this must run EXACTLY ONCE per server process, at
+# startup — never as a side effect of Get-Notes (which is called
+# repeatedly, on nearly every request). Running a "check and convert"
+# migration inside a hot-path function is fragile: any two overlapping
+# or back-to-back calls (e.g. opening the note editor, then saving,
+# which itself calls Get-Notes again) can end up processing the same
+# already-migrated values more than once. That's exactly what caused
+# timestamps to get shifted by DOUBLE the intended amount previously.
+# Calling this once, here, before the request loop starts, guarantees
+# it can never run more than once during this process's lifetime.
+function Invoke-NotesTimestampMigration {
+    $notes = Get-Notes
+    if ($notes.Count -eq 0) { return }
+
+    # Get-Notes now always returns correctly-normalized timestamps
+    # in memory (see Get-NormalizedTimestamp). This just persists that
+    # clean, canonical form back to disk once at startup, so the raw
+    # notes.json file itself is readable/consistent even outside the
+    # app (e.g. if you open it in a text editor).
+    Save-Notes -Notes $notes
+    Write-Host "  [MIGRATE] notes.json timestamps normalized to UTC (one-time, at startup)" -ForegroundColor Yellow
+}
+
 # ── Load notes from JSON file ──────────────────────────────────
 
 function Get-Notes {
     if (Test-Path $NotesFile) {
         $raw = Get-Content -Path $NotesFile -Raw -Encoding UTF8
         if ($raw -and $raw.Trim().Length -gt 2) {
-            return ($raw | ConvertFrom-Json -AsHashtable)
+            $notes = ($raw | ConvertFrom-Json -AsHashtable)
+            # Always normalize — see Get-NormalizedTimestamp's comment for
+            # why this must run on every call rather than only once, and
+            # why it's safe to do so (it's genuinely idempotent).
+            foreach ($ref in @($notes.Keys)) {
+                $n = $notes[$ref]
+                if ($n.ContainsKey('updated')) { $n.updated = Get-NormalizedTimestamp $n.updated }
+                if ($n.ContainsKey('created')) { $n.created = Get-NormalizedTimestamp $n.created }
+            }
+            return $notes
         }
     }
     return @{}
@@ -527,8 +685,8 @@ function Handle-SaveNote {
     $notes = Get-Notes
     $notes[$ref] = @{
         text    = $text
-        created = if ($notes[$ref] -and $notes[$ref].created) { $notes[$ref].created } else { (Get-Date -Format "o") }
-        updated = (Get-Date -Format "o")
+        created = if ($notes[$ref] -and $notes[$ref].created) { $notes[$ref].created } else { (Get-UtcTimestamp) }
+        updated = (Get-UtcTimestamp)
     }
     Save-Notes -Notes $notes
 
@@ -672,7 +830,7 @@ function Handle-SyncKindle {
     }
 
     # Update sync timestamp
-    Get-Date -Format "o" | Set-Content -Path $SyncState
+    Get-UtcTimestamp | Set-Content -Path $SyncState
 
     $result = @{
         ok     = $true
@@ -987,7 +1145,7 @@ function Handle-ExportNotes {
         $highlights = Get-Highlights
 
         $bundle = @{
-            exportedAt = (Get-Date -Format "o")
+            exportedAt = (Get-UtcTimestamp)
             notes      = $notes
             highlights = $highlights
         }
@@ -1170,11 +1328,11 @@ function Handle-ImportCommit {
         }
 
         if ($useImported) {
-            $existingCreated = if ($currentNotes.ContainsKey($ref) -and $currentNotes[$ref].created) { $currentNotes[$ref].created } else { (Get-Date -Format "o") }
+            $existingCreated = if ($currentNotes.ContainsKey($ref) -and $currentNotes[$ref].created) { $currentNotes[$ref].created } else { (Get-UtcTimestamp) }
             $currentNotes[$ref] = @{
                 text    = $importedNotes[$ref].text
                 created = $existingCreated
-                updated = (Get-Date -Format "o")
+                updated = (Get-UtcTimestamp)
             }
             $bakeRefs.Add($ref) | Out-Null
             $importedCount++
@@ -1417,7 +1575,7 @@ function Handle-SyncNotes {
         mergedHighlights = $mergedHighlights
         noteConflicts  = $noteConflicts
         hlConflicts    = $hlConflicts
-        createdAt      = (Get-Date -Format "o")
+        createdAt      = (Get-UtcTimestamp)
     }
     $pending | ConvertTo-Json -Depth 10 | Set-Content -Path $SyncTokenFile -Encoding UTF8
 
@@ -1524,7 +1682,7 @@ function Handle-SyncCommit {
         imported         = $importedCount
         mergedNotes      = $mergedNotes
         mergedHighlights = $mergedHighlights
-        syncedAt         = (Get-Date -Format "o")
+        syncedAt         = (Get-UtcTimestamp)
     }
 }
 
@@ -1683,6 +1841,12 @@ Write-Host "  Server running at:  $BaseUrl" -ForegroundColor Green
 Write-Host "  Project root:       $Root" -ForegroundColor Gray
 Write-Host "  Notes file:         $NotesFile" -ForegroundColor Gray
 Write-Host ""
+
+# One-time migration check, run exactly once here at startup —
+# see Invoke-NotesTimestampMigration's comment for why this must
+# not live inside Get-Notes itself.
+Invoke-NotesTimestampMigration
+
 Write-Host "  Press Ctrl+C to stop the server." -ForegroundColor Yellow
 Write-Host ""
 
@@ -1733,7 +1897,8 @@ try {
         # Allow localhost (127.x) and local LAN subnet (192.168.x.x and 10.x.x.x).
         # Reject everything else with 403 to prevent access from outside the network.
         $remoteIp = $request.RemoteEndPoint.Address.ToString()
-        $isAllowed = $remoteIp -match "^127\." -or          # loopback
+        $isAllowed = $remoteIp -eq "::1" -or                # IPv6 loopback
+                     $remoteIp -match "^127\." -or          # loopback
                      $remoteIp -match "^192\.168\." -or     # class C private
                      $remoteIp -match "^10\." -or           # class A private
                      $remoteIp -match "^172\.(1[6-9]|2[0-9]|3[01])\."  # class B private

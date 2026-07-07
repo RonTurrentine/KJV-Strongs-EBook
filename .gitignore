@@ -50,3 +50,9 @@ KJV-Strongs.epub
 
 # Personal data (never public)
 notes.json
+highlights.json
+
+# Machine-local / transient state (not source, not portable)
+installed-sha.txt
+.sync-token.json
+migration-warnings.log
