@@ -37,6 +37,7 @@
     var totalFiltered = 0;
     var filteredResults = null;   /* cached filtered array for client-side pagination */
     var lastServerData = null;    /* cached last server-paginated API response (Whole Bible mode) */
+    var lastApiWarning = "";      /* API's own warning text (e.g. "limited to 500 results"), if any */
     var pageSize = 50;
 
     /* ── DOM refs ──────────────────────────────────────────────── */
@@ -104,6 +105,15 @@
         {id:64,name:"3 John"},{id:65,name:"Jude"},{id:66,name:"Revelation"}
     ];
 
+    /* ── Book ID -> name lookup (for building 'reference' params) ── */
+
+    var BOOK_ID_TO_NAME = {};
+    (function () {
+        for (var i = 0; i < BOOK_LIST.length; i++) {
+            BOOK_ID_TO_NAME[BOOK_LIST[i].id] = BOOK_LIST[i].name;
+        }
+    })();
+
     /* ── Category -> book_id arrays ────────────────────────────── */
 
     var CATEGORIES = {
@@ -143,7 +153,33 @@
                 if (xhr.status >= 200 && xhr.status < 300) {
                     try { callback(null, JSON.parse(xhr.responseText)); }
                     catch(e) { callback("Parse error", null); }
-                } else { callback("HTTP " + xhr.status, null); }
+                } else {
+                    /* Some BibleSuperSearch API responses are actually
+                       soft WARNINGS (e.g. "limited to 500 results"),
+                       not real failures -- wrapped in an HTTP 400 status
+                       but still containing a fully valid results array.
+                       Treat these as successful, so we don't throw away
+                       perfectly good search results just because of an
+                       unusual status code choice on the API's part. */
+                    var body = null;
+                    try { body = JSON.parse(xhr.responseText); } catch (parseErr2) { body = null; }
+
+                    if (body && body.results && body.errors && body.errors.length > 0) {
+                        callback(null, body);
+                        return;
+                    }
+
+                    var detail = "HTTP " + xhr.status;
+                    if (body) {
+                        if (body.message) { detail += ": " + body.message; }
+                        else if (body.error) { detail += ": " + body.error; }
+                        else if (body.errors && body.errors.length) { detail += ": " + body.errors.join("; "); }
+                        else { detail += ": " + xhr.responseText.substring(0, 300); }
+                    } else if (xhr.responseText) {
+                        detail += ": " + xhr.responseText.substring(0, 300);
+                    }
+                    callback(detail, null);
+                }
             }
         };
         try { xhr.timeout = 30000; xhr.ontimeout = function() { callback("Timeout", null); }; } catch(e) {}
@@ -408,6 +444,35 @@
         window.setScopeMode();
     };
 
+    window.clearSearch = function() {
+        /* Reset scope: book dropdown + all category/master checkboxes */
+        if (bookSelEl) { bookSelEl.value = ""; }
+        var catChecks = getAllCategoryChecks();
+        for (var i = 0; i < catChecks.length; i++) { catChecks[i].checked = false; }
+        var otMaster = document.getElementById("cat-ot-master");
+        var ntMaster = document.getElementById("cat-nt-master");
+        if (otMaster) { otMaster.checked = false; }
+        if (ntMaster) { ntMaster.checked = false; }
+
+        /* Reset results-per-page to the default */
+        if (rppEl) { rppEl.value = "50"; }
+        pageSize = 50;
+
+        /* Clear the search box and any current results */
+        if (inputEl) { inputEl.value = ""; }
+        if (statusEl) { statusEl.innerHTML = ""; }
+        if (resultsEl) { resultsEl.innerHTML = ""; }
+        if (paginEl) { paginEl.innerHTML = ""; }
+        filteredResults = null;
+        lastServerData = null;
+
+        /* Re-enable everything (book dropdown / categories can end up
+           disabled depending on prior scope selection) and put focus
+           back in the search box, ready for a fresh search. */
+        window.setScopeMode();
+        if (inputEl) { inputEl.focus(); }
+    };
+
     window.onRppChanged = function() {
         var val = rppEl ? rppEl.value : "50";
         pageSize = (val === "all") ? 999999 : parseInt(val, 10);
@@ -434,39 +499,64 @@
         clearSessionState();
         filteredResults = null;
         lastServerData = null;
+        lastApiWarning = "";
 
         statusEl.innerHTML = '<p class="search-loading">Searching for &ldquo;'
-            + escapeHtml(query) + '&rdquo;'
-            + (scope.fetchAll ? '... this may take a moment for common words' : '')
-            + '</p>';
+            + escapeHtml(query) + '&rdquo;</p>';
         resultsEl.innerHTML = "";
         paginEl.innerHTML = "";
 
         var url = API_BASE + "?bible=kjv&search=" + encodeURIComponent(query);
 
-        if (scope.fetchAll || rppVal === "all") {
-            /* Fetch everything, filter client-side */
+        /* Scope server-side via 'reference' whenever a book/category is
+           selected, instead of fetching everything and filtering
+           client-side. The old approach silently missed real matches:
+           if the API's own result cap (roughly 500) was reached while
+           scanning the whole Bible before it ever got to, say, the New
+           Testament, a scoped search for a common word like "house"
+           would come back completely empty even though real matches
+           exist -- the API just never handed them to us. Scoping the
+           actual API request to the right books fixes this at the
+           root, since the search only ever runs within those books. */
+        if (scope.bookIds) {
+            var refNames = [];
+            for (var i = 0; i < scope.bookIds.length; i++) {
+                if (BOOK_ID_TO_NAME[scope.bookIds[i]]) { refNames.push(BOOK_ID_TO_NAME[scope.bookIds[i]]); }
+            }
+            if (refNames.length > 0) {
+                url += "&reference=" + encodeURIComponent(refNames.join(";"));
+            }
+        }
+
+        if (rppVal === "all") {
+            /* Fetch everything (within scope), paginate client-side */
             url += "&page_all=true";
 
             ajax(url, function(err, data) {
                 if (err) { showError(err); return; }
                 if (!data || !data.results) { showError("Unexpected response"); return; }
 
-                var allResults = data.results || [];
-                filteredResults = filterResults(allResults, scope.bookIds);
+                if (data.errors && data.errors.length > 0) {
+                    lastApiWarning = data.errors.join(" ");
+                }
+
+                filteredResults = data.results || [];
                 totalFiltered = filteredResults.length;
                 currentPage = 1;
                 renderClientPage();
                 saveSessionState();
             });
         } else {
-            /* Server-side pagination (Whole Bible, not "All") */
+            /* Server-side pagination, optionally scoped via 'reference' */
             currentPage = page || 1;
             url += "&page_limit=" + pageSize + "&page=" + currentPage;
 
             ajax(url, function(err, data) {
                 if (err) { showError(err); return; }
                 if (!data || !data.results) { showError("Unexpected response"); return; }
+                if (data.errors && data.errors.length > 0) {
+                    lastApiWarning = data.errors.join(" ");
+                }
                 lastServerData = data;
                 renderServerResults(data);
                 saveSessionState();
@@ -488,7 +578,8 @@
             + total + ' result' + (total !== 1 ? 's' : '')
             + ' for &ldquo;' + escapeHtml(currentQuery) + '&rdquo;'
             + (lastPage > 1 ? ' (page ' + currentPage + ' of ' + lastPage + ')' : '')
-            + '</p>';
+            + '</p>'
+            + (lastApiWarning ? '<p class="search-api-warning">&#9888; ' + escapeHtml(lastApiWarning) + '</p>' : '');
 
         buildResultCards(data.results || []);
         buildServerPagination();
@@ -512,15 +603,18 @@
         var pageResults = filteredResults.slice(start, end);
 
         var notice = "";
-        if (totalFiltered > 500) {
-            notice = ' &mdash; consider narrowing your search scope';
+        if (lastApiWarning) {
+            notice = '<p class="search-api-warning">&#9888; ' + escapeHtml(lastApiWarning) + '</p>';
+        } else if (totalFiltered > 500) {
+            notice = '<p class="search-api-warning">&#9888; Large result set &mdash; consider narrowing your search scope.</p>';
         }
 
         statusEl.innerHTML = '<p class="search-results-header">'
             + totalFiltered + ' result' + (totalFiltered !== 1 ? 's' : '')
             + ' for &ldquo;' + escapeHtml(currentQuery) + '&rdquo;'
             + (lastPage > 1 ? ' (page ' + currentPage + ' of ' + lastPage + ')' : '')
-            + notice + '</p>';
+            + '</p>'
+            + notice;
 
         buildResultCards(pageResults);
         buildClientPagination();
@@ -596,7 +690,7 @@
            response", which mean the service responded but something else
            went wrong. Worth different wording since only the first case
            is actually about internet connectivity. */
-        var isConnectivityFailure = (errStr === "Timeout" || errStr === "No XHR" || errStr === "HTTP 0");
+        var isConnectivityFailure = (errStr === "Timeout" || errStr === "No XHR" || errStr.indexOf("HTTP 0") === 0);
 
         var message = isConnectivityFailure
             ? "The Bible SuperSearch service is unavailable at the moment. Please check your internet connection and try again."

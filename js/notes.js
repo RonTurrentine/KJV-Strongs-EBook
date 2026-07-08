@@ -106,6 +106,7 @@
     }
 
     var isChapterPage = (osisBook !== "" && chapterNum > 0);
+    var isHomePage = (pagePath === "/" || /\/index\.html$/.test(pagePath));
 
     /* -- XMLHttpRequest helper (ES3) ----------------------------  */
 
@@ -1465,12 +1466,18 @@
                 addClass(modal, "is-open");
             }
 
-            /* On page load: check PC reachability and show appropriate banner */
+            /* On page load: check PC reachability (needed everywhere, for
+               Search visibility) but only show the sync banner itself on
+               the Home page -- seeing "N unsynced notes" on every single
+               page you navigate to was reported as frustrating/repetitive. */
             if (isPhoneMode) {
                 checkPcReachable(function (reachable) {
                     pcReachable = reachable;
                     syncCheckDone = true;
                     setSearchVisibility(reachable);
+
+                    if (!isHomePage) { return; }
+
                     if (reachable) {
                         var pending = countPendingNotes();
                         var neverSynced = !localStorage.getItem(LS_LAST_SYNC);

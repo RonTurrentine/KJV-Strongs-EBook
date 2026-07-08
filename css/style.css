@@ -437,8 +437,7 @@ button.btn:hover {
   }
 
   .verse-num {
-    display: block;
-    margin-bottom: 8px;
+    margin-bottom: 0;
   }
 
   .strongs-link {
@@ -1627,6 +1626,56 @@ body.strongs-hidden .verse {
     vertical-align: middle;
 }
 
+/* ── Search scope: single column on narrow (phone) screens ──────
+   Two side-by-side columns (each min-width: 180px) plus the 24px
+   left margin easily exceeds a typical ~360-390px phone viewport,
+   cutting off the right column's longer labels ("Paul's Church
+   Epistles", etc.). Stack into one column instead. */
+@media (max-width: 600px) {
+    .scope-categories {
+        display: block;
+        margin-left: 8px;
+    }
+
+    .scope-cat-column {
+        min-width: 0;
+        width: 100%;
+        margin-bottom: 12px;
+    }
+
+    .scope-cat-column:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Hebrew/Greek index page: "Showing X of Y" + "Show: 50/100/200/All"
+       already wraps via flex-wrap, but the status text alone is nearly
+       full-width, leaving "All" orphaned alone on its own row. Forcing
+       the status onto its own full-width row lets the label+buttons
+       wrap together as one cohesive group on the row(s) below instead. */
+    .index-status {
+        flex-basis: 100%;
+    }
+
+    /* Safety net: prevent the search scope panel's flex content from
+       ever visually overflowing past the viewport edge, regardless of
+       whether the column-stacking rule above is in effect yet (e.g. a
+       stale cached copy of this stylesheet). */
+    .scope-panel,
+    .search-page-wrap {
+        overflow-x: hidden;
+    }
+
+    /* Search + Clear buttons: wrap onto a second row on very narrow
+       screens instead of squeezing/overflowing next to the input. */
+    .search-form {
+        flex-wrap: wrap;
+    }
+
+    .search-form .search-input {
+        flex-basis: 100%;
+    }
+}
+
 .scope-check-label input[type="checkbox"]:disabled {
     opacity: 0.4;
     cursor: not-allowed;
@@ -1665,6 +1714,7 @@ body.strongs-hidden .verse {
 .search-form {
     display: -webkit-flex;
     display: flex;
+    gap: 8px;
     margin-bottom: 8px;
 }
 
@@ -1704,6 +1754,13 @@ body.strongs-hidden .verse {
     font-size: 0.9em;
     font-family: Arial, Helvetica, sans-serif;
     margin: 16px 0 10px 0;
+}
+
+.search-api-warning {
+    color: #d9a441;
+    font-size: 0.85em;
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0 0 14px 0;
 }
 
 .search-result-card {

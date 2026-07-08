@@ -239,7 +239,48 @@ notes look right after regeneration/rebaking. Not built this session —
 intentionally deferred.
 
 
-## Outstanding / not yet done
+## Update log — July 8, 2026
+
+Real-world phone testing (a day after the stale-while-revalidate fix)
+surfaced four smaller UI/UX issues, all fixed:
+
+- **Verse number line break on phone**: `.verse-num { display: block; }`
+  was a *pre-existing* rule inside `@media (max-width: 800px)`, predating
+  this project's recent work — not something introduced this week. PC is
+  almost always wider than 800px so never saw it; any phone did. Removed
+  per user preference (now matches PC's inline verse-number style).
+- **Search Scope page on phone**: two-column category checkboxes were
+  still overflowing/cutting off text even after the `max-width: 600px`
+  stacking fix from July 7 — likely a deployment/caching gap rather than
+  the fix being wrong (unconfirmed as of this writing; check whether it's
+  still an issue after a fresh push + hard refresh). Added
+  `overflow-x: hidden` on `.scope-panel`/`.search-page-wrap` as a safety
+  net regardless.
+- **Hebrew/Greek index controls wrapping**: "Showing X of Y" + "Show:
+  50/100/200/All" buttons wrapped awkwardly (All orphaned alone). Fixed
+  by forcing `.index-status` to `flex-basis: 100%` on mobile so the
+  status takes its own row and the buttons wrap together as a group.
+- **Sync banner shown on every page**: previously only suppressed
+  *repeats* of the same banner state within a session (July 7 fix) — user
+  wanted it restricted to the **Home page only**, full stop. Implemented:
+  `checkPcReachable()` still runs on every page (needed for Search
+  visibility everywhere), but the actual banner display is now gated on
+  `isHomePage`. Tradeoff: no fresh "you're offline" notice if you go
+  offline while deep in a reading session away from Home until you next
+  visit Home — flagged to user, not yet confirmed if acceptable long-term.
+
+### On Claude's memory system (clarified for user this session)
+
+User asked whether Claude's cross-conversation memory means session notes
+/ this file are no longer needed for new sessions. Clarified: memory
+stores periodically-generated high-level summaries (name, ongoing
+projects, preferences) — not file contents, code, or session-note-level
+technical detail, and may lag behind recent conversations. **Continue
+uploading this file + session notes at the start of new sessions** — memory
+is a nice-to-have on top, not a replacement for the detailed handoff this
+project needs. User has agreed to keep doing this, and asked Claude to
+keep adding to this file proactively as new crucial details emerge.
+
 
 - Real HTTPS setup (self-signed cert via mkcert or similar) so phone
   service-worker registration doesn't require the manual Chrome flag
