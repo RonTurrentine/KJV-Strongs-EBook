@@ -1030,6 +1030,21 @@ function Write-UpdateStatus {
 function Handle-Update {
     param([System.Net.HttpListenerResponse]$Response)
 
+    # Guard against starting a second update job while one is already
+    # running (e.g. doUpdateNow() firing twice in a row before the modal
+    # existed to show progress). Without this, Start-Job below would
+    # either throw on a duplicate job name, or -- worse -- silently run
+    # two concurrent regenerate passes writing to the same files.
+    $existingJob = Get-Job -Name "kjv-update" -ErrorAction SilentlyContinue
+    if ($existingJob -and $existingJob.State -eq "Running") {
+        Write-Host "[UPDATE] Update already in progress — ignoring duplicate request." -ForegroundColor Yellow
+        Send-Json -Response $Response -Data @{ started = $true; alreadyRunning = $true }
+        return
+    }
+    # Clean up a finished job with the same name so Start-Job below
+    # doesn't collide with it.
+    if ($existingJob) { Remove-Job -Name "kjv-update" -Force -ErrorAction SilentlyContinue }
+
     Write-Host "[UPDATE] Starting update..." -ForegroundColor Cyan
 
     $generateBibleScript = Join-Path $Root "scripts\generate_bible.ps1"
@@ -1083,7 +1098,23 @@ function Handle-Update {
                 Get-ChildItem -Path $extractedDir -Force | ForEach-Object {
                     $destPath = Join-Path $Root $_.Name
                     if (Test-Path $destPath) {
-                        Remove-Item -Recurse -Force $destPath -ErrorAction SilentlyContinue
+                        # IMPORTANT: Windows frequently marks files extracted
+                        # from a downloaded ZIP as read-only. Remove-Item can
+                        # silently fail to delete a read-only tree even with
+                        # -Force, and swallowing that failure here (the old
+                        # -ErrorAction SilentlyContinue) meant Move-Item below
+                        # would then nest the FRESH folder uselessly inside
+                        # the STALE one that never actually got removed --
+                        # the update would "succeed" while silently running
+                        # the same old scripts the whole time. Clear read-only
+                        # attributes first, and verify deletion actually
+                        # worked instead of assuming it did.
+                        Get-ChildItem -Path $destPath -Recurse -Force -ErrorAction SilentlyContinue |
+                            ForEach-Object { try { $_.Attributes = "Normal" } catch { } }
+                        Remove-Item -Recurse -Force $destPath -ErrorAction Stop
+                        if (Test-Path $destPath) {
+                            throw "Could not remove stale '$($_.Name)' before update -- it may still be open/locked."
+                        }
                     }
                     Move-Item -Path $_.FullName -Destination $destPath -Force
                 }

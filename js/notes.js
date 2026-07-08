@@ -1823,7 +1823,7 @@
             }
         };
 
-        function runBulkDownload(kind, title, urls, reportEvery) {
+        function runBulkDownload(kind, title, urls, reportEvery, onComplete) {
             if (!("serviceWorker" in navigator)) {
                 showToast("This browser doesn't support offline downloads.", "error");
                 return;
@@ -1884,6 +1884,7 @@
                     bulkJob = null;
                     setProgress(total, "Download complete! " + total + " pages saved for offline use");
                     showDoneButton();
+                    if (typeof onComplete === "function") { onComplete(); }
                 }
             }
 
@@ -1910,17 +1911,90 @@
             document.head.appendChild(script);
         }
 
-        window.downloadOffline = function (kind) {
+        window.downloadOffline = function (kind, onComplete) {
             if (kind === "lexicon") {
-                runBulkDownload("dictionary", "Downloading Lexicon", buildDictUrlList(), 500);
+                runBulkDownload("dictionary", "Downloading Lexicon", buildDictUrlList(), 500, onComplete);
             } else {
                 loadBibleDataIfNeeded(function () {
-                    runBulkDownload("chapters", "Downloading Bible Text", buildChapterUrlList(), 50);
+                    runBulkDownload("chapters", "Downloading Bible Text", buildChapterUrlList(), 50, onComplete);
                 });
             }
         };
 
     })();
+
+    /* ============================================================
+       One-time Phone Setup Wizard
+       ============================================================
+       On the very first Home-page visit in phone mode, offers to do
+       everything in one guided flow: download Bible text, download
+       the Hebrew/Greek lexicon, then pull down any existing PC notes
+       — instead of the user having to discover and run three separate
+       menu items themselves. Shown at most once automatically (tracked
+       via a dedicated localStorage flag); the existing "Download Bible
+       Text for Offline" / "Download Lexicon for Offline" menu rows
+       remain available afterward for anyone who said "Not Now" or
+       wants to re-run things later (e.g. after clearing site data).
+       ============================================================ */
+
+    var PHONE_SETUP_PROMPTED_KEY = "kjv-phone-setup-prompted";
+
+    function ensurePhoneSetupModal() {
+        if (document.getElementById("phone-setup-modal")) { return; }
+        var modal = document.createElement("div");
+        modal.id = "phone-setup-modal";
+        modal.className = "update-modal";
+        modal.innerHTML =
+            '<div class="update-modal-box">' +
+            '  <div class="update-modal-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="18" viewBox="0 0 16 18" fill="currentColor"><path d="M7 0h2v10.5l3-3 1.4 1.4L8 13.3 2.6 8.9 4 7.5l3 3V0z"/><rect x="0" y="15" width="16" height="3"/></svg></div>' +
+            '  <h2 class="update-modal-title">Set Up This Phone for Offline Use</h2>' +
+            '  <p class="update-modal-msg">This will download the entire Bible text, the Hebrew/Greek lexicon, ' +
+            '  and any existing notes/highlights from your PC &mdash; about <strong>163 MB</strong> total, ' +
+            '  typically taking several minutes depending on your home WiFi speed.</p>' +
+            '  <p class="update-modal-msg">This is a <strong>one-time setup</strong>. Once it finishes, this phone ' +
+            '  can read and study completely offline, anytime, and will automatically stay in sync with your PC ' +
+            '  whenever you\'re back on your home WiFi with the PC app running. If you get a new phone or reinstall ' +
+            '  the app, you can repeat this setup again from the &#9776; menu.</p>' +
+            '  <div class="update-modal-btns">' +
+            '    <button class="update-now-btn" onclick="confirmPhoneSetup()">Set Up Now</button>' +
+            '    <button class="update-later-btn" onclick="dismissPhoneSetup()">Not Now</button>' +
+            '  </div>' +
+            '</div>';
+        document.body.appendChild(modal);
+    }
+
+    window.startPhoneSetup = function () {
+        ensurePhoneSetupModal();
+        var modal = document.getElementById("phone-setup-modal");
+        addClass(modal, "is-open");
+    };
+
+    window.dismissPhoneSetup = function () {
+        var modal = document.getElementById("phone-setup-modal");
+        if (modal) { removeClass(modal, "is-open"); }
+    };
+
+    window.confirmPhoneSetup = function () {
+        window.dismissPhoneSetup();
+        /* Chain: Bible text -> Lexicon -> pull down existing PC notes.
+           Each step reuses the exact same download machinery (progress
+           modal, cancel, resume-on-interruption) as the manual menu
+           items — this is just three of those, run back to back. */
+        window.downloadOffline("bible", function () {
+            window.downloadOffline("lexicon", function () {
+                if (typeof window.syncWithPc === "function") { window.syncWithPc(); }
+            });
+        });
+    };
+
+    if (isPhoneMode && isHomePage) {
+        var alreadyPrompted = false;
+        try { alreadyPrompted = !!localStorage.getItem(PHONE_SETUP_PROMPTED_KEY); } catch (e) { }
+        if (!alreadyPrompted) {
+            try { localStorage.setItem(PHONE_SETUP_PROMPTED_KEY, "1"); } catch (e) { }
+            window.startPhoneSetup();
+        }
+    }
 
     /* "Sync Phone via QR Code" is how the PC side initiates a phone
        connection — it doesn't make sense to show once you're already

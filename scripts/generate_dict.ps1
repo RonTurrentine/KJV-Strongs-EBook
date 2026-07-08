@@ -690,7 +690,7 @@ function Write-IndexPage {
       </div>
       <div class="settings-row settings-row-clickable" onclick="syncViaQr()">
         <span class="settings-row-icon">&#128247;</span>
-        Sync Phone via QR Code
+        Connect New Phone
       </div>
       <div class="settings-row settings-row-clickable" onclick="rebakeNotes()">
         <span class="settings-row-icon">&#128260;</span>

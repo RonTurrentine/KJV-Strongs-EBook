@@ -402,17 +402,36 @@ function ConvertTo-VerseHtml {
 }
 
 # Phase 0: Fetch current GitHub commit SHA (baked into pages for update detection)
+# Phase 0: Fetch current GitHub commit SHA (baked into pages for update detection)
+# IMPORTANT: if this fails, the page's kjv-sha meta tag ends up empty,
+# which silently disables ALL future update-detection for this install
+# (see notes.js: `if (!installedSha) { return; }`) -- with no visible
+# error, since Write-Host output is invisible in the Electron app's
+# hidden console. Retry a couple of times before giving up, and log
+# failures to a real file so this is actually diagnosable.
 Write-Host "Fetching latest commit SHA from GitHub..." -ForegroundColor Cyan
 $InstalledSha = ""
-try {
-    $apiUrl  = "https://api.github.com/repos/RonTurrentine/KJV-Strongs-EBook/commits/main"
-    $headers = @{ "User-Agent" = "KJV-Strongs-Generator"; "Accept" = "application/vnd.github.v3+json" }
-    $resp    = Invoke-RestMethod -Uri $apiUrl -Headers $headers -TimeoutSec 10
-    $InstalledSha = $resp.sha
-    Write-Host "  SHA: $($InstalledSha.Substring(0,7))..." -ForegroundColor Green
-} catch {
-    Write-Host "  Could not fetch SHA (offline?). Update check will be disabled." -ForegroundColor Yellow
-    $InstalledSha = ""
+$shaAttempts = 0
+$shaMaxAttempts = 3
+while ($shaAttempts -lt $shaMaxAttempts -and -not $InstalledSha) {
+    $shaAttempts++
+    try {
+        $apiUrl  = "https://api.github.com/repos/RonTurrentine/KJV-Strongs-EBook/commits/main"
+        $headers = @{ "User-Agent" = "KJV-Strongs-Generator"; "Accept" = "application/vnd.github.v3+json" }
+        $resp    = Invoke-RestMethod -Uri $apiUrl -Headers $headers -TimeoutSec 10
+        $InstalledSha = $resp.sha
+        Write-Host "  SHA: $($InstalledSha.Substring(0,7))..." -ForegroundColor Green
+    } catch {
+        if ($shaAttempts -lt $shaMaxAttempts) {
+            Write-Host "  SHA fetch attempt $shaAttempts failed, retrying..." -ForegroundColor Yellow
+            Start-Sleep -Seconds 2
+        } else {
+            $warnMsg = "[$(Get-Date -Format 'o')] Could not fetch GitHub SHA after $shaMaxAttempts attempts: $($_.Exception.Message). Update-check will be silently disabled for this install until the next regenerate succeeds."
+            Write-Host "  $warnMsg" -ForegroundColor Red
+            try { Add-Content -Path (Join-Path $Root "update-warnings.log") -Value $warnMsg -Encoding UTF8 } catch { }
+            $InstalledSha = ""
+        }
+    }
 }
 
 # Phase 0b: Determine app version from the latest GitHub Release tag.
@@ -665,7 +684,7 @@ foreach ($entry in $FlatChapters) {
       </div>
       <div class="settings-row settings-row-clickable" onclick="syncViaQr()">
         <span class="settings-row-icon">&#128247;</span>
-        Sync Phone via QR Code
+        Connect New Phone
       </div>
       <div class="settings-row settings-row-clickable" onclick="rebakeNotes()">
         <span class="settings-row-icon">&#128260;</span>
@@ -871,7 +890,7 @@ foreach ($book in $BookTable) {
       </div>
       <div class="settings-row settings-row-clickable" onclick="syncViaQr()">
         <span class="settings-row-icon">&#128247;</span>
-        Sync Phone via QR Code
+        Connect New Phone
       </div>
       <div class="settings-row settings-row-clickable" onclick="rebakeNotes()">
         <span class="settings-row-icon">&#128260;</span>
@@ -1049,7 +1068,7 @@ Write-Host "Generating navigate.html..." -ForegroundColor Cyan
       </div>
       <div class="settings-row settings-row-clickable" onclick="syncViaQr()">
         <span class="settings-row-icon">&#128247;</span>
-        Sync Phone via QR Code
+        Connect New Phone
       </div>
       <div class="settings-row settings-row-clickable" onclick="rebakeNotes()">
         <span class="settings-row-icon">&#128260;</span>
