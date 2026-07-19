@@ -46,10 +46,18 @@ if ($lanIp) {
 Write-Host ""
 Write-Host "  Cleaning up any old HTTP.sys registrations..." -ForegroundColor Yellow
 $oldUrls = @(
-    "http://192.168.86.39:8080/",
     "http://+:8080/",
     "http://*:8080/"
 )
+if ($lanIp) {
+    # Clean up a reservation for this PC's *current* LAN IP, detected
+    # above -- not a hardcoded address from whenever this script was
+    # first written, which could easily be stale (routers reassign
+    # IPs). This is just cleanup of an old, now-unused approach (the
+    # LAN proxy uses raw TCP sockets, not HTTP.sys), so it's harmless
+    # either way if nothing matches.
+    $oldUrls += "http://${lanIp}:8080/"
+}
 foreach ($url in $oldUrls) {
     $check = & netsh http show urlacl url=$url 2>&1 | Out-String
     if ($check -match [regex]::Escape($url)) {
