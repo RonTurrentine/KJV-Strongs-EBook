@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark">
-  <meta name="kjv-sha" content="4d8b4bad809620fd1095e4d505da8a3b6658d958">
+  <meta name="kjv-sha" content="f732ce1469c345a9bf183465fc7fc3ec9ae28fb8">
   <title>Search KJV — KJV Strong's Bible</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="BiblePencil.ico">
@@ -44,6 +44,10 @@
         <span class="settings-row-icon">&#128241;</span>
         Connect Phone via USB
       </div>
+      <div class="settings-row settings-row-clickable" onclick="window.location.href='/notes-manager.html'">
+        <span class="settings-row-icon">&#128209;</span>
+        My Notes
+      </div>
       <div class="settings-row settings-row-clickable" onclick="rebakeNotes()">
         <span class="settings-row-icon">&#128260;</span>
         Rebake Notes
@@ -67,6 +71,10 @@
       <div class="settings-row settings-row-clickable" id="offline-lexicon-row" onclick="downloadOffline('lexicon')">
         <span class="settings-row-icon">&#128218;</span>
         <span id="offline-lexicon-label">Download Lexicon for Offline</span>
+      </div>
+      <div class="settings-row settings-row-clickable" id="offline-refresh-row" onclick="refreshOfflineContent()">
+        <span class="settings-row-icon">&#128259;</span>
+        Refresh Offline Content
       </div>
     </div>
     <div class="settings-divider"></div>

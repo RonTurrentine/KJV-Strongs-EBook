@@ -230,13 +230,42 @@ Ran once, end-to-end, this session, as the new standard process:
    then `git status` review, then `pwsh scripts\git-push.ps1 -Message
    "..."`.
 
-## New feature request (not started — deferred to a future session)
+## Next major feature (design phase, not yet started): Notes Management System
 
-User wants an **"All My Notes" page**: a single page listing every note
-across the whole Bible, organized OT → NT, each with a jump link to view
-it in context. Explicitly also useful as an ad-hoc QA tool for checking
-notes look right after regeneration/rebaking. Not built this session —
-intentionally deferred.
+Originally just "All My Notes" (a page listing every note OT → NT with
+jump links, also useful as an ad-hoc QA tool) — now expanded into a
+bigger vision the user calls "the next major app upgrade": a **tagging/
+indexing system** on top of that page. Tag a note "Justification" or
+"Second Coming", then filter the whole note collection by tag to see
+every related note/verse across the entire Bible — cross-referential
+topical study, not just per-verse annotation. User believes this would
+be a genuine differentiator vs. other Bible apps (hasn't seen this
+feature elsewhere).
+
+Key design questions raised, **not yet decided** — work through together
+in a dedicated session:
+
+1. **Tags as a new field on each note** (`tags: [...]`) — small, contained
+   data-model change, but the *existing* sync/merge logic (both
+   `Handle-SyncNotes` in `start-study.ps1` and the phone-side sync code in
+   `notes.js`) needs to correctly carry this field through too. Contained,
+   not a redesign, but must be deliberate given how much effort went into
+   getting sync right.
+2. **Tag consistency**: recommend storing/matching tags case-insensitively
+   with a remembered "nice" display form, and offering autocomplete of
+   already-used tags when adding new ones, to avoid silent fragmentation
+   ("Second Coming" vs "second coming" as accidentally-different tags).
+3. **Read-only browsing vs. edit-in-place**: user wants to use this page to
+   spot notes needing "attention/updating" — which leans toward wanting
+   real inline editing, not just view+jump-to-verse. Meaningfully affects
+   scope; user explicitly deferred this decision to the design session
+   rather than choosing now.
+4. **Data source**: no new sync infrastructure needed — this page just
+   reads from whatever the current device already considers "current"
+   notes (PC's `/api/notes`, or phone's `localStorage`), same as
+   everything else already does.
+
+Not started. Pick up here next session on this topic.
 
 
 ## Update log — July 8, 2026

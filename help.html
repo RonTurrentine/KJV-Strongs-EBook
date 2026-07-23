@@ -217,6 +217,15 @@
       <p>The Sync to Kindle option will be grayed out when no Kindle device is detected. ADB (Android Debug Bridge) must be installed and the device must be connected via USB with USB debugging enabled.</p>
     </div>
 
+    <!-- ── Troubleshooting ────────────────────────────────────── -->
+    <div class="help-section">
+      <h2>&#128295; Troubleshooting</h2>
+      <p><strong>Phone won't connect over WiFi / QR code doesn't work?</strong> This is almost always a Windows Firewall issue &mdash; by default, Windows blocks the port your PC uses to talk to your phone (port 8081).</p>
+      <p>To fix it, run this once on your PC, <strong>as Administrator</strong>:</p>
+      <p><span class="help-key">scripts\setup-phone-access.ps1</span></p>
+      <p>This adds a one-time Windows Firewall rule allowing your phone to reach your PC over your home WiFi. You only need to run this once per PC &mdash; it isn't something the app can do on its own, since creating firewall rules requires administrator privileges that the app intentionally doesn't run with for everyday use. You may need to run it again if you set up on a new PC, or if your firewall settings ever get reset.</p>
+    </div>
+
   </div>
 
 </body>

@@ -890,6 +890,43 @@ body.is-localhost .note-btn.has-note {
   outline: none;
 }
 
+.note-modal-tags-row {
+  margin: 0 0 14px 0;
+}
+
+.note-modal-tags-label {
+  display: block;
+  font-size: 0.85em;
+  color: #ffd700;
+  margin-bottom: 4px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.note-modal-tags-input {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.9em;
+  color: #e0e0e0;
+  background-color: #1a1a1a;
+  border: 1px solid #555555;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.note-modal-tags-input:focus {
+  border-color: #ffd700;
+  outline: none;
+}
+
+.note-modal-tags-hint {
+  font-size: 0.78em;
+  color: #888888;
+  margin: 4px 0 0 0;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
 .note-modal-buttons {
   text-align: right;
 }
@@ -2320,4 +2357,204 @@ body:has(.sync-banner-syncing),
 body:has(.sync-banner-offline),
 body:has(.sync-banner-error) {
     padding-top: 44px;
+}
+
+/* ================================================================
+   Notes Manager Page
+   ================================================================ */
+
+.nm-wrap {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 95px 16px 40px 16px;
+}
+
+.nm-title {
+    font-size: 1.3em;
+    color: #ffffff;
+    margin: 0 0 6px 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.nm-status {
+    color: #888888;
+    font-size: 0.9em;
+    font-family: Arial, Helvetica, sans-serif;
+    margin-bottom: 16px;
+}
+
+.nm-tag-filter-wrap {
+    margin: 18px 0 10px 0;
+}
+
+.nm-tag-filter-label {
+    color: #cccccc;
+    font-size: 0.92em;
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0 0 8px 0;
+}
+
+.nm-tag-filter-hint {
+    color: #777777;
+    font-size: 0.85em;
+    font-weight: normal;
+}
+
+.nm-tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.nm-tag-btn {
+    background-color: #1a1a1a;
+    color: #cccccc;
+    border: 1px solid #555555;
+    border-radius: 14px;
+    padding: 5px 12px;
+    font-size: 0.85em;
+    font-family: Arial, Helvetica, sans-serif;
+    cursor: pointer;
+}
+
+.nm-tag-btn:hover {
+    border-color: #00bcd4;
+}
+
+.nm-tag-btn.is-selected {
+    background-color: #00bcd4;
+    color: #0a0a0a;
+    border-color: #00bcd4;
+    font-weight: bold;
+}
+
+.nm-tag-empty {
+    color: #777777;
+    font-size: 0.88em;
+    font-style: italic;
+}
+
+.nm-filter-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 18px 0 14px 0;
+}
+
+.nm-result-count {
+    color: #888888;
+    font-size: 0.9em;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.nm-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.nm-empty {
+    color: #888888;
+    font-size: 0.95em;
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
+    padding: 30px 0;
+}
+
+.nm-card {
+    background-color: #161616;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+    padding: 14px 16px;
+}
+
+.nm-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.nm-card-ref {
+    color: #00bcd4;
+    font-size: 1.05em;
+    font-weight: bold;
+    text-decoration: none;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.nm-card-ref:hover {
+    text-decoration: underline;
+}
+
+.nm-card-edit-btn {
+    font-size: 0.82em;
+    padding: 4px 12px;
+}
+
+.nm-card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 8px;
+}
+
+.nm-card-tag-badge {
+    background-color: #1a3a4a;
+    color: #00bcd4;
+    border-radius: 3px;
+    padding: 2px 8px;
+    font-size: 0.78em;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.nm-card-text {
+    color: #d0d0d0;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 0.95em;
+    line-height: 1.6;
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+/* ── Notes Manager: single column on narrow (phone) screens ────── */
+@media (max-width: 600px) {
+    .nm-scope-categories,
+    #nm-scope-categories.scope-categories {
+        display: block;
+        margin-left: 8px;
+    }
+
+    .nm-card-header {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+}
+
+/* ── Notes Manager: highlight-color swatch + empty-text state ──── */
+
+.nm-card-ref-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nm-card-color-swatch {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.nm-card-color-swatch.nm-hl-yellow { background-color: #ffdc00; }
+.nm-card-color-swatch.nm-hl-green  { background-color: #4caf50; }
+.nm-card-color-swatch.nm-hl-red    { background-color: #f44336; }
+.nm-card-color-swatch.nm-hl-blue   { background-color: #2196f3; }
+
+.nm-card-text-empty {
+    color: #777777 !important;
+    font-style: italic;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 0.85em !important;
 }

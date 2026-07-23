@@ -22,7 +22,7 @@
      page; fetches and caches a whole list of URLs proactively
    ================================================================ */
 
-const CACHE_VERSION = "kjv-cache-4d8b4bad809620fd1095e4d505da8a3b6658d958";
+const CACHE_VERSION = "kjv-cache-f732ce1469c345a9bf183465fc7fc3ec9ae28fb8";
 const APP_SHELL = [
     "/index.html",
     "/manifest.json",
@@ -134,6 +134,7 @@ self.addEventListener("message", function (event) {
     var urls = data.urls || [];
     var jobId = data.jobId || "default";
     var reportEvery = data.reportEvery || 25;
+    var forceRefresh = !!data.forceRefresh;
     var client = event.source;
     var jobState = { cancelled: false };
     activeJobs[jobId] = jobState;
@@ -153,6 +154,25 @@ self.addEventListener("message", function (event) {
             }
         }
 
+        function fetchAndCache(i) {
+            return fetch(urls[i]).then(function (resp) {
+                if (resp && resp.status === 200) {
+                    return cache.put(urls[i], resp).then(function () {
+                        done++;
+                        reportProgress(false, false);
+                        return cacheNext(i + 1);
+                    });
+                }
+                done++;
+                reportProgress(false, false);
+                return cacheNext(i + 1);
+            }).catch(function () {
+                done++;
+                reportProgress(false, false);
+                return cacheNext(i + 1);
+            });
+        }
+
         function cacheNext(i) {
             if (jobState.cancelled) {
                 delete activeJobs[jobId];
@@ -164,6 +184,19 @@ self.addEventListener("message", function (event) {
                 reportProgress(true, false);
                 return Promise.resolve();
             }
+
+            if (forceRefresh) {
+                /* "Refresh Offline Content": always re-fetch and
+                   overwrite, even if already cached. This is how a
+                   stale page (e.g. a chapter whose baked note content
+                   changed on the PC after this page was first
+                   downloaded) actually gets corrected -- the normal
+                   resume-skip behavior below would otherwise leave it
+                   untouched forever, since "already cached" and
+                   "correctly up to date" aren't the same thing. */
+                return fetchAndCache(i);
+            }
+
             /* Resume support: if this URL is already cached (e.g. from
                an earlier, interrupted run of this same download), skip
                straight past it instead of re-fetching. */
@@ -173,22 +206,7 @@ self.addEventListener("message", function (event) {
                     reportProgress(false, false);
                     return cacheNext(i + 1);
                 }
-                return fetch(urls[i]).then(function (resp) {
-                    if (resp && resp.status === 200) {
-                        return cache.put(urls[i], resp).then(function () {
-                            done++;
-                            reportProgress(false, false);
-                            return cacheNext(i + 1);
-                        });
-                    }
-                    done++;
-                    reportProgress(false, false);
-                    return cacheNext(i + 1);
-                }).catch(function () {
-                    done++;
-                    reportProgress(false, false);
-                    return cacheNext(i + 1);
-                });
+                return fetchAndCache(i);
             });
         }
         return cacheNext(0);

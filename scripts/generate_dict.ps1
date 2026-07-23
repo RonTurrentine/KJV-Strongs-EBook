@@ -692,6 +692,10 @@ function Write-IndexPage {
         <span class="settings-row-icon">&#128247;</span>
         Connect New Phone
       </div>
+      <div class="settings-row settings-row-clickable" onclick="window.location.href='/notes-manager.html'">
+        <span class="settings-row-icon">&#128209;</span>
+        My Notes
+      </div>
       <div class="settings-row settings-row-clickable" onclick="rebakeNotes()">
         <span class="settings-row-icon">&#128260;</span>
         Rebake Notes
@@ -715,6 +719,10 @@ function Write-IndexPage {
       <div class="settings-row settings-row-clickable" id="offline-lexicon-row" onclick="downloadOffline('lexicon')">
         <span class="settings-row-icon">&#128218;</span>
         <span id="offline-lexicon-label">Download Lexicon for Offline</span>
+      </div>
+      <div class="settings-row settings-row-clickable" id="offline-refresh-row" onclick="refreshOfflineContent()">
+        <span class="settings-row-icon">&#128259;</span>
+        Refresh Offline Content
       </div>
     </div>
     <div class="settings-divider"></div>

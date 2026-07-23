@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="kjv-sha" content="KJV_SHA_PLACEHOLDER">
+  <title>My Notes — KJV Strong's Bible</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="BiblePencil.ico">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#00bcd4">
+</head>
+<body class="bible-text">
+
+  <nav class="chapter-nav">
+    <h1 class="book-chapter"><span class="update-cross" onclick="openUpdateModal()" title="Update available!"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="18" viewBox="0 0 14 18" fill="currentColor"><rect x="5.5" y="0" width="3" height="18"/><rect x="0" y="4" width="14" height="3"/></svg></span>My Notes</h1>
+    <div class="nav-buttons">
+      <a href="index.html" class="btn home-btn" title="Home"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></a>
+      <a href="indexes/strongs-hebrew-index.html" class="btn">Hebrew</a>
+      <a href="indexes/strongs-greek-index.html" class="btn">Greek</a>
+      <a href="navigate.html" class="btn">Go To</a>
+      <button class="btn" onclick="history.back()" title="Back">&#9664; Back</button>
+      <button class="btn hamburger-btn" id="hamburger-btn" onclick="toggleSettingsMenu()" title="Settings">&#9776;</button>
+    </div>
+  </nav>
+
+  <div class="settings-dropdown" id="settings-dropdown">
+    <div class="settings-section">
+      <p class="settings-section-label">DISPLAY</p>
+      <div class="settings-row settings-font-row">
+        <button class="btn settings-font-btn" id="font-decrease" onclick="decreaseFontSize()">a&#8595;</button>
+        <span class="settings-row-label">Font size</span>
+        <button class="btn settings-font-btn" id="font-increase" onclick="increaseFontSize()">A&#8593;</button>
+      </div>
+    </div>
+    <div class="settings-divider"></div>
+    <div class="settings-section">
+      <div class="settings-row settings-row-clickable" id="sync-kindle-row" onclick="syncToKindle()">
+        <span class="settings-row-icon">&#9889;</span>
+        Sync to Kindle
+      </div>
+      <div class="settings-row settings-row-clickable" onclick="syncViaQr()">
+        <span class="settings-row-icon">&#128247;</span>
+        Connect New Phone
+      </div>
+      <div class="settings-row settings-row-clickable" onclick="rebakeNotes()">
+        <span class="settings-row-icon">&#128260;</span>
+        Rebake Notes
+      </div>
+      <div class="settings-row settings-row-clickable" onclick="exportNotes()">
+        <span class="settings-row-icon">&#128190;</span>
+        Export Notes
+      </div>
+      <div class="settings-row settings-row-clickable" onclick="importNotes()">
+        <span class="settings-row-icon">&#128229;</span>
+        Import Notes
+      </div>
+    </div>
+    <div class="settings-divider"></div>
+    <div class="settings-section">
+      <p class="settings-section-label">OFFLINE ACCESS</p>
+      <div class="settings-row settings-row-clickable" id="offline-bible-row" onclick="downloadOffline('bible')">
+        <span class="settings-row-icon">&#128214;</span>
+        <span id="offline-bible-label">Download Bible Text for Offline</span>
+      </div>
+      <div class="settings-row settings-row-clickable" id="offline-lexicon-row" onclick="downloadOffline('lexicon')">
+        <span class="settings-row-icon">&#128218;</span>
+        <span id="offline-lexicon-label">Download Lexicon for Offline</span>
+      </div>
+    </div>
+    <div class="settings-divider"></div>
+    <div class="settings-section">
+      <div class="settings-row settings-row-clickable" onclick="window.open('help.html','_blank')">
+        <span class="settings-row-icon">&#10067;</span>
+        Help / Documentation
+      </div>
+      <div class="settings-row settings-row-clickable" onclick="window.open('about.html','_blank')">
+        <span class="settings-row-icon">&#8505;</span>
+        About
+      </div>
+    </div>
+    <div class="settings-divider"></div>
+    <div class="settings-section">
+      <div class="settings-row settings-row-clickable settings-row-exit" onclick="window.close()">
+        <span class="settings-row-icon">&#10005;</span>
+        Exit
+      </div>
+    </div>
+  </div>
+
+  <div class="nm-wrap">
+
+    <h2 class="nm-title">My Notes</h2>
+    <p id="notes-manager-status" class="nm-status">Loading notes...</p>
+
+    <fieldset class="scope-panel" id="nm-scope-panel">
+      <legend class="scope-legend">Filter by Book / Testament</legend>
+      <p class="scope-hint">Leave everything blank to show every note.</p>
+
+      <div class="scope-row" id="scope-row-book">
+        <label class="scope-radio-label">Specific Book:
+          <select class="scope-book-select" id="nm-book-select" onchange="nmApplyFilters()">
+            <option value="">-- All Books --</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="scope-categories" id="nm-scope-categories">
+        <div class="scope-cat-column">
+          <p class="scope-cat-heading">
+            <label class="scope-check-label scope-master-label" title="All 39 Old Testament books">
+              <input type="checkbox" id="nm-cat-ot-master" onchange="nmMasterChecked('ot')"> <strong>Old Testament</strong>
+            </label>
+          </p>
+          <label class="scope-check-label"><input type="checkbox" class="nm-cat-check" value="torah" onchange="nmApplyFilters()"> Torah</label>
+          <label class="scope-check-label"><input type="checkbox" class="nm-cat-check" value="historical" onchange="nmApplyFilters()"> Historical</label>
+          <label class="scope-check-label"><input type="checkbox" class="nm-cat-check" value="poetic" onchange="nmApplyFilters()"> Poetic/Wisdom</label>
+          <label class="scope-check-label"><input type="checkbox" class="nm-cat-check" value="prophetic" onchange="nmApplyFilters()"> Prophetic</label>
+        </div>
+        <div class="scope-cat-column">
+          <p class="scope-cat-heading">
+            <label class="scope-check-label scope-master-label" title="All 27 New Testament books">
+              <input type="checkbox" id="nm-cat-nt-master" onchange="nmMasterChecked('nt')"> <strong>New Testament</strong>
+            </label>
+          </p>
+          <label class="scope-check-label"><input type="checkbox" class="nm-cat-check" value="gospels" onchange="nmApplyFilters()"> Gospels</label>
+          <label class="scope-check-label"><input type="checkbox" class="nm-cat-check" value="acts" onchange="nmApplyFilters()"> Acts</label>
+          <label class="scope-check-label"><input type="checkbox" class="nm-cat-check" value="paul_church" onchange="nmApplyFilters()"> Paul's Church Epistles</label>
+          <label class="scope-check-label"><input type="checkbox" class="nm-cat-check" value="paul_pastoral" onchange="nmApplyFilters()"> Paul's Pastoral Epistles</label>
+          <label class="scope-check-label"><input type="checkbox" class="nm-cat-check" value="general" onchange="nmApplyFilters()"> General Epistles</label>
+          <label class="scope-check-label"><input type="checkbox" class="nm-cat-check" value="revelation" onchange="nmApplyFilters()"> Revelation</label>
+        </div>
+      </div>
+    </fieldset>
+
+    <div class="nm-tag-filter-wrap">
+      <p class="nm-tag-filter-label">Filter by Tags <span class="nm-tag-filter-hint">(selecting more than one narrows further)</span></p>
+      <div id="nm-tag-cloud" class="nm-tag-cloud"></div>
+    </div>
+
+    <div class="nm-filter-actions">
+      <button class="btn" onclick="nmClearFilters()">Clear Filters</button>
+      <span id="nm-result-count" class="nm-result-count"></span>
+    </div>
+
+    <div id="notes-manager-list" class="nm-list"></div>
+
+  </div>
+
+  <script src="js/fontsize.js"></script>
+  <script src="js/notes.js"></script>
+  <script>
+  if ("serviceWorker" in navigator && (location.protocol === "http:" || location.protocol === "https:")) {
+      navigator.serviceWorker.register("/sw.js").catch(function () {});
+  }
+  </script>
+
+</body>
+</html>

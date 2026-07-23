@@ -438,6 +438,18 @@ function Get-Notes {
                 $n = $notes[$ref]
                 if ($n.ContainsKey('updated')) { $n.updated = Get-NormalizedTimestamp $n.updated }
                 if ($n.ContainsKey('created')) { $n.created = Get-NormalizedTimestamp $n.created }
+                # Self-heal tags the same way: PowerShell's ConvertTo-Json
+                # famously collapses a single-element array into a bare
+                # scalar string when serializing (e.g. a note with exactly
+                # one tag gets written as "tags": "Justification" instead
+                # of "tags": ["Justification"]), which then crashes
+                # client-side code expecting a real array (.join() etc.).
+                # Force it back into a proper array on every load.
+                if (-not $n.ContainsKey('tags') -or $null -eq $n.tags) {
+                    $n.tags = @()
+                } elseif ($n.tags -isnot [array]) {
+                    $n.tags = @($n.tags)
+                }
             }
             return $notes
         }
@@ -683,10 +695,11 @@ function Handle-SaveNote {
     }
 
     $ref  = $data.ref
-    $text = $data.text
+    $text = if ($null -ne $data.text) { $data.text } else { "" }
+    $tags = if ($data.tags) { @($data.tags) } else { @() }
 
-    if (-not $ref -or -not $text) {
-        Send-Error -Response $Response -StatusCode 400 -Message "Missing ref or text"
+    if (-not $ref) {
+        Send-Error -Response $Response -StatusCode 400 -Message "Missing ref"
         return
     }
 
@@ -696,6 +709,7 @@ function Handle-SaveNote {
     $notes = Get-Notes
     $notes[$ref] = @{
         text    = $text
+        tags    = $tags
         created = if ($notes[$ref] -and $notes[$ref].created) { $notes[$ref].created } else { (Get-UtcTimestamp) }
         updated = (Get-UtcTimestamp)
     }
@@ -1548,7 +1562,7 @@ function Handle-SyncNotes {
                 $noteStats.auto++
             } elseif ($phoneUpdated -gt $pcUpdated) {
                 # Phone is newer — auto-resolve to phone
-                $mergedNotes[$ref] = @{ text = $phoneText; created = $phone.created; updated = $phone.updated }
+                $mergedNotes[$ref] = @{ text = $phoneText; tags = $phone.tags; created = $phone.created; updated = $phone.updated }
                 $noteStats.auto++
             } else {
                 # Same timestamp, different text — true conflict
@@ -1576,7 +1590,7 @@ function Handle-SyncNotes {
             $noteStats.auto++
         } elseif ($phone -and -not $pc) {
             # Only on phone — add to PC
-            $mergedNotes[$ref] = @{ text = $phone.text; created = $phone.created; updated = $phone.updated }
+            $mergedNotes[$ref] = @{ text = $phone.text; tags = $phone.tags; created = $phone.created; updated = $phone.updated }
             $noteStats.auto++
         }
     }
@@ -1702,9 +1716,30 @@ function Handle-SyncCommit {
         $importedCount++
     }
 
+    # Capture what existed BEFORE this sync overwrites notes.json/
+    # highlights.json, so we can tell what was actually REMOVED by it
+    # (e.g. a deletion tombstone from the phone). Without this, a note
+    # correctly removed from notes.json during sync would leave its
+    # stale content sitting in the baked chapter HTML forever -- the
+    # existing rebake loops below only ever added/updated content for
+    # what's still present in the merged result, never noticing
+    # something disappeared entirely.
+    $previousNotes      = Get-Notes
+    $previousHighlights = Get-Highlights
+    $removedNoteRefs      = @($previousNotes.Keys      | Where-Object { -not $mergedNotes.ContainsKey($_) })
+    $removedHighlightRefs = @($previousHighlights.Keys | Where-Object { -not $mergedHighlights.ContainsKey($_) })
+
     # Save merged results to PC
     Save-Notes -Notes $mergedNotes
     Save-Highlights -Highlights $mergedHighlights
+
+    # Un-bake anything this sync actually removed
+    foreach ($ref in $removedNoteRefs) {
+        Unbake-Note -Ref $ref | Out-Null
+    }
+    foreach ($ref in $removedHighlightRefs) {
+        Bake-Highlight -Ref $ref -Color "" | Out-Null
+    }
 
     # Rebake all notes into HTML
     foreach ($ref in $mergedNotes.Keys) {

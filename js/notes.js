@@ -107,6 +107,7 @@
 
     var isChapterPage = (osisBook !== "" && chapterNum > 0);
     var isHomePage = (pagePath === "/" || /\/index\.html$/.test(pagePath));
+    var isNotesManagerPage = /\/notes-manager\.html$/.test(pagePath);
 
     /* -- XMLHttpRequest helper (ES3) ----------------------------  */
 
@@ -170,11 +171,12 @@
 
     function phoneGetNotes() { return lsGet(LS_NOTES); }
 
-    function phoneSaveNote(ref, text) {
+    function phoneSaveNote(ref, text, tags) {
         var notes = phoneGetNotes();
         var now = new Date().toISOString();
         notes[ref] = {
             text:    text,
+            tags:    tags || [],
             created: (notes[ref] && notes[ref].created) ? notes[ref].created : now,
             updated: now
         };
@@ -279,8 +281,100 @@
     var selectedColor = null;     /* currently selected in picker */
     var originalColor = null;     /* color when modal opened (for cancel revert) */
     var pickerRow = null;         /* the color picker DOM element */
+    var modalTagsInput = null;    /* tags text input */
+    var tagsDatalist = null;      /* <datalist> of known tags, for autocomplete */
+    var lastKnownTagsMap = null;  /* lowercase -> canonical casing, refreshed each time the modal opens */
     var HL_COLORS = ["yellow", "green", "red", "blue"];
     var HL_CLASSES = { yellow: "hl-yellow", green: "hl-green", red: "hl-red", blue: "hl-blue" };
+
+    /* Guarantees a real array, regardless of what was actually
+       received: a proper array, a bare string (PowerShell's
+       ConvertTo-Json infamously collapses a single-element array into
+       a scalar string), or missing/null entirely. */
+    function normalizeTagsArray(rawTags) {
+        if (!rawTags) { return []; }
+        if (Object.prototype.toString.call(rawTags) === "[object Array]") { return rawTags; }
+        if (typeof rawTags === "string") { return [rawTags]; }
+        return [];
+    }
+
+    /* Normalizes .tags on every note in a notes object received from
+       the server, in place -- call this immediately after any GET
+       /api/notes response, before the data is used anywhere else. */
+    function normalizeNotesTagsInPlace(notesObj) {
+        var ref;
+        for (ref in notesObj) {
+            if (!notesObj.hasOwnProperty(ref)) { continue; }
+            if (notesObj[ref]) { notesObj[ref].tags = normalizeTagsArray(notesObj[ref].tags); }
+        }
+        return notesObj;
+    }
+
+    /* Normalizes a tag into a comparison key: collapses ALL whitespace
+       variants (including non-breaking spaces -- \s in JS regex
+       matches these too) into a single regular space, trims, and
+       lowercases. Without this, two tags that look completely
+       identical on screen ("New Creature" typed normally vs. via
+       mobile-keyboard autocomplete, which sometimes inserts a
+       non-breaking space instead of a regular one) would silently be
+       treated as different tags everywhere -- the tag cloud, the
+       autocomplete list, and the AND-filter matching. */
+    function normalizeTagKey(tag) {
+        return (tag || "").replace(/\s+/g, " ").replace(/^\s+|\s+$/g, "").toLowerCase();
+    }
+
+    /* Build a lowercase -> canonical-casing map from every tag used
+       across all notes, so we can gently converge casing variants
+       ("Second Coming" vs "second coming") instead of letting them
+       silently fork into separate tags over time. */
+    function collectKnownTagsMap(allNotes) {
+        var map = {};
+        var ref;
+        for (ref in allNotes) {
+            if (!allNotes.hasOwnProperty(ref)) { continue; }
+            var noteTags = normalizeTagsArray(allNotes[ref] && allNotes[ref].tags);
+            if (!noteTags.length) { continue; }
+            for (var i = 0; i < noteTags.length; i++) {
+                var t = noteTags[i];
+                var key = normalizeTagKey(t);
+                if (!map[key]) { map[key] = t; }
+            }
+        }
+        return map;
+    }
+
+    /* Parse the comma-separated tags input into a clean array: trims
+       whitespace, drops empties, de-duplicates case-insensitively
+       within this input, and normalizes casing to match an existing
+       known tag when one exists. */
+    function parseTagsInput(rawInput, knownTagsMap) {
+        var parts = (rawInput || "").split(",");
+        var result = [];
+        var usedKeys = {};
+        for (var i = 0; i < parts.length; i++) {
+            var t = parts[i].replace(/^\s+|\s+$/g, "");
+            if (!t) { continue; }
+            var key = normalizeTagKey(t);
+            if (usedKeys[key]) { continue; }
+            usedKeys[key] = true;
+            result.push((knownTagsMap && knownTagsMap[key]) ? knownTagsMap[key] : t);
+        }
+        return result;
+    }
+
+    /* Refresh the autocomplete <datalist> to reflect the current set
+       of known tags. */
+    function populateTagsDatalist(knownTagsMap) {
+        if (!tagsDatalist) { return; }
+        tagsDatalist.innerHTML = "";
+        var key;
+        for (key in knownTagsMap) {
+            if (!knownTagsMap.hasOwnProperty(key)) { continue; }
+            var opt = document.createElement("option");
+            opt.value = knownTagsMap[key];
+            tagsDatalist.appendChild(opt);
+        }
+    }
 
     function createModal() {
         if (modal) { return; }
@@ -361,6 +455,31 @@
         pickerPanel.appendChild(makeBookSection("Old Testament", OT_BOOKS));
         pickerPanel.appendChild(makeBookSection("New Testament", NT_BOOKS));
 
+        /* Tags input row, with autocomplete against existing tags */
+        var tagsRow = document.createElement("div");
+        tagsRow.className = "note-modal-tags-row";
+
+        var tagsLabel = document.createElement("label");
+        tagsLabel.className = "note-modal-tags-label";
+        tagsLabel.appendChild(document.createTextNode("Tags:"));
+        tagsRow.appendChild(tagsLabel);
+
+        modalTagsInput = document.createElement("input");
+        modalTagsInput.type = "text";
+        modalTagsInput.className = "note-modal-tags-input";
+        modalTagsInput.setAttribute("placeholder", "e.g. Justification, Second Coming");
+        modalTagsInput.setAttribute("list", "note-tags-datalist");
+        tagsRow.appendChild(modalTagsInput);
+
+        tagsDatalist = document.createElement("datalist");
+        tagsDatalist.id = "note-tags-datalist";
+        tagsRow.appendChild(tagsDatalist);
+
+        var tagsHint = document.createElement("p");
+        tagsHint.className = "note-modal-tags-hint";
+        tagsHint.appendChild(document.createTextNode("Comma-separated. Start typing to see tags you've already used."));
+        tagsRow.appendChild(tagsHint);
+
         var btnRow = document.createElement("div");
         btnRow.className = "note-modal-buttons";
 
@@ -418,6 +537,7 @@
         box.appendChild(modalTextarea);
         box.appendChild(hint);
         box.appendChild(pickerPanel);
+        box.appendChild(tagsRow);
         box.appendChild(btnRow);
         modal.appendChild(box);
 
@@ -467,6 +587,7 @@
 
         /* Reset textarea */
         modalTextarea.value = "";
+        modalTagsInput.value = "";
         modalDeleteBtn.style.display = "none";
 
         /* Set up highlight state for this verse */
@@ -479,8 +600,11 @@
         if (isPhoneMode) {
             /* Phone mode: load from localStorage */
             var phoneNs = phoneGetNotes();
+            lastKnownTagsMap = collectKnownTagsMap(phoneNs);
+            populateTagsDatalist(lastKnownTagsMap);
             if (phoneNs[ref]) {
                 modalTextarea.value = phoneNs[ref].text || "";
+                modalTagsInput.value = (phoneNs[ref].tags || []).join(", ");
                 modalDeleteBtn.style.display = "inline-block";
             }
             addClass(modal, "is-open");
@@ -488,8 +612,14 @@
         } else {
             /* PC mode: fetch from server */
             ajax("GET", pcServerOrigin + "/api/notes", null, function (status, data) {
+                if (status === 200 && data) {
+                    normalizeNotesTagsInPlace(data);
+                    lastKnownTagsMap = collectKnownTagsMap(data);
+                    populateTagsDatalist(lastKnownTagsMap);
+                }
                 if (status === 200 && data && data[ref]) {
                     modalTextarea.value = data[ref].text || "";
+                    modalTagsInput.value = normalizeTagsArray(data[ref].tags).join(", ");
                     modalDeleteBtn.style.display = "inline-block";
                 }
                 addClass(modal, "is-open");
@@ -546,6 +676,7 @@
     function saveNote() {
         var text = modalTextarea.value;
         var ref = currentRef;
+        var tags = parseTagsInput(modalTagsInput.value, lastKnownTagsMap);
 
         if (!ref) { return; }
 
@@ -572,34 +703,41 @@
             }
         }
 
-        if (!text) {
+        /* Save if there's EITHER note text OR tags -- a highlighted
+           verse with tags but no written note is a legitimate thing to
+           save now, not something to silently discard. */
+        var hasContent = !!text || (tags && tags.length > 0);
+
+        if (!hasContent) {
             closeNoteModal(true);
             if (hlChanged) {
                 showToast("Highlight updated", "success");
             } else {
-                showToast("Note is empty", "error");
+                showToast("Nothing to save", "error");
             }
             return;
         }
 
         if (isPhoneMode) {
             /* Phone mode: write to localStorage immediately */
-            phoneSaveNote(ref, text);
+            phoneSaveNote(ref, text, tags);
             closeNoteModal(true);
             updateVerseIndicator(ref, true);
-            refreshBakedNote(ref, text);
-            showToast("Note saved \uD83D\uDCF1 (syncs when on your PC\u2019s WiFi)", "success");
+            if (text) { refreshBakedNote(ref, text); } else { clearBakedNote(ref); }
+            if (isNotesManagerPage && typeof window.nmRefreshAfterSave === "function") { window.nmRefreshAfterSave(ref); }
+            showToast((text ? "Note saved" : "Tags saved") + " \uD83D\uDCF1 (syncs when on your PC\u2019s WiFi)", "success");
             return;
         }
 
-        var payload = JSON.stringify({ ref: ref, text: text });
+        var payload = JSON.stringify({ ref: ref, text: text, tags: tags });
 
         ajax("POST", pcServerOrigin + "/api/notes", payload, function (status, data) {
             if (status === 200 && data && data.ok) {
                 closeNoteModal(true);
                 updateVerseIndicator(ref, true);
-                refreshBakedNote(ref, text);
-                showToast("Note saved", "success");
+                if (text) { refreshBakedNote(ref, text); } else { clearBakedNote(ref); }
+                if (isNotesManagerPage && typeof window.nmRefreshAfterSave === "function") { window.nmRefreshAfterSave(ref); }
+                showToast(text ? "Note saved" : "Tags saved", "success");
             } else {
                 showToast("Failed to save note", "error");
             }
@@ -618,6 +756,7 @@
             closeNoteModal(true);
             updateVerseIndicator(ref, false);
             clearBakedNote(ref);
+            if (isNotesManagerPage && typeof window.nmRefreshAfterSave === "function") { window.nmRefreshAfterSave(ref); }
             showToast("Note deleted \uD83D\uDCF1", "success");
             return;
         }
@@ -628,6 +767,7 @@
                     closeNoteModal(true);
                     updateVerseIndicator(ref, false);
                     clearBakedNote(ref);
+                    if (isNotesManagerPage && typeof window.nmRefreshAfterSave === "function") { window.nmRefreshAfterSave(ref); }
                     showToast("Note deleted", "success");
                 } else {
                     showToast("Failed to delete note", "error");
@@ -1823,7 +1963,7 @@
             }
         };
 
-        function runBulkDownload(kind, title, urls, reportEvery, onComplete) {
+        function runBulkDownload(kind, title, urls, reportEvery, onComplete, forceRefresh) {
             if (!("serviceWorker" in navigator)) {
                 showToast("This browser doesn't support offline downloads.", "error");
                 return;
@@ -1833,9 +1973,12 @@
                 return;
             }
 
-            var message = "Saving " + urls.length + " pages so this device can be used without WiFi. " +
-                "Stay connected to your home WiFi while this runs — leaving the network will interrupt the download " +
-                "(you can safely re-run it later to pick up where it left off).";
+            var message = forceRefresh
+                ? ("Re-downloading " + urls.length + " pages to make sure this device has the latest content " +
+                   "(useful after editing notes on your PC). Stay connected to your home WiFi while this runs.")
+                : ("Saving " + urls.length + " pages so this device can be used without WiFi. " +
+                   "Stay connected to your home WiFi while this runs — leaving the network will interrupt the download " +
+                   "(you can safely re-run it later to pick up where it left off).");
 
             if (bulkJob) {
                 /* Something's already downloading — just re-show its modal
@@ -1857,6 +2000,9 @@
             var jobId = kind + "-" + (new Date()).getTime();
             bulkJob = { jobId: jobId, kind: kind };
 
+            var verb = forceRefresh ? "Refreshing" : "Downloading";
+            var doneVerb = forceRefresh ? "Refresh complete! " : "Download complete! ";
+
             function setProgress(done, label) {
                 var pct = total > 0 ? Math.floor((done / total) * 100) : 100;
                 if (bar) { bar.style.width = pct + "%"; }
@@ -1876,13 +2022,13 @@
                     return;
                 }
 
-                setProgress(data.done, "Downloading: " + data.done + " of " + total);
+                setProgress(data.done, verb + ": " + data.done + " of " + total);
 
                 if (data.complete) {
                     navigator.serviceWorker.removeEventListener("message", onMessage);
                     releaseWakeLock();
                     bulkJob = null;
-                    setProgress(total, "Download complete! " + total + " pages saved for offline use");
+                    setProgress(total, doneVerb + total + " pages saved for offline use");
                     showDoneButton();
                     if (typeof onComplete === "function") { onComplete(); }
                 }
@@ -1890,7 +2036,7 @@
 
             navigator.serviceWorker.addEventListener("message", onMessage);
             navigator.serviceWorker.controller.postMessage({
-                type: "cache-urls", urls: urls, jobId: jobId, reportEvery: reportEvery
+                type: "cache-urls", urls: urls, jobId: jobId, reportEvery: reportEvery, forceRefresh: !!forceRefresh
             });
         }
 
@@ -1919,6 +2065,22 @@
                     runBulkDownload("chapters", "Downloading Bible Text", buildChapterUrlList(), 50, onComplete);
                 });
             }
+        };
+
+        /* "Refresh Offline Content" — re-downloads everything already
+           cached, overwriting it regardless of whether it's already
+           present. Needed because "already cached" and "correctly up
+           to date" aren't the same thing: e.g. after editing/rebaking
+           notes on the PC, a phone's offline copy of that chapter page
+           keeps showing the old baked note forever otherwise, since
+           the normal download only ever fills in what's MISSING, never
+           corrects what's already there but stale. */
+        window.refreshOfflineContent = function () {
+            loadBibleDataIfNeeded(function () {
+                runBulkDownload("chapters", "Refreshing Bible Text", buildChapterUrlList(), 50, function () {
+                    runBulkDownload("dictionary", "Refreshing Lexicon", buildDictUrlList(), 500, null, true);
+                }, true);
+            });
         };
 
     })();
@@ -2018,6 +2180,397 @@
         var offlineBibleRow = document.getElementById("offline-bible-row");
         var offlineSection = offlineBibleRow ? offlineBibleRow.closest(".settings-section") : null;
         if (offlineSection) { offlineSection.style.display = "none"; }
+    }
+
+    /* ============================================================
+       Notes Manager Page
+       ============================================================
+       Browsable, filterable, editable list of every note across the
+       whole Bible (OT -> NT order). Filters: by tag (AND logic across
+       multiple selected tags) and by Book/Testament/Category (reusing
+       the same category scheme as the Search page, for familiarity).
+       Editing reuses the existing per-verse note modal (openNoteModal)
+       rather than building a separate editing UI.
+       ============================================================ */
+    if (isNotesManagerPage) {
+        (function () {
+
+            if (!canTakeNotes) {
+                var statusElEarly = document.getElementById("notes-manager-status");
+                if (statusElEarly) { statusElEarly.textContent = "Notes aren't available in this mode."; }
+                return;
+            }
+
+            /* Same book-number ranges as the Search page's category
+               scheme, duplicated here to keep this page self-contained
+               rather than reaching into search.js. */
+            var NM_CATEGORIES = {
+                torah:         [1, 2, 3, 4, 5],
+                historical:    [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+                poetic:        [18, 19, 20, 21, 22],
+                prophetic:     [23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39],
+                gospels:       [40, 41, 42, 43],
+                acts:          [44],
+                paul_church:   [45, 46, 47, 48, 49, 50, 51, 52, 53],
+                paul_pastoral: [54, 55, 56, 57],
+                general:       [58, 59, 60, 61, 62, 63, 64, 65],
+                revelation:    [66]
+            };
+
+            var nmAllNotes = [];          /* flattened, sorted note records with computed metadata */
+            var nmBookLookup = {};        /* abbr -> { num, folder, name } */
+            var nmSelectedTags = {};      /* tag (lowercase) -> true, for currently-selected filter tags */
+            var nmSelectedBookIds = null; /* null = no book/category filter active; else array of book numbers */
+
+            function nmLoadBibleDataIfNeeded(callback) {
+                if (typeof BIBLE_DATA !== "undefined") { callback(); return; }
+                var existing = document.getElementById("nm-bible-data-script");
+                if (existing) { existing.addEventListener("load", callback); return; }
+                var script = document.createElement("script");
+                script.id = "nm-bible-data-script";
+                script.src = "/js/bible-data.js";
+                script.onload = callback;
+                script.onerror = function () {
+                    showToast("Could not load book/chapter data — try reloading the page.", "error");
+                };
+                document.head.appendChild(script);
+            }
+
+            function buildBookLookup() {
+                if (typeof BIBLE_DATA === "undefined") { return; }
+                for (var i = 0; i < BIBLE_DATA.length; i++) {
+                    var b = BIBLE_DATA[i];
+                    nmBookLookup[b.abbr] = { num: b.num, folder: b.folder, name: b.name };
+                }
+            }
+
+            function parseRef(ref) {
+                var parts = ref.split(".");
+                return {
+                    bookAbbr: parts[0] || "",
+                    chapter: parseInt(parts[1], 10) || 0,
+                    verse: parseInt(parts[2], 10) || 0
+                };
+            }
+
+            function loadAllNotesAndHighlights(callback) {
+                if (isPhoneMode) {
+                    callback(phoneGetNotes(), phoneGetHighlights());
+                } else {
+                    var notesResult = null;
+                    var highlightsResult = null;
+                    var pending = 2;
+                    function maybeDone() {
+                        pending--;
+                        if (pending === 0) { callback(notesResult || {}, highlightsResult || {}); }
+                    }
+                    ajax("GET", pcServerOrigin + "/api/notes", null, function (status, data) {
+                        notesResult = (status === 200 && data) ? data : {};
+                        normalizeNotesTagsInPlace(notesResult);
+                        maybeDone();
+                    });
+                    ajax("GET", pcServerOrigin + "/api/highlights", null, function (status, data) {
+                        highlightsResult = (status === 200 && data) ? data : {};
+                        maybeDone();
+                    });
+                }
+            }
+
+            function buildNoteRecords(notesObj, highlightsObj) {
+                var records = [];
+                var seenRefs = {};
+                var ref;
+
+                /* Every ref that has a note (text and/or tags) */
+                for (ref in notesObj) {
+                    if (!notesObj.hasOwnProperty(ref)) { continue; }
+                    var n = notesObj[ref];
+                    var text = n.text || "";
+                    var tags = normalizeTagsArray(n.tags);
+                    var color = highlightsObj ? (highlightsObj[ref] || null) : null;
+                    /* Skip entries with nothing at all (shouldn't normally
+                       happen, but be defensive rather than show blank cards) */
+                    if (!text && tags.length === 0 && !color) { continue; }
+                    seenRefs[ref] = true;
+                    records.push(makeRecord(ref, text, tags, color));
+                }
+
+                /* Every ref that's highlighted but has no note entry at
+                   all -- previously these never showed up here. */
+                for (ref in highlightsObj) {
+                    if (!highlightsObj.hasOwnProperty(ref) || seenRefs[ref]) { continue; }
+                    var hlColor = highlightsObj[ref];
+                    if (!hlColor) { continue; }
+                    records.push(makeRecord(ref, "", [], hlColor));
+                }
+
+                records.sort(function (a, b) {
+                    if (a.bookNum !== b.bookNum) { return a.bookNum - b.bookNum; }
+                    if (a.chapter !== b.chapter) { return a.chapter - b.chapter; }
+                    return a.verse - b.verse;
+                });
+                return records;
+            }
+
+            function makeRecord(ref, text, tags, color) {
+                var parsed = parseRef(ref);
+                var bookInfo = nmBookLookup[parsed.bookAbbr] || { num: 999, folder: "", name: parsed.bookAbbr };
+                return {
+                    ref: ref,
+                    text: text,
+                    tags: tags,
+                    color: color || null,
+                    bookAbbr: parsed.bookAbbr,
+                    bookName: bookInfo.name,
+                    bookNum: bookInfo.num,
+                    folder: bookInfo.folder,
+                    chapter: parsed.chapter,
+                    verse: parsed.verse
+                };
+            }
+
+            function collectAllTagsFromRecords(records) {
+                var seen = {};
+                for (var i = 0; i < records.length; i++) {
+                    var tags = records[i].tags || [];
+                    for (var j = 0; j < tags.length; j++) {
+                        var key = normalizeTagKey(tags[j]);
+                        if (!seen[key]) { seen[key] = tags[j]; }
+                    }
+                }
+                return seen;
+            }
+
+            function renderTagCloud(tagsMap) {
+                var cloud = document.getElementById("nm-tag-cloud");
+                if (!cloud) { return; }
+                cloud.innerHTML = "";
+                var keys = [];
+                var k;
+                for (k in tagsMap) { if (tagsMap.hasOwnProperty(k)) { keys.push(k); } }
+                keys.sort();
+                if (keys.length === 0) {
+                    cloud.innerHTML = '<span class="nm-tag-empty">No tags yet — add some from any note\u2019s editor.</span>';
+                    return;
+                }
+                for (var i = 0; i < keys.length; i++) {
+                    (function (key, label) {
+                        var btn = document.createElement("button");
+                        btn.className = "nm-tag-btn";
+                        btn.setAttribute("data-tag", key);
+                        btn.appendChild(document.createTextNode(label));
+                        btn.onclick = function () { window.nmToggleTag(key, btn); };
+                        cloud.appendChild(btn);
+                    })(k, tagsMap[k]);
+                }
+            }
+
+            window.nmToggleTag = function (key, btnEl) {
+                if (nmSelectedTags[key]) {
+                    delete nmSelectedTags[key];
+                    if (btnEl) { removeClass(btnEl, "is-selected"); }
+                } else {
+                    nmSelectedTags[key] = true;
+                    if (btnEl) { addClass(btnEl, "is-selected"); }
+                }
+                nmRenderList();
+            };
+
+            function getSelectedCategoryBookIds() {
+                var checks = document.getElementsByClassName("nm-cat-check");
+                var ids = [];
+                var any = false;
+                var i;
+                for (i = 0; i < checks.length; i++) {
+                    if (checks[i].checked) {
+                        any = true;
+                        var cat = checks[i].value;
+                        if (NM_CATEGORIES[cat]) { ids = ids.concat(NM_CATEGORIES[cat]); }
+                    }
+                }
+                var bookSel = document.getElementById("nm-book-select");
+                if (bookSel && bookSel.value) {
+                    any = true;
+                    /* A specific book takes precedence over any category
+                       checkboxes also selected -- narrows to just that book. */
+                    ids = [parseInt(bookSel.value, 10)];
+                }
+                return any ? ids : null;
+            }
+
+            window.nmMasterChecked = function (which) {
+                var group = (which === "ot")
+                    ? ["torah", "historical", "poetic", "prophetic"]
+                    : ["gospels", "acts", "paul_church", "paul_pastoral", "general", "revelation"];
+                var master = document.getElementById("nm-cat-" + which + "-master");
+                var checks = document.getElementsByClassName("nm-cat-check");
+                for (var i = 0; i < checks.length; i++) {
+                    if (group.indexOf(checks[i].value) !== -1) { checks[i].checked = master.checked; }
+                }
+                window.nmApplyFilters();
+            };
+
+            window.nmApplyFilters = function () {
+                nmSelectedBookIds = getSelectedCategoryBookIds();
+                nmRenderList();
+            };
+
+            window.nmClearFilters = function () {
+                var checks = document.getElementsByClassName("nm-cat-check");
+                for (var i = 0; i < checks.length; i++) { checks[i].checked = false; }
+                var otMaster = document.getElementById("nm-cat-ot-master");
+                var ntMaster = document.getElementById("nm-cat-nt-master");
+                if (otMaster) { otMaster.checked = false; }
+                if (ntMaster) { ntMaster.checked = false; }
+                var bookSel = document.getElementById("nm-book-select");
+                if (bookSel) { bookSel.value = ""; }
+                nmSelectedTags = {};
+                var tagBtns = document.getElementsByClassName("nm-tag-btn");
+                for (var j = 0; j < tagBtns.length; j++) { removeClass(tagBtns[j], "is-selected"); }
+                nmSelectedBookIds = null;
+                nmRenderList();
+            };
+
+            function populateBookSelect() {
+                var sel = document.getElementById("nm-book-select");
+                if (!sel || typeof BIBLE_DATA === "undefined") { return; }
+                for (var i = 0; i < BIBLE_DATA.length; i++) {
+                    var opt = document.createElement("option");
+                    opt.value = BIBLE_DATA[i].num;
+                    opt.appendChild(document.createTextNode(BIBLE_DATA[i].name));
+                    sel.appendChild(opt);
+                }
+            }
+
+            function buildNoteCard(rec) {
+                var card = document.createElement("div");
+                card.className = "nm-card";
+
+                var header = document.createElement("div");
+                header.className = "nm-card-header";
+
+                var refWrap = document.createElement("span");
+                refWrap.className = "nm-card-ref-wrap";
+
+                if (rec.color) {
+                    var swatch = document.createElement("span");
+                    swatch.className = "nm-card-color-swatch nm-hl-" + rec.color;
+                    swatch.title = rec.color.charAt(0).toUpperCase() + rec.color.slice(1) + " highlight";
+                    refWrap.appendChild(swatch);
+                }
+
+                var refLink = document.createElement("a");
+                refLink.className = "nm-card-ref";
+                refLink.href = "/books/" + rec.folder + "/" + rec.chapter + ".html#verse-" + rec.verse;
+                refLink.appendChild(document.createTextNode(rec.bookName + " " + rec.chapter + ":" + rec.verse));
+                refWrap.appendChild(refLink);
+
+                header.appendChild(refWrap);
+
+                var editBtn = document.createElement("button");
+                editBtn.className = "btn nm-card-edit-btn";
+                editBtn.appendChild(document.createTextNode("Edit"));
+                editBtn.onclick = function () { window.openNoteModal(rec.ref); };
+                header.appendChild(editBtn);
+
+                card.appendChild(header);
+
+                if (rec.tags && rec.tags.length > 0) {
+                    var tagsRow = document.createElement("div");
+                    tagsRow.className = "nm-card-tags";
+                    for (var i = 0; i < rec.tags.length; i++) {
+                        var badge = document.createElement("span");
+                        badge.className = "nm-card-tag-badge";
+                        badge.appendChild(document.createTextNode(rec.tags[i]));
+                        tagsRow.appendChild(badge);
+                    }
+                    card.appendChild(tagsRow);
+                }
+
+                var textEl = document.createElement("p");
+                if (rec.text) {
+                    textEl.className = "nm-card-text";
+                    textEl.innerHTML = linkifyVerseRefs(escapeHtml(rec.text));
+                } else {
+                    textEl.className = "nm-card-text nm-card-text-empty";
+                    textEl.appendChild(document.createTextNode("No note text \u2014 highlighted and/or tagged only."));
+                }
+                card.appendChild(textEl);
+
+                return card;
+            }
+
+            function nmRenderList() {
+                var listEl = document.getElementById("notes-manager-list");
+                var countEl = document.getElementById("nm-result-count");
+                if (!listEl) { return; }
+
+                var selectedTagKeys = [];
+                var k;
+                for (k in nmSelectedTags) { if (nmSelectedTags.hasOwnProperty(k)) { selectedTagKeys.push(k); } }
+
+                var filtered = [];
+                var i;
+                for (i = 0; i < nmAllNotes.length; i++) {
+                    var rec = nmAllNotes[i];
+
+                    if (nmSelectedBookIds && nmSelectedBookIds.indexOf(rec.bookNum) === -1) { continue; }
+
+                    if (selectedTagKeys.length > 0) {
+                        var recTagKeys = {};
+                        for (var t = 0; t < rec.tags.length; t++) { recTagKeys[normalizeTagKey(rec.tags[t])] = true; }
+                        var matchesAll = true;
+                        for (var s = 0; s < selectedTagKeys.length; s++) {
+                            if (!recTagKeys[selectedTagKeys[s]]) { matchesAll = false; break; }
+                        }
+                        if (!matchesAll) { continue; }
+                    }
+
+                    filtered.push(rec);
+                }
+
+                if (countEl) {
+                    countEl.textContent = filtered.length + " note" + (filtered.length !== 1 ? "s" : "");
+                }
+
+                listEl.innerHTML = "";
+                if (filtered.length === 0) {
+                    listEl.innerHTML = '<p class="nm-empty">No notes match the current filters.</p>';
+                    return;
+                }
+
+                for (i = 0; i < filtered.length; i++) {
+                    listEl.appendChild(buildNoteCard(filtered[i]));
+                }
+            }
+            window.nmRenderList = nmRenderList;
+
+            function refreshOneRecord(ref) {
+                loadAllNotesAndHighlights(function (notesObj, highlightsObj) {
+                    nmAllNotes = buildNoteRecords(notesObj, highlightsObj);
+                    renderTagCloud(collectAllTagsFromRecords(nmAllNotes));
+                    nmRenderList();
+                });
+            }
+            window.nmRefreshAfterSave = refreshOneRecord;
+
+            function initNotesManager() {
+                var statusEl = document.getElementById("notes-manager-status");
+                nmLoadBibleDataIfNeeded(function () {
+                    buildBookLookup();
+                    populateBookSelect();
+                    loadAllNotesAndHighlights(function (notesObj, highlightsObj) {
+                        nmAllNotes = buildNoteRecords(notesObj, highlightsObj);
+                        if (statusEl) { statusEl.style.display = "none"; }
+                        renderTagCloud(collectAllTagsFromRecords(nmAllNotes));
+                        nmRenderList();
+                    });
+                });
+            }
+
+            initNotesManager();
+
+        })();
     }
 
     if (!isChapterPage) { return; }
