@@ -2361,7 +2361,7 @@
                         btn.appendChild(document.createTextNode(label));
                         btn.onclick = function () { window.nmToggleTag(key, btn); };
                         cloud.appendChild(btn);
-                    })(k, tagsMap[k]);
+                    })(keys[i], tagsMap[keys[i]]);
                 }
             }
 
