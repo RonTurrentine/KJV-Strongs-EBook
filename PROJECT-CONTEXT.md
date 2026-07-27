@@ -348,3 +348,267 @@ keep adding to this file proactively as new crucial details emerge.
   gitignore status: see audit section above)
 - `scripts/` — templates copied into repo root during generation; see
   "three-location trap" section above for exactly which files
+# PROJECT-CONTEXT.md — Update covering July 8 → July 26, 2026
+
+(Merge this into the existing file — this covers everything since the
+last documented update. Claude's own working sandbox reset partway
+through this stretch, so this is reconstructed from full conversation
+history, not an incremental edit of the prior file.)
+
+---
+
+## Major feature shipped: Notes Management System (v1.3.0)
+
+The single biggest addition since July 8. Two parts:
+
+### 1. Note tagging
+- Notes can now carry a `tags: [...]` array (e.g. "Justification",
+  "Second Coming") alongside their text.
+- Tag input in the existing per-verse note editor: comma-separated,
+  with browser `<datalist>` autocomplete against every tag already
+  used, and automatic casing convergence (typing "second coming" when
+  "Second Coming" already exists saves it with the existing casing,
+  preventing silent tag-forking).
+- **Tags can be saved with NO note text** — a highlighted-but-untagged
+  verse, or a tagged-but-textless verse, is now a valid, savable state.
+  This required removing an early client-side AND server-side
+  (`Handle-SaveNote`) validation gate that used to require non-empty
+  text.
+
+### 2. Notes Manager page (`notes-manager.html`, new file)
+- Reachable via a new **"My Notes"** hamburger menu item (added across
+  `generate_bible.ps1` ×3 templates, `generate_dict.ps1`, `search.html`).
+- Lists every note, OT → NT order.
+- **Filters**: by tag (AND logic — selecting multiple narrows further,
+  per explicit user decision), and by Book/Testament/Category (reuses
+  the exact same category scheme as the Search page, for familiarity).
+- **Inline editing** — clicking "Edit" on any card reuses the existing
+  per-verse note modal directly (not a separate editor), so saving/
+  deleting refreshes the list live without a page reload.
+- **Highlight-only verses included** — a verse that's highlighted
+  and/or tagged but has no written note text now shows up too (shown
+  with a colored dot matching the highlight color, and an italic
+  placeholder instead of blank text). This required the page to load
+  *both* notes and highlights and merge them, not just notes.
+- Verse cross-references (`[[Book.Ch.Vs]]`) in note text are rendered
+  through the same `escapeHtml` + `linkifyVerseRefs` pipeline used
+  elsewhere, so they display as clickable links, not raw bracket text.
+
+### New: "Refresh Offline Content"
+New hamburger menu item (phone-only, next to the offline download
+rows). Re-downloads everything already cached for offline use,
+overwriting it — unlike the normal offline download, which only fills
+in what's *missing*. Needed because "already cached" and "correctly
+up to date" aren't the same thing (e.g. after editing/rebaking notes
+on the PC, a phone's cached copy of that chapter page would otherwise
+show the old note forever). Implemented via a new `forceRefresh` flag
+in `sw.js`'s bulk-download message handler, and
+`window.refreshOfflineContent()` in `notes.js`.
+
+## Real bugs found and fixed while building the above
+
+Several genuine, non-obvious bugs surfaced during this work — worth
+documenting since some were subtle and could easily recur in similar
+form elsewhere:
+
+1. **PowerShell `ConvertTo-Json` single-element-array collapse.** A
+   note with *exactly one* tag serialized as a bare string
+   (`"tags": "Justification"`) instead of a JSON array
+   (`"tags": ["Justification"]`), crashing client-side `.join()` calls
+   — and breaking the pencil-icon editor entirely, since the crash sat
+   in the middle of the note-loading callback. Fixed with the same
+   self-healing-on-load pattern used for the earlier timestamp bug:
+   `Get-Notes` (in `start-study.ps1`) now normalizes any non-array
+   `tags` field back into an array on every load. Client-side
+   (`notes.js`) also got defensive `normalizeTagsArray()` /
+   `normalizeNotesTagsInPlace()` helpers as a second layer of defense.
+
+2. **Sync-commit not un-baking deleted content.** `Handle-SyncCommit`
+   correctly updated `notes.json`/`highlights.json` when a phone-side
+   deletion synced to the PC, but never told the *baked chapter HTML*
+   about it — meaning a deleted note's stale text could persist in the
+   chapter page indefinitely (a manual "Rebake Notes" was the only
+   fix). Root cause: the rebake loop only ever bakes what's still
+   *present* in the merged result; it never noticed something had
+   disappeared. Fixed by capturing the pre-sync state, diffing against
+   the merged result, and explicitly un-baking (`Unbake-Note` /
+   `Bake-Highlight -Color ""`) anything actually removed.
+
+3. **Duplicate-tag rendering bug** (the "New Creature ×8" saga). Not a
+   data issue at all (confirmed via direct byte-level inspection of an
+   exported `notes.json` — only one genuine instance existed) and not
+   a caching/extension issue either (confirmed via InPrivate window
+   testing with zero extensions). The actual bug: `renderTagCloud` in
+   `notes.js` built a correctly-sorted `keys` array, but then its
+   button-creation loop referenced the *stale* leftover loop variable
+   `k` from an earlier `for (k in tagsMap)` loop instead of `keys[i]`
+   — so every button rendered whatever `k`'s frozen post-loop value
+   happened to be, regardless of which tag it was meant to represent.
+   Fixed by using `keys[i]` correctly. This took an extensive,
+   systematic debugging session (network tab check, module-duplication
+   check, InPrivate test, temporary diagnostic `console.log`/
+   `console.trace` instrumentation) to isolate — a good case study in
+   ruling out plausible-sounding theories (whitespace variants,
+   extensions, duplicate script tags, duplicate network fetches) one
+   at a time via direct evidence rather than guessing.
+
+4. **`notes-manager.html` missing from the file-copy pipeline.** The
+   hamburger menu link was added before the actual static file was
+   wired into `generate_bible.ps1`'s copy loop (the same one that
+   copies `search.html`/`help.html`/`about.html`) — meaning the menu
+   item existed and pointed correctly, but the target file itself
+   never actually landed in the output. Fixed by adding
+   `'notes-manager.html'` to that loop's file list.
+
+## Launcher repo work (`KJV-Strongs-Launcher`)
+
+### One-time phone setup wizard
+- "Sync Phone via QR Code" renamed to **"Connect New Phone"** (menu
+  text only — same underlying QR flow).
+- New automatic first-visit prompt on the phone's Home page: offers to
+  download Bible text + lexicon + pull existing PC notes in one
+  chained flow, with an honest size estimate (~163 MB, measured from
+  real `books`/`dict` folder sizes, not guessed).
+- Shown at most once (tracked via a localStorage flag); existing
+  manual download menu items remain available afterward regardless of
+  choice.
+
+### Automated phone WiFi firewall setup during install
+- `setup-phone-access.ps1` (adds a one-time Windows Firewall rule for
+  port 8081) used to be a manual, undiscoverable step. Cleaned up
+  (removed a stale hardcoded PC IP left over from early development —
+  the actual firewall rule itself was never IP-specific, it opens the
+  port to the whole private network) and documented in `help.html`
+  under a new Troubleshooting section.
+- Automated into the Launcher's first-run setup flow: `main.js` gained
+  a `setup-phone-access` IPC handler that launches the script elevated
+  via `Start-Process -Verb RunAs` (since, unlike `msiexec`, a raw
+  `.ps1` doesn't self-elevate). Deliberately **non-fatal** — if the
+  UAC prompt is declined or fails, setup continues normally. Wired
+  into `setup.js` between the download step and the (long, unattended)
+  generation step, front-loading anything needing user attention.
+  `setup.html`'s existing antivirus/security notice was extended with
+  a paragraph explaining this second, optional prompt.
+
+### Root-caused a genuinely serious latent bug: silent update failures
+While troubleshooting a fresh install on the user's wife's laptop that
+showed stale content despite a clean reinstall:
+- **Release vs. commit distinction**: fresh installs pull from a
+  tagged GitHub *Release* (via `download-sources`, for the two large
+  static data files only) but pull *code* (scripts, HTML, JS) from the
+  live `main` branch zip (via `clone-repo`) — always current,
+  independent of any Launcher release. This was never actually the
+  bug in that specific case, but is important context: **a new
+  Launcher release/installer is not required for feature code to reach
+  future fresh installs** — only for keeping the installer's *own*
+  bundled version number accurate for display/detection purposes.
+- **Actual root cause**: `generate_bible.ps1` fetches the current
+  GitHub commit SHA at generation time (baked into each page's
+  `kjv-sha` meta tag) for the in-app update-detection system to
+  compare against. If that specific fetch failed (transient network
+  issue), it silently fell back to an empty string — and
+  `notes.js`'s update-checker silently does nothing at all if that
+  meta tag is empty, with zero visible error. This meant an install
+  could be **permanently, silently unable to ever detect updates**,
+  with no symptom other than "the cross icon never appears." Fixed:
+  the SHA fetch now retries up to 3 times, and logs a real, visible
+  warning to `update-warnings.log` on final failure instead of a
+  console output that's invisible in the Electron app.
+- **A second, related latent bug**: `Handle-Update`'s file-replacement
+  logic during an update used `Remove-Item -Recurse -Force
+  -ErrorAction SilentlyContinue` before `Move-Item`. Windows commonly
+  marks files extracted from a downloaded ZIP as read-only, which can
+  make `Remove-Item` silently fail even with `-Force`. When that
+  happens, the subsequent `Move-Item` doesn't replace the stale
+  folder — it nests the fresh one *inside* it, and the actual script
+  that runs afterward is still the old, untouched one. The whole
+  update process would report "Update complete!" — a false success —
+  while having silently changed nothing. Fixed: explicitly clear
+  read-only attributes before deletion, verify the deletion actually
+  succeeded, and throw a real, visible error instead of silently
+  continuing if it didn't.
+- **Also added**: a guard in `Handle-Update` against starting a second
+  update job while one is already running (discovered because calling
+  `doUpdateNow()` twice in a row — once before the progress modal
+  existed to show it, once after — could otherwise trigger two
+  overlapping regenerate passes).
+- Confirmed via testing on the actual affected laptop that the
+  read-only fix resolved it.
+
+### `KJV-Strongs-Launcher/scripts/git-push.ps1` created
+Mirrors the EBook repo's explicit-file-staging philosophy (no blanket
+`git add -A`). One real bug fixed after first use: the script printed
+"Done!" unconditionally even if `git push` had actually failed (a
+missing upstream branch on a fresh clone caused a real, silent-looking
+failure the first time it was run) — now checks `$LASTEXITCODE` and
+reports failure explicitly instead of lying about success.
+
+## Releases published
+
+### `KJV-Strongs-EBook` — v1.3.0
+Tagged and published cleanly, confirmed live via a logged-out/InPrivate
+check (useful trick: Claude's own web-fetch tool sometimes lags behind
+a brand-new GitHub release by a few minutes due to caching — an
+InPrivate browser window is a more reliable, instant way to verify
+public visibility than waiting on a fetch to catch up).
+
+### `KJV-Strongs-Launcher` — v1.3.0
+Built via the existing `.github/workflows/build-release.yml` (GitHub
+Actions, triggered by pushing a `v*.*.*` tag — NOT a manual local
+`npm run build`, which only produces a Windows-only installer with no
+Mac support). Took several real fix-and-retrigger cycles:
+
+1. **DMG build crash**: `package.json`'s `dmg.background: null` (an
+   explicit null, rather than omitting the key) confused
+   `electron-builder`'s underlying `dmgbuild` Python tool into trying
+   to reference a background image file that was never created.
+   Fixed by removing the key entirely.
+2. **`hdiutil detach` flakiness on the arm64 (Apple Silicon) build,
+   initially assumed to be a "two DMG builds in one job" isolation
+   issue** — the mac job was split into a matrix strategy (separate
+   job per architecture).
+3. **That split didn't actually work at first**: the `--x64`/`--arm64`
+   CLI flags don't reliably override `package.json`'s
+   `mac.target[].arch` array in this electron-builder version — both
+   "isolated" jobs were still silently building *both* architectures
+   together, reproducing the exact same failure. Real fix: each
+   matrix job now rewrites its own (ephemeral, never-committed)
+   workspace copy of `package.json` to list only its one target
+   architecture before building, guaranteeing true isolation instead
+   of relying on a flag that doesn't actually work as documented.
+4. All three jobs (Windows, mac x64, mac arm64) succeeded on the next
+   run. Release published with all three installers attached.
+
+**Release-asset cleanup (in progress, unresolved as of this writing)**:
+`electron-builder`'s GitHub-publish step attaches several files beyond
+the three actual installers: duplicate copies under a different naming
+convention (`kjv-strongs-launcher-*` vs. the friendlier `KJV Strong's
+Bible *` names — same files, same SHA256 hashes, just uploaded twice),
+plus `latest.yml`/`latest-mac.yml` and `.blockmap` files, which are
+artifacts of *Electron's own built-in auto-updater* — a completely
+separate mechanism the app doesn't use at all (this project has its
+own custom "glowing cross" update system instead). None of the four
+`latest*`/`.blockmap` files are needed. **Ron was in the middle of
+manually deleting the unnecessary files from the v1.3.0 release page
+when this session ended** — Claude flagged a concern about ambiguous
+unlabeled file-size entries in the deletion-confirmation dialog
+possibly corresponding to files that should be *kept* (two of the
+unlabeled sizes matched the real installers' sizes exactly), and asked
+for a screenshot of the actual checkbox list to verify before
+confirming. **This was never confirmed/resolved** — pick this up first
+in a new session if it wasn't already sorted out.
+
+**Follow-up recommended for next release**: add
+`"publishAutoUpdate": false` to `package.json`'s `build` config so
+`electron-builder` stops generating the `latest*.yml`/`.blockmap`
+files in the first place, avoiding this cleanup step on future
+releases. Not yet applied.
+
+## Housekeeping note
+
+The EBook repo appears to be missing a `v1.2.0` release on its public
+Releases page (only `v1.1.0` and `v1.0.0` show, despite earlier console
+output referencing "Version: 1.2.0 (from release v1.2.0)" at some
+point in this project's history). Unclear whether it was deleted or
+never actually published. Not urgent, but worth a look at some point
+for a complete release history.

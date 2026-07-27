@@ -1061,15 +1061,47 @@
         return d.innerHTML;
     }
 
+    function formatTagList(tags) {
+        var arr = normalizeTagsArray(tags);
+        return arr.length ? arr.join(", ") : "(none)";
+    }
+
     function renderNoteConflict(c) {
         var safeRef = escapeHtml(c.ref);
-        return '<div class="import-conflict-row" data-ref="' + safeRef + '" data-kind="note">' +
-            '  <p class="import-conflict-ref">' + safeRef + '</p>' +
-            '  <label class="import-conflict-opt"><input type="radio" name="res-note-' + safeRef + '" value="imported" checked> ' +
-            '    <span class="import-conflict-label">Imported:</span> <span class="import-conflict-text">' + escapeHtml(c.importedText) + '</span></label>' +
-            '  <label class="import-conflict-opt"><input type="radio" name="res-note-' + safeRef + '" value="current"> ' +
-            '    <span class="import-conflict-label">Keep current:</span> <span class="import-conflict-text">' + escapeHtml(c.currentText) + '</span></label>' +
-            '</div>';
+        var html = '<div class="import-conflict-row" data-ref="' + safeRef + '" data-kind="note">' +
+            '  <p class="import-conflict-ref">' + safeRef + '</p>';
+
+        /* Text resolution -- only shown when the note text itself
+           actually differs; a tags-only conflict has nothing here to
+           choose between. */
+        if (c.textDiffers) {
+            html += '  <div class="import-conflict-group">' +
+                '    <label class="import-conflict-opt"><input type="radio" name="res-note-' + safeRef + '" value="imported" checked> ' +
+                '      <span class="import-conflict-label">Imported text:</span> <span class="import-conflict-text">' + escapeHtml(c.importedText) + '</span></label>' +
+                '    <label class="import-conflict-opt"><input type="radio" name="res-note-' + safeRef + '" value="current"> ' +
+                '      <span class="import-conflict-label">Keep current text:</span> <span class="import-conflict-text">' + escapeHtml(c.currentText) + '</span></label>' +
+                '  </div>';
+        }
+
+        /* Tag resolution -- only shown when tags actually differ.
+           Default is "union" (merge both sets) since tags are additive
+           by nature -- unlike note text, there's rarely a reason to
+           want one side's tags to actively replace the other's. */
+        if (c.tagsDiffer) {
+            var importedTagsText = formatTagList(c.importedTags);
+            var currentTagsText  = formatTagList(c.currentTags);
+            html += '  <div class="import-conflict-group import-conflict-tags">' +
+                '    <label class="import-conflict-opt"><input type="radio" name="res-tag-note-' + safeRef + '" value="union" checked> ' +
+                '      <span class="import-conflict-label">Merge tags:</span> <span class="import-conflict-text">' + escapeHtml(currentTagsText + " + " + importedTagsText) + '</span></label>' +
+                '    <label class="import-conflict-opt"><input type="radio" name="res-tag-note-' + safeRef + '" value="imported"> ' +
+                '      <span class="import-conflict-label">Imported tags only:</span> <span class="import-conflict-text">' + escapeHtml(importedTagsText) + '</span></label>' +
+                '    <label class="import-conflict-opt"><input type="radio" name="res-tag-note-' + safeRef + '" value="current"> ' +
+                '      <span class="import-conflict-label">Keep current tags only:</span> <span class="import-conflict-text">' + escapeHtml(currentTagsText) + '</span></label>' +
+                '  </div>';
+        }
+
+        html += '</div>';
+        return html;
     }
 
     function renderHighlightConflict(c) {
@@ -1098,10 +1130,20 @@
             var row = rows[i];
             var ref = row.getAttribute("data-ref");
             var kind = row.getAttribute("data-kind");
-            var checked = row.querySelector('input[type="radio"]:checked');
-            var value = checked ? checked.value : "imported";
-            var key = (kind === "highlight") ? ("hl:" + ref) : ref;
-            resolutions[key] = value;
+
+            if (kind === "highlight") {
+                var checkedHl = row.querySelector('input[type="radio"]:checked');
+                resolutions["hl:" + ref] = checkedHl ? checkedHl.value : "imported";
+            } else {
+                /* Note rows can now contain two independent radio
+                   groups (text + tags); either one may be absent if
+                   that particular field didn't actually conflict. */
+                var checkedText = row.querySelector('input[name="res-note-' + ref + '"]:checked');
+                if (checkedText) { resolutions[ref] = checkedText.value; }
+
+                var checkedTag = row.querySelector('input[name="res-tag-note-' + ref + '"]:checked');
+                if (checkedTag) { resolutions["tags:" + ref] = checkedTag.value; }
+            }
         }
 
         var applyBtn = document.getElementById("import-apply-btn");
@@ -2221,6 +2263,7 @@
             var nmBookLookup = {};        /* abbr -> { num, folder, name } */
             var nmSelectedTags = {};      /* tag (lowercase) -> true, for currently-selected filter tags */
             var nmSelectedBookIds = null; /* null = no book/category filter active; else array of book numbers */
+            var nmTagPresenceFilter = null; /* null = no presence filter; "any" = notes WITH at least one tag; "none" = notes with NO tags */
 
             function nmLoadBibleDataIfNeeded(callback) {
                 if (typeof BIBLE_DATA !== "undefined") { callback(); return; }
@@ -2329,6 +2372,19 @@
                 };
             }
 
+            /* Generic collapse/expand for the Notes Manager's filter
+               panels. `key` is the shared prefix used by both the body
+               element (key + "-body") and the chevron (key + "-chevron")
+               -- kept generic so both panels reuse the same function. */
+            window.nmToggleCollapse = function (key) {
+                var body = document.getElementById(key + "-body");
+                var chevron = document.getElementById(key + "-chevron");
+                if (!body) { return; }
+                var isCollapsed = body.style.display === "none";
+                body.style.display = isCollapsed ? "" : "none";
+                if (chevron) { chevron.style.transform = isCollapsed ? "rotate(0deg)" : "rotate(-90deg)"; }
+            };
+
             function collectAllTagsFromRecords(records) {
                 var seen = {};
                 for (var i = 0; i < records.length; i++) {
@@ -2372,7 +2428,39 @@
                 } else {
                     nmSelectedTags[key] = true;
                     if (btnEl) { addClass(btnEl, "is-selected"); }
+                    if (nmTagPresenceFilter) {
+                        nmTagPresenceFilter = null;
+                        var anyBtn = document.getElementById("nm-tag-presence-any");
+                        var noneBtn = document.getElementById("nm-tag-presence-none");
+                        if (anyBtn)  { removeClass(anyBtn, "is-selected"); }
+                        if (noneBtn) { removeClass(noneBtn, "is-selected"); }
+                    }
                 }
+                nmRenderList();
+            };
+
+            /* "Has Any Tags" / "No Tags" are mutually exclusive with each
+               other AND with specific tag selections -- picking a specific
+               tag already implies "has tags", and the two presence modes
+               can't both apply to the same note, so selecting one clears
+               the other kind of selection to avoid a filter combination
+               that could never match anything. */
+            window.nmSetTagPresenceFilter = function (mode) {
+                var anyBtn = document.getElementById("nm-tag-presence-any");
+                var noneBtn = document.getElementById("nm-tag-presence-none");
+
+                if (nmTagPresenceFilter === mode) {
+                    nmTagPresenceFilter = null;
+                } else {
+                    nmTagPresenceFilter = mode;
+                    nmSelectedTags = {};
+                    var tagBtns = document.getElementsByClassName("nm-tag-btn");
+                    for (var j = 0; j < tagBtns.length; j++) { removeClass(tagBtns[j], "is-selected"); }
+                }
+
+                if (anyBtn)  { if (nmTagPresenceFilter === "any")  { addClass(anyBtn, "is-selected"); }  else { removeClass(anyBtn, "is-selected"); } }
+                if (noneBtn) { if (nmTagPresenceFilter === "none") { addClass(noneBtn, "is-selected"); } else { removeClass(noneBtn, "is-selected"); } }
+
                 nmRenderList();
             };
 
@@ -2427,6 +2515,11 @@
                 nmSelectedTags = {};
                 var tagBtns = document.getElementsByClassName("nm-tag-btn");
                 for (var j = 0; j < tagBtns.length; j++) { removeClass(tagBtns[j], "is-selected"); }
+                nmTagPresenceFilter = null;
+                var anyBtn = document.getElementById("nm-tag-presence-any");
+                var noneBtn = document.getElementById("nm-tag-presence-none");
+                if (anyBtn)  { removeClass(anyBtn, "is-selected"); }
+                if (noneBtn) { removeClass(noneBtn, "is-selected"); }
                 nmSelectedBookIds = null;
                 nmRenderList();
             };
@@ -2515,6 +2608,9 @@
                     var rec = nmAllNotes[i];
 
                     if (nmSelectedBookIds && nmSelectedBookIds.indexOf(rec.bookNum) === -1) { continue; }
+
+                    if (nmTagPresenceFilter === "any" && rec.tags.length === 0) { continue; }
+                    if (nmTagPresenceFilter === "none" && rec.tags.length > 0) { continue; }
 
                     if (selectedTagKeys.length > 0) {
                         var recTagKeys = {};

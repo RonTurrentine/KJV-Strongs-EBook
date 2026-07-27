@@ -1386,3 +1386,1506 @@ Files modified this session: style.css, style-kindle.css,
 generate_bible.ps1, fontsize.js, notes.js, start-study.ps1,
 
 scripts/qa-test.ps1
+
+
+---
+
+### Session 19
+- **Date:** 2026-06-22 (continued same day as Session 18)
+- **Model:** Claude Sonnet 4.6 (claude.ai)
+- **Work Done:**
+
+  **Electron Launcher — first .exe build**
+  - Added `icon.ico` (copied BiblePencil.ico from main project)
+  - Built first `.exe` via `npm run build` (electron-builder, NSIS target)
+  - Initial build failed: winCodeSign symlink error — fixed by running as
+    Administrator and clearing `%LOCALAPPDATA%\electron-builder\Cache\winCodeSign`
+  - Second build succeeded: `dist\KJV Strong's Bible Setup 1.0.0.exe`
+
+  **Laptop install test — Round 1 (FAILED)**
+  - Clean Windows 11 laptop, Avast antivirus, WiFi, no dev tools installed
+  - Issues found:
+    - 24-second blank gap before setup window appeared
+    - PowerShell install failed silently — msiexec /quiet exits 1603 without
+      UAC elevation; no prompt shown to user
+    - Avast CyberCapture intercepted executables multiple times
+    - No warning to user about antivirus scanning behavior
+
+  **Launcher fixes — Round 2 (main.js, setup.js, setup.html)**
+
+  main.js:
+  - show: false + ready-to-show event — window appears only once HTML painted
+  - PWSH_DEFAULT_PATH constant — C:\Program Files\PowerShell\7\pwsh.exe
+  - detectPowerShell() — checks direct path if pwsh not in PATH; fresh MSI
+    install doesn't update PATH in current process
+  - runPowerShell() — uses explicit path if not in PATH yet
+  - startServer() — same explicit path fix
+  - install-powershell handler — /quiet → /passive (shows Windows UI, triggers
+    UAC elevation visibly); timeout 120s → 180s; hardcoded v7.4.6 URL →
+    dynamic GitHub API lookup with fallback
+
+  setup.js:
+  - avWarningShown flag — AV warning only shows once per session
+  - firstRunSetup() split into showAntivirusWarning() + doFirstRunSetup()
+  - retrySetup() sets avWarningShown = true — retry skips AV warning
+
+  setup.html:
+  - Added #av-warning full-screen overlay before first-run setup begins
+  - Explains antivirus scanning is normal, warns about UAC prompt
+  - Links to GitHub repo as open-source assurance
+  - "Got it — Begin Setup" button
+
+  **Laptop install test — Round 2 (SUCCESS with issues)**
+  - AV warning appeared correctly ✅
+  - PowerShell downloaded (110MB) and installed with UAC prompt ✅
+  - Bible generation ran: chapters ~1m 34s, dictionary ~40s, total ~2m 15s ✅
+  - Bible opened successfully ✅
+  - Remaining issues:
+    - AV warning appeared 3 times (Avast CyberCapture triggered multiple times)
+    - Red PowerShell error flashed briefly before self-recovering
+    - Both Electron window AND system browser opened simultaneously
+
+  **Launcher fixes — Round 3 (main.js, start-study.ps1)**
+  - start-study.ps1: Start-Process $BaseUrl guarded by $env:KJV_LAUNCHER -ne "1"
+    — browser only opens when running standalone, not from Electron
+  - main.js startServer(): passes env: Object.assign({}, process.env, { KJV_LAUNCHER: "1" })
+    when spawning server process
+
+  **Laptop install test — Round 3 (FULLY SUCCESSFUL)**
+  - Added installer to Avast exceptions to prevent CyberCapture interruptions
+  - Total elapsed time: ~2m 45s end-to-end ✅
+  - AV warning appeared once only ✅
+  - No PowerShell error (PS already installed from Round 2) ✅
+  - No duplicate browser window — Electron window only ✅
+  - Subsequent launch: skipped setup, went straight to Bible ✅
+  - Shutdown: no orphaned PowerShell processes in Task Manager ✅
+  - All UI changes present on laptop ✅
+
+  **GitHub 2FA**
+  - GitHub required 2FA by August 5, 2026 — set up via authenticator app ✅
+  - Daily git push from PowerShell unaffected (uses token/SSH, not website login)
+
+  **UI improvements — KJV-Strongs main project**
+
+  generate_bible.ps1:
+  - ◀V / V▶ → ◀C / C▶ (chapters, not verses)
+  - All "Books" buttons → SVG house icon (home-btn, title="Home") across
+    all 4 nav templates (chapter pages x2, navigate.html, index.html)
+  - Hamburger dropdown: removed "KINDLE" section label — Sync to Kindle
+    and Rebake Notes now peers in unlabeled section
+  - sync-kindle-row id added for JS targeting
+
+  generate_dict.ps1:
+  - "Books" button → SVG house icon on Hebrew/Greek index pages
+
+  scripts/search.html:
+  - "Books" button → SVG house icon
+
+  notes.js:
+  - updateSyncButton() targets #sync-kindle-row in settings menu
+  - Kindle not connected: row gets settings-row-disabled class, click
+    disabled, title="Not connected" tooltip on hover
+  - Connected: class removed, click re-enabled, title cleared
+
+  style.css:
+  - Added .settings-row-disabled — opacity 0.4, cursor not-allowed, hover suppressed
+  - Added .home-btn — inline-flex for SVG icon centering
+
+  style-kindle.css:
+  - Added .home-btn — inline-block for Kindle compatibility
+
+  scripts/qa-test.ps1:
+  - Updated all V→C button pattern checks (6 occurrences across 4 assertions)
+
+  README.md:
+  - Added Option A (Electron Launcher) as recommended install path
+  - Removed SQLite3 from requirements — not needed by end users
+  - Removed bdb-thayer.dct.mybible from source files — replaced with
+    pre-exported bdb-thayer.json hosted on Releases page
+  - Removed export-bdb.ps1 as required step — demoted to optional note
+  - Updated QA test count: 151+ → 155+
+  - Updated nav buttons: ◀V/V▶ → ◀C/C▶
+  - Added hamburger menu, home button, keyboard shortcuts to features
+  - Updated platform table to include Launcher row
+  - Clarified BDB/Thayer acknowledgement — end users don't need MyBible
+
+  **GitHub Releases**
+  - Bumped launcher to v1.1.0 in package.json, rebuilt installer
+  - Created v1.1.0 release on GitHub Releases page with:
+    - KJV Strong's Bible Setup 1.1.0.exe
+    - kjv.osis.xml (carried over from v1.0.0)
+    - bdb-thayer.json (carried over from v1.0.0)
+
+  **KJV-Strongs-Launcher GitHub repo created**
+  - https://github.com/RonTurrentine/KJV-Strongs-Launcher
+  - Initial push failed — gitignore file was missing dot prefix so Git
+    tracked node_modules/ (405 packages) and dist/ (270MB); push rejected
+    by GitHub due to 177MB files exceeding the 100MB limit
+  - Fix: renamed gitignore → .gitignore, deleted .git entirely,
+    re-initialized fresh, re-committed and pushed cleanly
+  - Final push: 10 files, 90KB ✅
+
+  **Git commit message fix**
+  - Accidentally used launcher commit message on main project commit
+  - Fixed with: git commit --amend + git push --force-with-lease
+
+  **QA: 155/155 passing, 0 failures, 0 warnings**
+
+  **Files modified this session (KJV-Strongs-EBook repo):**
+  - js/notes.js
+  - css/style.css
+  - css/style-kindle.css
+  - scripts/generate_bible.ps1
+  - scripts/generate_dict.ps1
+  - scripts/qa-test.ps1
+  - scripts/search.html
+  - start-study.ps1
+  - README.md
+
+  **Files modified this session (KJV-Strongs-Launcher repo):**
+  - main.js
+  - setup.js
+  - setup.html
+  - package.json (version 1.0.0 → 1.1.0)
+  - .gitignore (renamed from gitignore)
+
+  **Pending for next session:**
+  - Test PowerShell fresh-install detection on a truly clean machine
+    (Round 3 laptop already had PS from Round 2 — fix not fully verified)
+  - Add git-push.ps1 helper script to launcher repo
+  - Consider code signing certificate for cleaner Avast/SmartScreen experience
+  - Add LAUNCHER-DEV-NOTES.md content if not already written
+
+
+---
+
+### Session 20
+- **Date:** 2026-06-24
+- **Model:** Claude Sonnet 4.6 (claude.ai)
+- **Work Done:**
+
+  **Help, About, and Exit in hamburger menu**
+
+  `generate_bible.ps1` — hamburger dropdown updated with two new sections:
+  - ❓ Help / Documentation — opens `help.html` in a new tab
+  - ℹ️ About — opens `about.html` in a new tab
+  - ✕ Exit — calls `window.close()`
+  - Help/About use `window.open('../../help.html', '_blank')` (chapter page depth)
+  - Exit row styled with subtle red tint on hover via `.settings-row-exit`
+
+  `style.css`:
+  - Added `.settings-row-exit` — `color: #ff6b6b`, dark red hover background
+
+  `scripts/help.html` (new static file):
+  - Full documentation page covering: Navigation, Strong's Numbers, Settings
+    Menu, Keyboard Shortcuts, Personal Notes, Verse Highlighting, Reading Mode,
+    English Word Search, Kindle Fire Sync
+  - Sticky "✕ Close Tab" bar at top calls `window.close()`
+  - Styled to match app dark theme using `css/style.css`
+  - Stored in `scripts/` like `search.html`, copied to root by `generate_bible.ps1`
+
+  `scripts/about.html` (new static file):
+  - Shows version (v1.1.0), stat counters (1,189 chapters, 66 books,
+    14,298 lexicon pages, 155+ QA tests)
+  - Bible text edition description (Blayney 1769)
+  - Acknowledgements, links to GitHub repo and Releases page
+  - Sticky "✕ Close Tab" bar at top
+  - Stored in `scripts/`, copied to root by `generate_bible.ps1`
+
+  `generate_bible.ps1` Phase 5c added:
+  - Copies `help.html` and `about.html` from `scripts/` to project root
+    during generation (same pattern as `search.html` Phase 5b)
+
+  **Hamburger menu on index (home) page**
+
+  `generate_bible.ps1` index.html template updated:
+  - Added hamburger ☰ button to nav bar
+  - Added full settings dropdown (Font Size, Sync to Kindle, Rebake Notes,
+    Help, About, Exit) — Strong's toggle omitted (no badges on home page)
+  - Added `fontsize.js` and `notes.js` script includes
+  - Help/About paths are root-relative (`help.html` / `about.html`)
+  - Bug fix: button called `toggleSettings()` which doesn't exist —
+    corrected to `toggleSettingsMenu()` (the function in notes.js)
+
+  **Chapter count and verse count display**
+
+  `generate_bible.ps1`:
+  - Index page book list: chapter count moved inside `<a>` tag so it sits
+    immediately after the book name and is part of the clickable link
+    e.g. "Matthew (28 ch)" — was previously outside the link
+  - Chapter header: verse count added in `chapter-meta` span
+    e.g. "Genesis 1 (31 v)"
+
+  `style.css`:
+  - Added `.chapter-meta` — `color: #888888`, `font-size: 0.7em`,
+    `font-weight: normal` — matches existing gray chapter-count style
+  - Added `a .chapter-count` rule — keeps count gray inside anchor tags
+    (prevents it inheriting link blue color)
+
+  **WINDOWS-SETUP.md updated**
+  - Restructured as Option A (Installer, recommended) and Option B (Manual)
+  - Removed SQLite3 from requirements
+  - Removed bdb-thayer.dct.mybible from source files
+  - Removed export-bdb.ps1 as required step
+  - Updated generation time estimates to actual times (2-3 min not 10-15)
+  - Added hamburger menu, home button, keyboard shortcuts to features
+  - Updated sync button reference to hamburger menu
+  - Updated QA count to 155+
+  - Added search.html to file structure
+  - Marked export-bdb.ps1 as advanced/optional
+
+  **GPL v3 License added**
+  - LICENSE file created on GitHub.com using built-in license template
+  - README.md license section updated — proper GPL v3 notice with copyright,
+    warranty disclaimer, and third-party public domain content listed
+  - License headers added to all 8 PowerShell source files:
+    generate_bible.ps1, generate_dict.ps1, qa-test.ps1, rebake-notes.ps1,
+    adb-push-all.ps1, package_epub.ps1, git-push.ps1, start-study.ps1
+  - BDB (1906) and Thayer (1889) confirmed public domain — predates copyright
+    by over 100 years; MyBible format is just a SQLite container for PD content
+
+  **Legacy scripts removed from scripts/**
+  - `adb-push-test.ps1` — test version of adb-push-all, superseded
+  - `cleanup.ps1` — early dev cleanup script, no longer needed
+  - `ExportToJson.ps1` — superseded by export-bdb.ps1
+  - `scan_morph_codes.ps1` — morphology tool from early development
+
+  **Git configuration fix**
+  - `git pull` triggered vim editor for merge commit confirmation (LICENSE
+    created on GitHub wasn't in local repo) — very confusing first encounter
+  - Fixed: `git config --global core.editor "notepad"` — Git now uses
+    Notepad for merge messages instead of vim
+
+  **QA: 155/155 passing, 0 failures, 0 warnings**
+
+  **Files modified this session (KJV-Strongs-EBook repo):**
+  - `css/style.css`
+  - `scripts/generate_bible.ps1`
+  - `scripts/generate_dict.ps1` (license header only)
+  - `scripts/qa-test.ps1` (license header only)
+  - `scripts/rebake-notes.ps1` (license header only)
+  - `scripts/adb-push-all.ps1` (license header only)
+  - `scripts/package_epub.ps1` (license header only)
+  - `scripts/git-push.ps1` (license header only)
+  - `scripts/help.html` (new)
+  - `scripts/about.html` (new)
+  - `start-study.ps1` (license header only)
+  - `README.md`
+  - `WINDOWS-SETUP.md`
+  - `LICENSE` (new — created on GitHub)
+
+  **Files deleted this session:**
+  - `scripts/adb-push-test.ps1`
+  - `scripts/cleanup.ps1`
+  - `scripts/ExportToJson.ps1`
+  - `scripts/scan_morph_codes.ps1`
+
+  **Pending for next session:**
+  - Add GPL v3 license headers to JS files (notes.js, search.js, fontsize.js,
+    bookmarks.js, sticky-header.js, bible-data.js)
+  - Add LICENSE file to KJV-Strongs-Launcher repo
+  - Add license headers to launcher source files (main.js, preload.js,
+    setup.js, setup.css)
+  - Test Help/About/Exit in hamburger menu in browser
+  - Test hamburger menu on index page
+  - Verify chapter count inline and verse count in header after regeneration
+  - Run QA after all generate_bible.ps1 changes this session
+
+
+---
+
+### Session 21
+- **Date:** 2026-06-26
+- **Model:** Claude Sonnet 4.6 (claude.ai)
+- **Work Done:**
+
+  **macOS Installer — full implementation**
+
+  `main.js` changes:
+  - Added `IS_WIN` / `IS_MAC` platform constants at top
+  - `INSTALL_DIR` — `~/Library/Application Support/KJVStrongs` on Mac,
+    `%LOCALAPPDATA%\KJVStrongs` on Windows
+  - `PWSH_DEFAULT_PATH` — null on Mac; added `PWSH_MAC_PATHS` array covering
+    Intel (`/usr/local/bin/pwsh`), Apple Silicon (`/opt/homebrew/bin/pwsh`),
+    and manual install fallback
+  - `detectPowerShell()` — loops through platform-appropriate paths; checks
+    both PATH and known install locations
+  - `detectHomebrew()` — checks `/usr/local/bin/brew` (Intel) and
+    `/opt/homebrew/bin/brew` (Apple Silicon), falls back to `which brew`
+  - `installHomebrewViaTerm()` — spawns Terminal via `osascript` with official
+    Homebrew install command; resolves immediately so user clicks Continue
+  - `runPowerShell()` — platform-aware pwsh path resolution
+  - `startServer()` — `windowsHide` only on Windows; Mac-aware pwsh path;
+    `spawnOpts` object centralizes spawn options
+  - `install-powershell` IPC handler — branches on Mac (brew install powershell)
+    vs Windows (MSI download + /passive install)
+  - New IPC handlers: `check-homebrew`, `install-homebrew-via-term`, `get-platform`
+  - `clone-repo` — uses `unzip` on Mac instead of PowerShell `Expand-Archive`;
+    tar fallback works on both platforms
+  - `createSetupWindow()` — uses `icon.icns` on Mac, `icon.ico` on Windows
+
+  `preload.js` changes:
+  - Added `checkHomebrew`, `installHomebrewViaTerm`, `getPlatform` exposures
+
+  `setup.js` changes:
+  - `firstRunSetup()` — calls `getPlatform()` to show correct warning overlay
+  - `checkHomebrew()` — new Mac flow: detect → show prompt → spawn Terminal
+    → show waiting state with Continue button → verify → proceed to setup
+
+  `setup.html` changes:
+  - Renamed AV warning to Windows-specific (`#av-warning`)
+  - Added Mac Gatekeeper warning overlay (`#mac-warning`) — explains Gatekeeper,
+    Homebrew, and PowerShell install; same "Got it" button flow
+  - Added Homebrew install prompt (`#homebrew-prompt`) — "Open Terminal to
+    Install Homebrew" button calls `homebrewInstallStart()`
+  - Added Homebrew waiting state (`#homebrew-waiting`) — "✓ Homebrew is
+    installed — Continue" button calls `homebrewContinue()`
+
+  `package.json` changes:
+  - Added `build:mac` and `build:all` npm scripts
+  - Added `mac` build target — DMG format, x64 + arm64 architectures
+  - Added `dmg` config with window dimensions
+  - Added `icon.icns` to files list
+  - Updated license from MIT → GPL-3.0
+
+  `icon.icns` (new file):
+  - Generated from existing `BiblePencil.ico` (256x256 source)
+  - Contains all required Mac icon sizes (16, 32, 128, 256, 512, 1024)
+    plus Retina (@2x) variants
+  - 208KB
+
+  **GitHub Actions CI pipeline**
+
+  `.github/workflows/build-release.yml` (new file):
+  - Triggers on version tag push (e.g. `git tag v1.2.0 && git push origin v1.2.0`)
+  - Parallel jobs: `build-windows` (windows-latest) and `build-mac` (macos-latest)
+  - Both use Node.js 24, `npm ci`, electron-builder
+  - Uploads artifacts directly to GitHub Release via `softprops/action-gh-release@v2`
+  - `permissions: contents: write` required for release creation
+  - First successful run: Build Release #3, 2m 23s total
+
+  **First automated release — v1.1.0 / tag v1.2.0**
+  - Tag/version mismatch: package.json says 1.1.0, tag is v1.2.0
+    — release title manually set to v1.1.0 on GitHub; tag left as-is
+  - Three installer assets produced:
+    - `KJV Strong's Bible Setup 1.1.0.exe` (76.1 MB) — Windows
+    - `KJV Strong's Bible-1.1.0.dmg` (97.8 MB) — Mac Intel x64
+    - `KJV Strong's Bible-1.1.0-arm64.dmg` (93.6 MB) — Mac Apple Silicon
+  - Code signing skipped (no Apple Developer ID certificate) — users need
+    to click "Open Anyway" in macOS Gatekeeper / System Settings → Privacy
+
+  **Troubleshooting during CI setup**
+  - Build #1 failed: Node.js 20 deprecated, exit code 1 (old package.json
+    without build:mac script)
+  - Build #2 failed: 403 Forbidden — GITHUB_TOKEN lacked write permissions;
+    fixed by enabling Read and write permissions in repo Settings → Actions → General
+    and adding `permissions: contents: write` to workflow
+  - Build #3: ✅ SUCCESS
+
+  **KJV-Strongs-EBook releases confirmed correct**
+  - v1.1.0 release has kjv.osis.xml and bdb-thayer.json attached ✅
+  - Launcher downloads from latest EBook release — no changes needed
+
+  **Pending for next session:**
+  - Fix package.json version to 1.2.0 to match tag going forward
+  - Test Mac installer on an actual Mac (via friend/borrowed machine or
+    wait for user feedback)
+  - Consider Apple Developer ID certificate for cleaner Gatekeeper experience
+  - Update SESSION-NOTES.md with Sessions 20-21 content (partially done)
+  - Update README on launcher repo to document the CI build process
+
+
+---
+
+### Session 22
+- **Date:** 2026-06-28
+- **Model:** Claude Sonnet 4.6 (claude.ai)
+- **Work Done:**
+
+  **UI: Back Button added to all pages**
+
+  `generate_bible.ps1`:
+  - Chapter pages — `◀ Back` button (`history.back()`) added after home icon
+  - navigate.html — `◀ Back` button added to nav bar
+
+  `generate_dict.ps1`:
+  - Hebrew/Greek index pages — `◀ Back` button added to nav bar
+  - (Individual dict entry pages already had `javascript:history.back()`)
+
+  `scripts/search.html`:
+  - `◀ Back` button added after Go To link
+  - Font size buttons removed from nav (moved into hamburger menu)
+
+  **UI: "Go To Passage" renamed to "Go To" everywhere**
+
+  `generate_bible.ps1`:
+  - Chapter page nav button: "Go To Passage" → "Go To"
+  - navigate.html `<title>` and `<h1>`: "Go To Passage" → "Go To"
+  - index.html nav button: "Go To Passage" → "Go To"
+
+  **UI: Hamburger menu added to Hebrew, Greek, Go To, and Search pages**
+
+  `generate_bible.ps1`:
+  - navigate.html — full hamburger dropdown added (root-level paths)
+  - navigate.html — `fontsize.js` and `notes.js` script includes added
+
+  `generate_dict.ps1`:
+  - Hebrew/Greek index pages — full hamburger dropdown added
+    (`../help.html` / `../about.html` paths)
+  - Hebrew/Greek index pages — `fontsize.js` and `notes.js` added
+
+  `scripts/search.html`:
+  - Full hamburger dropdown added (root-level paths)
+  - `notes.js` script include added
+
+  **Feature: Update checker with glowing cross icon notification**
+
+  `generate_bible.ps1`:
+  - Phase 0 added — fetches latest commit SHA from GitHub API
+    (`https://api.github.com/repos/RonTurrentine/KJV-Strongs-EBook/commits/main`)
+    before generation starts; stored in `$InstalledSha`
+  - SHA baked into `<meta name="kjv-sha">` on every chapter page and index.html
+  - Rectangular Christian cross SVG icon added to every `<h1>` (hidden by default)
+  - Phase 5b updated — replaces `KJV_SHA_PLACEHOLDER` in search.html after copy
+  - Phase 5c updated — replaces `KJV_SHA_PLACEHOLDER` in help.html/about.html
+  - navigate.html fixed — was using single-quoted here-string (`@'...'@`) so
+    `$InstalledSha` was written as literal text; fixed using `KJV_SHA_PLACEHOLDER`
+    replaced via `ForEach-Object` pipeline before `Set-Content`
+
+  `generate_dict.ps1`:
+  - SHA fetch added at top (same GitHub API call)
+  - SHA meta tag and cross icon added to Hebrew/Greek index template
+  - `Write-IndexPage` function updated to accept `-Sha` parameter —
+    `$InstalledSha` is script-scope and not visible inside functions in PowerShell;
+    must be passed explicitly
+
+  `scripts/search.html`:
+  - `KJV_SHA_PLACEHOLDER` meta tag added (replaced at generation time)
+  - Cross icon added to `<h1>`
+
+  `js/notes.js`:
+  - New update check block runs on every page load (localhost only)
+  - Silently calls GitHub API, compares SHA to baked-in meta tag SHA
+  - If different: reveals glowing gold cross icon via `.is-visible` class
+  - `openUpdateModal()` — shows update modal with latest commit SHA and message
+  - `closeUpdateModal()` — dismisses modal
+  - `doUpdateNow()` — calls `POST /api/update`, shows progress, reloads on success
+  - Update modal created dynamically with progress state
+
+  `css/style.css`:
+  - `.update-cross` — gold `#f0c040` color, drop-shadow glow, 2s pulse animation
+  - `.update-cross.is-visible` — reveals the icon
+  - `@keyframes cross-pulse` — alternates glow intensity 4px↔12px
+  - Full update modal styles — overlay, box, icon, title, message, progress,
+    buttons (Update Now + Later)
+
+  `start-study.ps1`:
+  - `Handle-Update` function added — git pull → generate_bible → generate_dict
+    → rebake notes
+  - `/api/update` POST route added to router
+
+  **Cross icon shape fix**
+  - Original `&#10010;` (U+271A) is a square cross — replaced with custom SVG
+  - SVG cross: vertical beam full height (0-18), horizontal beam at y=4 (upper
+    third) — matches traditional rectangular Christian cross proportion
+  - Applied to: generate_bible.ps1 (3 instances), generate_dict.ps1 (1),
+    notes.js (2 — icon in header and modal)
+
+  **Correct push/regenerate order established**
+  - Must push to GitHub FIRST, then regenerate
+  - Generation fetches the SHA of the latest commit — if regenerated before
+    pushing, the new push immediately makes the baked SHA stale
+
+  **PowerShell scoping lessons learned**
+  - Single-quoted here-strings (`@'...'@`) do NOT expand variables — use
+    placeholder + replace pattern instead
+  - Script-scope variables are NOT visible inside functions — must pass explicitly
+    as parameters
+
+  **QA: 155/155 passing, 0 failures, 0 warnings**
+
+  **Files modified this session:**
+  - `js/notes.js`
+  - `css/style.css`
+  - `start-study.ps1`
+  - `scripts/generate_bible.ps1`
+  - `scripts/generate_dict.ps1`
+  - `scripts/search.html`
+  - `scripts/help.html` (cross icon added)
+  - `scripts/about.html` (cross icon added)
+
+  **Pending for next session:**
+  - Notes Export to JSON — "Download notes.json" button in hamburger menu
+    saves to user's Downloads folder
+  - Mobile/PWA support
+  - Update SESSION-NOTES.md (this entry)
+
+
+---
+
+### Session 23
+- **Date:** 2026-06-29
+- **Model:** Claude Sonnet 4.6 (claude.ai)
+- **Work Done:**
+
+  **Notes Export to JSON**
+
+  `start-study.ps1`:
+  - `Handle-ExportNotes` function added — reads `notes.json`, returns it with
+    `Content-Disposition: attachment; filename="kjv-notes-YYYY-MM-DD.json"` header
+  - `/api/export-notes` GET route added to router
+
+  `js/notes.js`:
+  - `exportNotes()` function — creates hidden `<a>` element pointing to
+    `/api/export-notes`, clicks it programmatically, removes it
+  - Toast message tells user exact filename and that it saved to Downloads folder:
+    "Notes saved to your Downloads folder as kjv-notes-YYYY-MM-DD.json"
+  - Works on both Windows (Downloads) and Mac/Safari (~/Downloads) — same behavior
+
+  `scripts/generate_bible.ps1`, `scripts/generate_dict.ps1`, `scripts/search.html`:
+  - "💾 Export Notes" menu item added to every hamburger dropdown,
+    immediately after "🔄 Rebake Notes"
+
+  **Launcher: Option B — Fresh Install Cleanup Flow**
+
+  `main.js` — 3 new IPC handlers:
+  - `check-existing-install` — checks if `KJVStrongs` folder exists and
+    if `notes.json` is present; returns `{ exists, hasNotes, notesSize, notesPath }`
+  - `export-notes-backup` — copies `notes.json` to
+    `~/Downloads/kjv-notes-backup-YYYY-MM-DD.json`; returns `{ ok, path, filename }`
+  - `wipe-install-dir` — deletes entire `KJVStrongs` folder with `fs.rmSync`;
+    returns `{ ok }` or `{ ok: false, message }`
+
+  `setup.js` — new flow before `firstRunSetup()`:
+  - `runSetup()` now calls `checkExistingInstall()` instead of `firstRunSetup()`
+    directly when `setupComplete` is false
+  - `checkExistingInstall()` — calls `check-existing-install` IPC; routes to
+    `showExistingInstallPrompt()` if folder exists, otherwise `firstRunSetup()`
+  - `showExistingInstallPrompt()` — shows overlay, wires up three buttons:
+    - `exportNotesBackup` — exports notes, disables button, shows
+      "✓ Notes saved — Refresh Now" button after success
+    - `refreshInstall` — wipes folder then calls `firstRunSetup()`
+    - `keepExisting` — marks `setupComplete: true` and calls `subsequentLaunch()`
+
+  `setup.html` — new `#existing-install-prompt` overlay:
+  - Shown when existing `KJVStrongs` folder detected on fresh install
+  - Notes warning section (hidden if no notes exist)
+  - "💾 Export My Notes First" button
+  - "✓ Notes saved — Refresh Now" button (appears after successful export)
+  - "Refresh Without Backup" button
+  - "Keep Existing & Launch" button
+
+  `preload.js` — fully rewritten with all handlers:
+  - Added `checkExistingInstall`, `exportNotesBackup`, `wipeInstallDir`
+  - Added Mac handlers: `checkHomebrew`, `installHomebrewViaTerm`, `getPlatform`
+  - All previous handlers retained
+
+  **Launcher v1.2.0 Release**
+
+  `package.json`:
+  - Version bumped to `1.2.0`
+  - DMG config fixed: `"background": null` + explicit `contents` layout
+    — fixes `FileNotFoundError: background.tiff` on macOS 26 GitHub runner
+  - Added `"createDesktopShortcut": true` and `"createStartMenuShortcut": true`
+    to NSIS config — installer now creates desktop and Start Menu shortcuts
+
+  CI build:
+  - Build #5 succeeded after DMG background fix
+  - Three assets produced: Windows `.exe`, Mac Intel `.dmg`, Mac arm64 `.dmg`
+  - Old v1.1.0 duplicate assets cleaned up from release page
+  - Release notes updated on GitHub
+
+  **Laptop fresh install test**
+  - Installed v1.1.0 from Releases page on laptop
+  - Discovered laptop had old version (6/21 files) — missing hamburger,
+    back buttons, and other recent features
+  - Root cause: launcher downloaded repo ZIP on 6/21 before recent changes pushed
+  - Fix: uninstall → delete `%LOCALAPPDATA%\KJVStrongs` → reinstall fresh
+  - Notes copied from desktop project to laptop:
+    `Copy-Item "C:\Users\OldTi\KJV-Strongs\notes.json" "$env:LOCALAPPDATA\KJVStrongs\notes.json"`
+  - Rebake Notes handles both notes AND highlights in one pass ✅
+
+  **Correct push/regenerate order reminder**
+  - Always: push to GitHub FIRST → then regenerate
+  - Generation fetches latest SHA — if you regenerate before pushing,
+    the new push makes the baked SHA immediately stale
+
+  **QA: 155/155 passing, 0 failures, 0 warnings**
+
+  **Files modified this session (KJV-Strongs-EBook repo):**
+  - `js/notes.js`
+  - `start-study.ps1`
+  - `scripts/generate_bible.ps1`
+  - `scripts/generate_dict.ps1`
+  - `scripts/search.html`
+
+  **Files modified this session (KJV-Strongs-Launcher repo):**
+  - `main.js`
+  - `preload.js`
+  - `setup.js`
+  - `setup.html`
+  - `package.json` (v1.2.0, DMG fix, desktop shortcut)
+
+  **Pending for next session:**
+  - Mobile/PWA support
+  - Test existing install detection flow on laptop with v1.2.0 installer
+  - Update SESSION-NOTES.md (this entry)
+  - Commit EBook repo changes (notes export, hamburger updates)
+
+
+---
+
+### Session 24
+- **Date:** 2026-06-30
+- **Model:** Claude Sonnet 4.6 (claude.ai)
+- **Work Done:**
+
+  **Bug discovered: laptop install showed stale content after reinstall**
+  - User uninstalled old launcher app but kept `%LOCALAPPDATA%\KJVStrongs` data
+    folder; reinstalling a newer launcher version still showed old Bible content
+    and threw `spawn EPERM` on launch
+  - Root cause: `.launcher-state.json` had `setupComplete: true` from the
+    previous install, so the launcher skipped straight to launching stale
+    content instead of detecting the mismatch
+
+  **Launcher fix: version-mismatch detection on every launch**
+
+  `main.js`:
+  - New `get-app-version` IPC handler — returns `app.getVersion()` (real
+    installed version from electron-builder, not a guessed/stored value)
+  - `check-existing-install` enhanced — now also compares `state.installedVersion`
+    (what generated the data) against `app.getVersion()` (what's running);
+    returns `versionMismatch: true/false`, `installedDataVersion`, `currentAppVersion`
+
+  `setup.js`:
+  - `runSetup()` — even when `setupComplete: true`, now calls
+    `checkVersionMismatch()` instead of launching directly
+  - New `checkVersionMismatch()` — calls `checkExistingInstall()`, routes to
+    the existing-install prompt if versions differ, otherwise launches normally
+  - `showExistingInstallPrompt()` — now accepts `isUpgrade` flag; customizes
+    title/message to "App Updated — Refresh Recommended" and shows old vs.
+    current version; hides "Keep Existing" option in upgrade scenario
+  - `startGeneration()` — fixed bug where `installedVersion` was being saved
+    from the bogus `state.latestKnownVersion` instead of the real app version
+    via the new `getAppVersion()` call
+
+  `preload.js`:
+  - Exposed `getAppVersion()`
+
+  **Launcher v1.2.0 — Windows shortcuts + DMG fix**
+
+  `package.json`:
+  - Added `"createDesktopShortcut": true` and `"createStartMenuShortcut": true`
+    to NSIS config
+  - DMG background fix carried forward from prior session
+
+  **About page version — three iterations to get it right**
+
+  Round 1 — hardcoded value (broken):
+  - `about.html` had `v1.1.0` hardcoded as plain text — never updated when
+    versions bumped
+
+  Round 2 — VERSION file (rejected by user, too manual):
+  - Considered a `VERSION` file as single source of truth
+  - User: "I don't like the idea of depending upon human effort... I'm quite
+    forgetful" — rejected in favor of automation
+
+  Round 3 — git describe --tags (broken for ZIP installs):
+  - `generate_bible.ps1` Phase 0b reads version via `git describe --tags --abbrev=0`
+  - Worked perfectly in dev repo (real git clone)
+  - BROKE on installed app: `%LOCALAPPDATA%\KJVStrongs` has no `.git` folder
+    (it's a ZIP extraction, not a clone) — `git describe` fails silently,
+    falls back to "unknown"
+
+  Round 4 — GitHub Releases API (final, correct fix):
+  - `generate_bible.ps1` Phase 0b now queries
+    `https://api.github.com/repos/RonTurrentine/KJV-Strongs-EBook/releases/latest`
+    and reads `tag_name` — works identically whether dev clone or ZIP install,
+    no local git required
+  - Created and published the first proper GitHub Release (not just a tag)
+    for v1.2.0 on the KJV-Strongs-EBook repo, with `kjv.osis.xml` and
+    `bdb-thayer.json` attached
+
+  **Bug discovered: "Update Now" never actually pulled fresh content**
+  - `Handle-Update` in `start-study.ps1` ran `git -C $Root pull origin main`
+  - Same root cause as the version bug: installed app folder has no `.git`,
+    so `git pull` silently failed every time
+  - Every previous "Update Now" click was just regenerating from stale
+    ZIP content over and over — explains why About page stayed on v1.1.0
+    through multiple "successful" updates
+
+  **Fix: ZIP-download replaces git pull in Handle-Update**
+
+  `start-study.ps1`:
+  - Replicated the Electron launcher's `cloneRepo()` approach: download
+    `https://github.com/RonTurrentine/KJV-Strongs-EBook/archive/refs/heads/main.zip`,
+    extract to temp, move each top-level item over the existing install
+  - `notes.json`/`highlights.json` confirmed safe — gitignored, never in the
+    ZIP, never touched by the move loop
+  - `Handle-Update` rewritten to be async — responds immediately with
+    `{started: true}`, runs the real pipeline (download → bible → dict →
+    rebake) in a `Start-Job` background job so the HTTP listener stays
+    responsive for polling
+  - New `Write-UpdateStatus` helper — writes progress to `.update-status.json`
+    at each step (10% → 18% → 25% → 65% → 90% → 100%)
+  - New `Handle-UpdateStatus` function + `/api/update-status` GET route
+
+  **Feature: live progress bar for update modal**
+
+  `js/notes.js`:
+  - Update modal HTML now includes a real progress bar element
+  - `doUpdateNow()` rewritten — kicks off update via POST, then polls
+    `/api/update-status` every 1.5s, updates bar width and detail text live
+  - Handles error state and success/reload state
+
+  `css/style.css`:
+  - `.update-progress-bar-wrap` / `.update-progress-bar` — gradient fill,
+    same visual language as the launcher's setup progress bar
+
+  **Feature: Import Notes & Highlights with conflict resolution**
+
+  User requested Option 4 (full conflict-resolution UI, like a git merge)
+  over simpler auto-merge strategies — more correct for irreplaceable
+  personal data.
+
+  `start-study.ps1`:
+  - `Handle-ExportNotes` updated — now bundles BOTH `notes.json` and
+    `highlights.json` into one export file (previously notes-only)
+  - New `Handle-ImportPreview` — POST `/api/import-notes/preview`; compares
+    uploaded bundle against current notes/highlights; returns
+    `{ newCount, conflictCount, unchangedCount, conflicts: [...] }` for each,
+    without writing anything
+  - New `Handle-ImportCommit` — POST `/api/import-notes/commit`; applies
+    merge using per-item user resolutions (`"imported"` or `"current"`),
+    bakes changes into HTML immediately
+  - Supports both new bundle format and legacy flat notes.json format
+
+  `js/notes.js`:
+  - `importNotes()` — creates hidden file input, reads JSON via `FileReader`
+  - `requestImportPreview()` — posts to preview endpoint
+  - `showImportPreviewModal()` — renders summary (new/conflict/unchanged counts)
+    plus a conflict row for each item needing a decision
+  - `renderNoteConflict()` / `renderHighlightConflict()` — side-by-side radio
+    choice (Imported vs Keep Current) with text comparison or color swatches
+  - `applyImport()` — collects all radio selections, posts to commit endpoint,
+    reloads page on success
+
+  `css/style.css`:
+  - Full `.import-modal` styling — larger scrollable box for conflict lists,
+    color swatch classes for highlight previews
+
+  `generate_bible.ps1`, `generate_dict.ps1`, `scripts/search.html`:
+  - "📥 Import Notes" added to every hamburger menu, after "💾 Export Notes"
+
+  **End-to-end validation — full pipeline confirmed working**
+  - Pushed Import Notes feature to GitHub
+  - Opened installed app — cross icon appeared correctly
+  - Clicked "Update Now" — progress bar displayed live, correctly cycled
+    through download → bible → dict → rebake → complete
+  - About page correctly showed v1.2.0 (via GitHub Releases API, working
+    identically on the ZIP-based install)
+  - Import Notes appeared in hamburger menu on installed copy
+  - User exported notes from dev repo, imported into installed app —
+    "worked flawlessly"
+
+  **QA: 155/155 passing, 0 failures, 0 warnings (dev repo)**
+
+  **Files modified this session (KJV-Strongs-EBook repo):**
+  - `start-study.ps1`
+  - `js/notes.js`
+  - `css/style.css`
+  - `scripts/generate_bible.ps1`
+  - `scripts/generate_dict.ps1`
+  - `scripts/search.html`
+  - `scripts/about.html`
+
+  **Files modified this session (KJV-Strongs-Launcher repo):**
+  - `main.js`
+  - `setup.js`
+  - `preload.js`
+  - `package.json`
+
+  **GitHub Releases:**
+  - Published first real Release (not just tag) for v1.2.0 on
+    KJV-Strongs-EBook with kjv.osis.xml and bdb-thayer.json attached
+
+  **Pending for next session:**
+  - Mobile/PWA support (Android — Samsung Galaxy S24 Ultra) — still pending
+    from prior session, deferred again today due to bug-fixing taking priority
+  - Consider whether Launcher repo's `main.js` should also use a ZIP-based
+    update mechanism consistently, or if it already does (cloneRepo already did)
+  - Update SESSION-NOTES.md (this entry)
+
+
+---
+
+### Session 25
+- **Date:** 2026-07-03
+- **Model:** Claude Sonnet 5 (claude.ai)
+- **Work Done:**
+
+  **Bug fix: version mismatch detection on launcher startup**
+
+  `main.js`:
+  - New `get-app-version` IPC handler — returns `app.getVersion()` (real
+    installed version from electron-builder)
+  - `check-existing-install` enhanced — now compares `state.installedVersion`
+    against `app.getVersion()`; returns `versionMismatch`, `installedDataVersion`,
+    `currentAppVersion`
+
+  `setup.js`:
+  - `runSetup()` — even when `setupComplete: true`, now calls
+    `checkVersionMismatch()` instead of launching directly
+  - New `checkVersionMismatch()` — routes to existing-install prompt if
+    versions differ
+  - `showExistingInstallPrompt()` — accepts `isUpgrade` flag; shows "App
+    Updated — Refresh Recommended" with old version shown; hides
+    "Keep Existing" option in upgrade scenario
+  - `startGeneration()` — fixed bug: was saving `latestKnownVersion` instead
+    of real app version; now calls `getAppVersion()` IPC
+
+  `preload.js`:
+  - Exposed `getAppVersion()`
+
+  **Bug fix: About page version — three iterations**
+
+  Round 1 — hardcoded `v1.1.0` (broken)
+  Round 2 — `git describe --tags` (broken on ZIP installs — no .git folder)
+  Round 3 (final) — GitHub Releases API:
+  - `generate_bible.ps1` Phase 0b queries
+    `https://api.github.com/repos/.../releases/latest`, reads `tag_name`
+  - Works identically on dev clone and ZIP-extracted installed app
+  - Requires a published GitHub Release (not just a bare tag)
+  - Published v1.2.0 Release on KJV-Strongs-EBook with both source files
+
+  **Bug fix: "Update Now" never pulled fresh content**
+
+  Root cause: `Handle-Update` ran `git -C $Root pull origin main` but
+  installed app folder has no `.git` (it's a ZIP extraction). `git pull`
+  silently failed every time — regeneration used stale content repeatedly.
+
+  Fix: replaced `git pull` with ZIP download + extract (same as launcher's
+  `cloneRepo()`):
+  - Downloads `https://github.com/.../archive/refs/heads/main.zip`
+  - Extracts to temp folder, moves each top-level item over existing install
+  - `notes.json`/`highlights.json` safe — gitignored, never in ZIP
+  - Async background job (`Start-Job`) so server stays responsive for polling
+
+  **Feature: live progress bar for Update Now modal**
+
+  `start-study.ps1`:
+  - `Handle-Update` responds immediately with `{started: true}`
+  - Pipeline runs in `Start-Job` background job
+  - `Write-UpdateStatus` helper writes progress to `.update-status.json`
+    at each step: 10% pull → 18% extract → 25% bible → 65% dict → 90%
+    rebake → 100% complete
+  - New `Handle-UpdateStatus` + `/api/update-status` GET route
+
+  `js/notes.js`:
+  - Update modal now has real progress bar element
+  - `doUpdateNow()` — kicks off update, polls `/api/update-status` every
+    1.5s, animates bar width and detail text live
+
+  `css/style.css`:
+  - `.update-progress-bar-wrap` / `.update-progress-bar` — gradient fill
+
+  **Feature: Import Notes & Highlights with conflict resolution**
+
+  `start-study.ps1`:
+  - `Handle-ExportNotes` updated — bundles both `notes.json` AND
+    `highlights.json` into one export file (was notes-only before)
+  - New `Handle-ImportPreview` POST `/api/import-notes/preview` — returns
+    diff without writing anything
+  - New `Handle-ImportCommit` POST `/api/import-notes/commit` — applies
+    merge with per-item user resolutions; supports legacy flat notes.json
+
+  `js/notes.js`:
+  - `importNotes()` — hidden file input, reads JSON via FileReader
+  - Preview → conflict modal → commit flow
+  - Side-by-side radio choices for notes (text) and highlights (color swatches)
+  - `applyImport()` — posts resolutions, reloads on success
+
+  `css/style.css`:
+  - Full `.import-modal` styles with scrollable conflict list, color swatches
+
+  `generate_bible.ps1`, `generate_dict.ps1`, `scripts/search.html`:
+  - "📥 Import Notes" added to all hamburger menus after "💾 Export Notes"
+
+  **Feature: About page version from GitHub Releases API**
+
+  `scripts/about.html`:
+  - Version changed from hardcoded → `vKJV_VERSION_PLACEHOLDER`
+
+  `generate_bible.ps1`:
+  - Phase 0b reads latest release tag from GitHub Releases API
+  - Phase 5c replaces `KJV_VERSION_PLACEHOLDER` in about.html during copy
+
+  **Docs: Upgrade guide for pre-v1.2.0 users**
+
+  `WINDOWS-SETUP.md`:
+  - New "Upgrading from a Version Before v1.2.0" section (5 steps:
+    back up notes → uninstall → delete %LOCALAPPDATA%\KJVStrongs →
+    reinstall → import notes)
+  - Added condensed version to Launcher v1.2.0 release notes
+
+  **Feature: PWA mobile support**
+
+  New files (`scripts/` → copied to root by Phase 5d):
+  - `manifest.json` — PWA manifest (name, icons, theme #00bcd4, standalone)
+  - `sw.js` — service worker: app shell cached on install, cache-on-visit
+    for Bible/dict pages, never caches search/API calls, bulk download via
+    postMessage for offline download buttons
+  - `icon-192.png` / `icon-512.png` — generated from BiblePencil.png
+
+  `generate_bible.ps1`:
+  - Manifest link + theme-color meta added to chapter pages, index.html,
+    navigate.html
+  - SW registration script added to all page closing scripts
+  - New Phase 5d — copies manifest.json, sw.js, icon-192.png, icon-512.png
+    from scripts/ to project root
+
+  `generate_dict.ps1`:
+  - Manifest link + theme-color meta added to dict index and entry pages
+  - SW registration added to dict index pages
+
+  `scripts/search.html`:
+  - Manifest link added; rectangular SVG cross fixed (was still &#10010;)
+  - SW registration added
+
+  `start-study.ps1`:
+  - Binds to `http://+:8080/` (all network interfaces) so phone can connect
+    over WiFi; graceful fallback to localhost with one-time netsh instructions
+  - LAN IP detection via `Get-NetIPAddress`; printed in startup banner:
+    "On your phone/tablet (same WiFi): http://[IP]:8080/"
+  - Browser open uses `$LocalhostBaseUrl` (not the + wildcard)
+
+  **Feature: Phone ↔ PC bidirectional note sync**
+
+  `js/notes.js`:
+  - `isPhoneMode` detection — true when port is 8080, not localhost, http://
+  - `canTakeNotes` flag — true on localhost OR phone mode
+  - Full localStorage layer: `phoneGetNotes()`, `phoneSaveNote()`,
+    `phoneDeleteNote()`, `phoneGetHighlights()`, `phoneSaveHighlight()`
+    all with tombstone support for deletions
+  - `openNoteModal()` / `saveNote()` / `deleteNote()` — route to localStorage
+    in phone mode
+  - Full sync system: `checkPcReachable()`, sync banner (4 states: connected/
+    syncing/offline/error), `syncWithPc()`, `applySyncResult()`,
+    `showSyncConflictModal()` — reuses import conflict modal UI
+  - Phone mode page init — loads localStorage highlights/notes, shows in page
+  - `connectViaUsb()` — calls `/api/usb-connect`, shows instructions in toast
+
+  `start-study.ps1`:
+  - `Handle-SyncNotes` POST `/api/sync-notes` — full bidirectional merge
+    algorithm handling all 8 sync scenarios (identical, PC newer, phone
+    newer, PC only, phone only, true conflict, PC tombstone, phone tombstone);
+    generates sync token stored in `.sync-token.json`
+  - `Handle-SyncCommit` POST `/api/sync-notes/commit` — applies merge with
+    user resolutions, saves to PC, rebakes HTML, returns merged data to phone
+  - `Handle-UsbConnect` POST `/api/usb-connect` — runs
+    `adb reverse tcp:8080 tcp:8080`, checks device connected first
+
+  `css/style.css`:
+  - `.sync-banner` with 4 states (connected/syncing/offline/error/hidden)
+  - Sync banner buttons and dismiss controls
+  - `body:has(.sync-banner-*)` padding to push content below banner
+
+  `generate_bible.ps1`, `generate_dict.ps1`, `scripts/search.html`:
+  - "📱 Connect Phone via USB" added to all hamburger menus (after Sync
+    to Kindle)
+  - "📖 Download Bible Text for Offline" and "📚 Download Lexicon for
+    Offline" buttons in OFFLINE ACCESS section of all hamburger menus
+  - "⚠️ Search always requires internet" note in OFFLINE ACCESS section
+
+  **QA: 155/155 passing, 0 failures, 0 warnings**
+
+  **Files modified this session (KJV-Strongs-EBook repo):**
+  - `start-study.ps1`
+  - `js/notes.js`
+  - `css/style.css`
+  - `scripts/generate_bible.ps1`
+  - `scripts/generate_dict.ps1`
+  - `scripts/search.html`
+  - `scripts/about.html`
+  - `scripts/manifest.json` (new)
+  - `scripts/sw.js` (new)
+  - `scripts/icon-192.png` (new)
+  - `scripts/icon-512.png` (new)
+  - `WINDOWS-SETUP.md`
+
+  **Files modified this session (KJV-Strongs-Launcher repo):**
+  - `main.js`
+  - `setup.js`
+  - `preload.js`
+  - `package.json` (desktop shortcut added)
+
+  **GitHub Releases:**
+  - Published v1.2.0 Release on KJV-Strongs-EBook with kjv.osis.xml and
+    bdb-thayer.json attached — required for GitHub Releases API version check
+
+  **Key architectural decisions:**
+  - Phone notes always go to localStorage (never directly to server), sync
+    when WiFi available
+  - Tombstones track deliberate deletions so sync knows difference between
+    "never existed" and "was deleted"
+  - `lastSyncAt` timestamp stored in localStorage after every successful sync
+  - Two connection modes: WiFi (auto-detect) and USB/ADB (one tap via menu)
+  - Service worker uses cache-on-visit strategy with opt-in bulk download
+  - Search page explicitly excluded from all caching (requires live API)
+
+  **Pending for next session:**
+  - Test phone connection (WiFi and USB) end-to-end
+  - Test note-taking on phone and sync back to PC
+  - Verify "Add to Home Screen" PWA install prompt appears in Chrome
+  - Implement "Download for Offline" bulk caching buttons (sw.js postMessage
+    handler is ready; notes.js `downloadOffline()` function still needed)
+  - Run Update Now on installed app to get all new mobile/sync features
+  - Consider whether `downloadOffline()` needs a separate `/api/offline-urls`
+    endpoint to get the full list of chapter/dict URLs to cache
+
+SESSION NOTES — End of July 4, 2026
+Completed today:
+
+Fixed service worker cache — sw.js now uses SHA-versioned cache name (kjv-cache-{SHA}) so every update automatically busts old cached pages
+Fixed IPv6 loopback (::1) in IP allowlist — app now starts correctly
+Added Cache-Control: no-store headers for HTML/JS — prevents Electron caching
+Fixed Get-LanIp to exclude 169.254.x.x link-local addresses, prefer DHCP
+Created scripts/setup-phone-access.ps1 — one-time elevated setup for phone WiFi sync
+Added killServer() before startServer() in main.js launcher — prevents duplicate server instances
+Extracted, patched, and repacked app.asar with updated main.js
+
+Current blocker — LAN listener:
+
+HttpListener cannot bind to both localhost:8080 AND 192.168.86.39:8080 simultaneously without conflicts in HTTP.sys
+The netsh urlacl reservation for 192.168.86.39:8080 causes listener.Start() to fail even on localhost
+Current installed start-study.ps1 is reverted to localhost-only (stable)
+The 503 from phone is because listener only binds localhost
+
+Tomorrow's plan — proper LAN solution:
+
+Instead of fighting HttpListener, run a separate lightweight TCP proxy on the LAN IP that forwards to localhost:8080
+This avoids HTTP.sys entirely and requires no elevation
+The proxy can be a simple PowerShell TcpListener background job
+
+Files currently correct in repo:
+
+start-study.ps1 ✅ (localhost-only, stable)
+js/notes.js ✅
+sw.js ✅
+scripts/generate_bible.ps1 ✅
+scripts/generate_dict.ps1 ✅
+scripts/setup-phone-access.ps1 ✅ (new)
+main.js (launcher) ✅ — killServer() fix applied
+
+Still TODO before v1.3.0:
+
+Get phone WiFi sync actually working end-to-end
+Fix "Offline Access" section visibility (hide on PC, show on phone only)
+Fix warning text styling in hamburger menu
+Fix ⚠️ icon color (should be yellow)
+Rebuild launcher installer with updated main.js
+
+## SESSION NOTES — July 5, 2026
+
+### Major Achievement
+Phone WiFi sync via QR code is now partially working — the home page loads on the phone via `http://192.168.86.39:8081/`. This is the first successful phone connection after days of effort!
+
+### Root Cause of All Previous Failures (identified by Opus)
+`System.Net.HttpListener` uses HTTP.sys, a Windows kernel-mode HTTP driver that owns the port across all interfaces. Any attempt to bind a second prefix (LAN IP, wildcard, etc.) to the same port conflicts with HTTP.sys registrations. No amount of `netsh urlacl` registration fixes this reliably from a non-elevated process.
+
+### The Solution (Opus's TCP Proxy approach)
+A raw `TcpListener` on port 8081 that intercepts phone requests, rewrites the `Host` header from `192.168.86.39:8081` to `localhost:8080`, and forwards to the existing HttpListener. `TcpListener` uses raw Winsock sockets, bypassing HTTP.sys entirely — no elevation needed, no URL ACL registration, no conflicts.
+
+### Implementation — 5 integration points in `start-study.ps1`
+1. C# `LanProxy` class compiled via `Add-Type` (inline C#)
+2. Lazy initialization — `Initialize-LanProxy` is called AFTER the first request is processed, not at startup (critical — avoids 30-second timeout)
+3. Proxy stopped cleanly in `finally` block
+4. `Handle-LocalUrl` returns port 8081 instead of 8080 for QR code
+5. `setup-phone-access.ps1` simplified — only adds firewall rule for port 8081, no netsh urlacl
+
+### Compilation issues resolved along the way
+- `System.Text.RegularExpressions` assembly reference error → removed `-ReferencedAssemblies` entirely (not needed on .NET 6+)
+- `CS4014` unawaited Task warning → `_ = Task.Run(...)` discard pattern + `#pragma warning disable 4014`
+- `CS0155` SocketException namespace → replaced with generic `catch { }`
+- `Add-Type` blocking server startup for 30 seconds → moved to lazy-init after first request
+- `::1` IPv6 loopback blocked → added `$remoteIp -eq "::1"` to IP allowlist
+
+### Current State
+- Home page loads on phone ✅
+- Navigation to book pages fails with `ERR_CONNECTION_REFUSED` ❌
+
+### Known Issue — Navigation fails after home page
+When the phone clicks a book link (e.g. Genesis), the URL changes to `192.168.86.39:8081/books/01-Gen/1.html` but gets `ERR_CONNECTION_REFUSED`. Two likely causes:
+1. Lazy-init timing — proxy may not have fully started before navigation clicks happen
+2. The proxy's `RelayAsync` bidirectional relay may be closing the connection too early, not keeping it alive for subsequent requests
+
+### Files changed
+- `start-study.ps1` — LAN proxy, lazy-init, ::1 allowlist, Handle-LocalUrl port 8081
+- `scripts/setup-phone-access.ps1` — simplified to firewall-only, no netsh
+
+### Still TODO
+- Fix phone navigation beyond home page
+- Test note sync phone→PC and PC→phone
+- Fix "Offline Access" section visibility (hide on PC, show on phone only)
+- Fix warning text styling in hamburger menu
+- Fix ⚠️ icon color (should be yellow)
+- Push all changes to GitHub and do Update Now
+- Rebuild launcher installer with `killServer()` fix in `main.js`
+- Version bump to v1.3.0 once phone sync is fully proven
+
+### Next session first task
+Upload current `start-study.ps1` and diagnose why navigation fails. Likely fix: ensure the proxy is fully initialized before returning the first response, OR increase the lazy-init trigger to fire immediately rather than after first request completes.
+
+### Session Summary — July 6, 2026
+
+### Where we left off:
+The LAN TCP proxy is now working correctly. The log confirms:
+
+Proxy compiles and starts successfully after first request
+Phone requests are reaching the server as 127.0.0.1 (proxy forwarding works)
+WhenAll fix applied so CSS/JS stream completely
+
+### Current blocker:
+Phone is still connecting on port 8080 instead of 8081 — getting "Invalid Hostname" 400 error. The QR code is showing the old cached URL. The service worker has cached the old http://192.168.86.39:8080/ URL.
+
+### Immediate next step:
+Clear Chrome cache on phone (chrome://settings/clearBrowserData), then re-scan QR code. Should show port 8081 and work fully.
+Two fixes applied today (in repo start-study.ps1):
+
+1. Added ::1 IPv6 loopback to IP allowlist (was blocking Electron's own requests)
+2. Changed WhenAny to WhenAll in proxy relay (was cutting off CSS/JS responses mid-stream)
+
+### Still TODO:
+
+- Confirm full phone navigation works after cache clear
+- Test bidirectional note sync
+- Fix Offline Access section visibility (hide on PC)
+- Fix warning text styling in menu
+- Fix ⚠️ icon yellow color
+- Push all changes to GitHub + Update Now
+- Rebuild launcher installer with killServer() fix
+- Version bump to v1.3.0
+
+## Session: July 6, 2026
+
+**Big theme:** LAN proxy stability, mobile UI, offline downloads, and a
+deep phone↔PC note-sync bug hunt — then establishing a proper
+repo→regenerate→commit→update workflow to stop losing track of changes
+across the three places this project lives (repo, installed app, scripts/
+templates).
+
+### LAN proxy — fixed
+- Root cause of the intermittent "Invalid Hostname" 400 error: the proxy
+  only rewrote the `Host` header on the *first* request of a kept-alive
+  TCP connection. Every subsequent request on that same connection
+  bypassed the rewrite and got rejected by `HttpListener`.
+- Fix: inject `Connection: close` so every request opens a fresh
+  connection (and gets the rewrite). Tradeoff: slightly slower page loads
+  (new handshake per resource) — acceptable for a personal LAN app.
+
+### Mobile header — fixed
+- Narrow-screen header was clipping/hiding nav buttons entirely
+  (`overflow: hidden` + fixed height + floated elements competing for
+  width).
+- Fixed with a `@media (max-width: 600px)` two-row layout (title above,
+  buttons below), flexbox-centered, sized to match the existing header
+  height so `.chapter-content` padding didn't need to change.
+
+### Offline downloads — built
+- `downloadOffline('bible' | 'lexicon')` — matches the existing HTML
+  calling convention already baked into generated pages.
+- Full progress modal (reusing "Update Available" modal styling),
+  **Cancel** that actually stops the job, **resume** that skips
+  already-cached pages after an interruption, and a screen wake lock
+  while downloading.
+- Had to add `event.waitUntil()` to the service worker's bulk-download
+  handler — without it, the browser was killing the service worker
+  mid-download for being "idle."
+
+### Phone ↔ PC note sync — the big one, fixed
+- `isPhoneMode` was hardcoded to port 8080 — never activated once phone
+  traffic moved to the LAN proxy (8081). Fixed to key off
+  hostname/protocol instead of a specific port.
+- Highlights were being counted as "pending sync" forever (no timestamp
+  comparison, unlike notes) — fixed with a synced-snapshot comparison.
+- **Root cause of notes never settling as "synced":** PowerShell's
+  `Get-Date -Format "o"` uses local timezone; JS's `toISOString()` is
+  always UTC. String-comparing the two is invalid whenever offsets
+  differ.
+- **A real scare along the way:** the first migration fix silently
+  defaulted to "now" on any unparseable timestamp, which combined with a
+  second bug to overwrite real historical note timestamps with a single
+  identical value. **Recovered from a June 29 backup** — lesson learned:
+  never silently default to "now" for bad data; leave it and log it.
+- **The actual root cause of repeated corruption:**
+  `ConvertFrom-Json -AsHashtable` silently auto-parses ISO-8601 strings
+  into real `[DateTime]` objects (not strings). Passing that object where
+  a string was expected silently re-stringified it with no timezone info
+  at all, and re-parsing *that* assumed the local machine's offset —
+  quietly adding hours to an already-correct value, every time. Fixed with
+  a type-aware, `Kind`-checking normalization function, confirmed stable
+  across multiple consecutive server restarts.
+- End-to-end confirmed working: notes/highlights sync both directions,
+  banner settles to "up to date" and stays there, resume/cancel/wake-lock
+  all behave correctly.
+
+### Git / workflow cleanup
+- Found and fixed a real gap: `git-push.ps1` never staged `sw.js`,
+  `manifest.json`, icons, `about.html`, `help.html`, or `search.html` —
+  meaning this week's entire PWA/offline feature set could have silently
+  never reached GitHub even after committing.
+- Found and fixed a regression: the committed `sw.js` had lost its
+  `KJV_SHA_PLACEHOLDER` token, silently breaking the SHA-based
+  cache-busting mechanism from an earlier session.
+- `highlights.json` added to `.gitignore` (repo is public — personal
+  highlight data must never be committed). `installed-sha.txt`,
+  `.sync-token.json`, `migration-warnings.log` also added as
+  machine-local/transient state.
+- `kjv.osis.xml`'s phantom "modified" status was pure line-ending noise —
+  fixed with `.gitattributes` (`-text`), not gitignored (it's the master
+  source data, must stay tracked).
+- **New standing workflow going forward:** edit only in the local repo →
+  `generate_bible.ps1` → `generate_dict.ps1` → `qa-test.ps1` →
+  `rebake-notes.ps1` → manual smoke test → `git-push.ps1` → "Update Now"
+  in the installed app. Confirmed working end-to-end this session.
+- Added `PROJECT-CONTEXT.md` to the repo — a technical handoff doc for
+  starting future sessions, since this one hit the 100-file limit
+  discussion again. Upload it first thing next time.
+
+### Pending for next session
+- **"All My Notes" page** — single page listing every note OT → NT with
+  jump links; also useful as a QA tool. Explicitly requested, explicitly
+  deferred.
+- **Real HTTPS** (self-signed cert, e.g. mkcert) to replace the manual
+  Chrome flag workaround (`unsafely-treat-insecure-origin-as-secure`)
+  currently needed for the phone's service worker to register at all over
+  the LAN IP.
+- `qa-test.ps1` needs updating to actually cover this week's features (LAN
+  proxy, mobile header, offline download, phone/PC sync) — right now a
+  clean pass only proves pre-existing structural checks still hold.
+- Confirm what `scripts/lan-proxy.ps1` actually is / whether it feeds into
+  `start-study.ps1` — came up but was never resolved.
+- Fold the Hebrew/Greek index pages and `navigate.html` into the bulk
+  offline-download list (currently only cached if visited manually while
+  online first).
+
+## Session: July 7, 2026
+
+**Big theme:** Real-world offline testing exposed a genuine architectural
+caching bug (not the SHA-versioning issue we suspected), plus a round of
+UI polish making the app feel native to whichever device you're on
+(hiding phone-only and PC-only menu items from each other).
+
+### Offline download gaps — fixed
+- Repeated red "Offline mode" banner on every page — the once-per-session
+  suppression fix from yesterday only covered the "connected/up to date"
+  banner state, never the "offline" state itself. Fixed with the same
+  sessionStorage pattern.
+- "Go To" and both Hebrew/Greek index pages always showed "hasn't been
+  downloaded" even after a full bulk download — they were never actually
+  included in the download URL lists to begin with. Added `navigate.html`
+  and both `indexes/strongs-*-index.html` pages to the bulk downloads.
+- Root cause of "downloaded content just disappeared": almost certainly
+  our own repeated manual Cache Storage clears during yesterday's
+  extensive notes-sync debugging — not a code bug. Re-running both
+  downloads while leaving the cache alone resolved it.
+
+### The real stale-content bug — found and fixed
+- User reported `help.html` and the hamburger menu kept showing old
+  content no matter how many times "Update Now" ran and regenerated
+  everything — even on the **PC**, not just the phone.
+- First suspect: the SHA-based cache-busting mechanism (`sw.js`'s
+  `CACHE_VERSION`) — confirmed still broken (the `KJV_SHA_PLACEHOLDER`
+  token never actually gets replaced by whatever runs during "Update Now",
+  even though our manual `generate_bible.ps1` runs correctly inject it).
+  Root cause of *that* specific bug still unconfirmed — likely lives in
+  the Electron app's own update code, which hasn't been reviewed.
+- Added explicit `Cache-Control: no-cache, no-store, must-revalidate`
+  headers to every server response (`start-study.ps1`'s `Send-Response`)
+  as a first attempt — genuinely good practice, but turned out not to be
+  the actual culprit here.
+- **The real culprit**: `sw.js`'s fetch handler used pure "cache-first" —
+  once anything was cached, it was served forever with zero revalidation,
+  completely ignoring `Cache-Control` headers by design (a cache hit never
+  even reaches the browser's normal HTTP cache logic). Only a hard refresh
+  (which bypasses an active service worker's interception) revealed fresh
+  content, and normal browsing reverted to stale within one page or two.
+- **Fix**: rewrote the fetch handler to use **stale-while-revalidate** —
+  serve the cached copy instantly (offline/fast behavior completely
+  unchanged), but always kick off a background fetch to refresh the cache
+  for next time. This makes every page self-healing within one extra
+  normal reload after a real change, permanently, without ever depending
+  on the SHA-versioning mechanism working. One important one-time
+  transition cost: since `sw.js` itself is cached, the currently-installed
+  old cache-first service worker needs one manual hard-refresh/unregister
+  to actually pick up this new code — after that, no more manual
+  intervention should ever be needed again.
+
+### Search UX cleanup
+- Search page's mobile layout (two-column Old/New Testament category
+  checkboxes) overflowed on phone screens, cutting off longer labels —
+  fixed with a `@media (max-width: 600px)` single-column stack.
+- The static "⚠ Search always requires internet — it isn't available
+  offline" note in the hamburger menu was confusing and unwanted —
+  **removed entirely** (from all 4 template locations across
+  `generate_bible.ps1`, `generate_dict.ps1`, and the standalone
+  `search.html`, which is copied as-is rather than generated and had to be
+  fixed separately).
+- Instead: the "Search" nav button itself now hides automatically —
+  immediately on Kindle (`file://`, can never work there), and dynamically
+  on phone based on the same PC-reachability check already driving the
+  sync banner (reappears the moment you're back on WiFi).
+- Added a genuine friendly in-page error for when a search request
+  actually fails to reach the API: *"The Bible SuperSearch service is
+  unavailable at the moment. Please check your internet connection and
+  try again."* — distinguished from other error types (parse/response
+  issues) which get a different, more accurate message.
+- `help.html`'s Search section rewritten to clearly explain both real
+  requirements: PC needs actual internet (not just the app running), and
+  phone needs WiFi connection specifically to the PC (cellular/other
+  internet isn't sufficient by itself).
+
+### Menu decluttering
+- "Sync Phone via QR Code" already hid on phone (from yesterday).
+  Symmetric fix added: the entire "OFFLINE ACCESS" section (Download
+  Bible Text / Download Lexicon) now hides on PC/localhost, since the PC
+  is the server itself and has no scenario where "offline" is meaningful.
+  Hides the whole section via `.closest(".settings-section")`, not just
+  the two rows, so the section label doesn't end up floating alone.
+
+### Deployed files this session
+`notes.js`, `generate_bible.ps1`, `generate_dict.ps1`, `help.html`,
+`style.css`, `search.js`, `search.html`, `start-study.ps1`, `sw.js` (→
+`scripts/sw.js` template). Full regenerate cycle run and confirmed
+working; final push pending at time of writing.
+
+### Pending for next session
+- Still deferred from yesterday: **"All My Notes" page** (OT → NT list
+  with jump links), **real HTTPS** setup, **`qa-test.ps1` update** to
+  cover this week's features, confirming what `scripts/lan-proxy.ps1`
+  actually is.
+- **New**: find and fix the actual root cause of the SHA-placeholder
+  never being replaced during "Update Now" (likely in Electron's own
+  update-checker code, not yet reviewed) — now lower priority than
+  before, since stale-while-revalidate means the app no longer *depends*
+  on this working, but it'd still be good to understand and fix properly.
+# SESSION-NOTES.md — Update covering sessions since July 8, 2026
+
+(Append this to the existing file — last entry there was dated 7/7.)
+
+---
+
+## Session: Phone Setup Wizard design + wife's laptop troubleshooting
+
+- Designed and built the one-time phone setup wizard (rename "Sync
+  Phone via QR Code" → "Connect New Phone"; auto-prompt on first phone
+  Home-page visit offering to download Bible + lexicon + pull PC notes
+  in one chained flow).
+- Testing this on the wife's laptop (a genuinely fresh install) turned
+  into a much bigger investigation: stale menu text even after a clean
+  reinstall led to discovering the release-vs-commit distinction for
+  the Launcher repo, then a real silent-failure bug in the update
+  system (SHA-fetch failing invisibly, permanently disabling
+  update-detection with zero symptom), then a second real bug (a
+  read-only-file edge case that could make "Update Now" report false
+  success while silently changing nothing). Both fixed and confirmed
+  working on the actual affected laptop.
+- Also found and fixed a stale hardcoded IP in `setup-phone-access.ps1`
+  (harmless in practice — the actual firewall rule was never
+  IP-specific — but sloppy and worth cleaning up), and automated that
+  script into the Launcher's first-run setup flow with proper UAC
+  elevation handling (non-fatal if declined).
+- Created `KJV-Strongs-Launcher/scripts/git-push.ps1`.
+
+## Session: Notes Management System design
+
+- Ron proposed a Notes Management System: browse all notes OT→NT in
+  one place, plus a tagging/indexing system to filter notes by topic
+  across the whole Bible. Identified as "the next major app upgrade."
+- Talked through key design decisions before building: tags as a new
+  note field (needs sync-logic updates too), tag-casing consistency
+  via autocomplete + normalization, read-only-browse vs. edit-in-place
+  (decided: edit-in-place), and confirmed no new sync infrastructure
+  needed (reuses whatever data source — API or localStorage — the
+  device already considers current).
+- Ron added a requirement: also filter by Book/Testament/Category
+  (reusing Search's existing scheme).
+
+## Session: Notes Management System build
+
+- Built tag support in the existing note editor (autocomplete, casing
+  normalization), then the full Notes Manager page (filtering, inline
+  editing, highlight-only verses), then the "Refresh Offline Content"
+  feature, then wired the menu links across all templates.
+- Chased and fixed the PowerShell `ConvertTo-Json` single-element-array
+  bug (crashed the pencil-icon editor for any note with exactly one
+  tag) using the same self-healing-on-load pattern from the earlier
+  timestamp bug.
+- Chased and fixed a sync-commit bug where deleted notes/highlights
+  weren't being un-baked from chapter HTML after syncing from phone to
+  PC (Ron caught this via a real example: deleted a note on his phone
+  weeks ago, and the chapter page still showed the old note text
+  indefinitely).
+- Fixed `notes-manager.html` not actually being copied into the
+  generated output (the menu link existed before the file-copy step
+  was wired in).
+- Pushed to GitHub, tested tagging live — "working great."
+
+## Session: Tag-duplication bug hunt ("New Creature ×8")
+
+A genuinely extensive, well-documented debugging session. Ron reported
+the tag filter cloud showing "New Creature" repeated 8 times instead
+of once. Ruled out, in order, via direct evidence rather than guessing:
+whitespace/invisible-character variants (checked actual export file
+byte-by-byte — only one clean instance existed), stale deployment
+(confirmed the fix was actually present in the deployed file), browser
+extensions (confirmed still broken in a fully clean InPrivate window),
+duplicate network requests (Network tab showed exactly one `/api/notes`
+fetch), and duplicate module/script inclusion (confirmed only one of
+each in the file). Finally isolated via temporary diagnostic
+`console.log`/`console.trace` instrumentation: the actual bug was a
+stale leftover loop variable (`k` instead of `keys[i]`) in
+`renderTagCloud`, meaning every button rendered the same frozen value
+regardless of which tag it was meant to represent. Fixed, confirmed
+working with a screenshot showing all 8 genuinely distinct tags
+correctly.
+
+Also fixed in the same session: tags being silently discarded when
+saving a highlight-only verse with no note text (both client and
+server-side gates required non-empty text — removed), and verse
+cross-references not linkifying in the Notes Manager (was using a
+plain text node instead of the same escapeHtml+linkifyVerseRefs
+pipeline used elsewhere).
+
+## Session: v1.3.0 releases (EBook + Launcher)
+
+- Published `KJV-Strongs-EBook` v1.3.0 cleanly. Confirmed live via an
+  InPrivate browser check after Claude's own web-fetch tool showed a
+  brief caching lag.
+- Attempted a Launcher v1.3.0 release. First tried a manual local
+  `npm run build` — worked, but Windows-only; discovered there's
+  actually a GitHub Actions workflow (`build-release.yml`, triggered by
+  pushing a version tag) that builds Windows + both Mac architectures
+  automatically and was the "real" release process all along (used
+  successfully for v1.2.0, including Mac support despite Ron not
+  owning a Mac).
+- Multiple fix-and-retrigger cycles to get the Mac build working:
+  fixed a `dmg.background: null` config crash, then discovered the
+  arm64 build's "hdiutil detach" flakiness wasn't actually fixed by
+  splitting into matrix jobs (the CLI arch flags don't override
+  `package.json`'s arch array as expected — had to explicitly rewrite
+  the workspace's own `package.json` per job to force true isolation).
+  All three installers (Windows, Mac x64, Mac arm64) built and
+  published successfully after that.
+- **Left unresolved**: cleaning up redundant/unnecessary release
+  assets on the Launcher v1.3.0 release (duplicate files under two
+  naming conventions, plus unused Electron auto-updater artifacts).
+  Ron was mid-deletion when Claude flagged a concern about ambiguous
+  file-size labels in the confirmation dialog possibly corresponding
+  to files that should be kept, and asked for a screenshot to verify
+  before confirming — session ended before this was confirmed either
+  way. **Check this first in the next session.**
+- Also noted as a minor, non-urgent loose end: the EBook repo's public
+  Releases page seems to be missing a v1.2.0 entry despite earlier
+  evidence it existed at some point — worth a quick look eventually,
+  not urgent.

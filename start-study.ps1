@@ -1227,6 +1227,62 @@ function Handle-ExportNotes {
     }
 }
 
+# ── Tag normalization / comparison / merge helpers ───────────────
+# Mirrors notes.js's client-side normalizeTagKey()/normalizeTagsArray()
+# logic, so import preview/commit classify and merge tags exactly the
+# same way the tag cloud and autocomplete already do (same whitespace
+# collapsing, casing rules, and single-element-array self-heal).
+
+function Get-NormalizedTagsArray {
+    param($RawTags)
+    if (-not $RawTags) { return @() }
+    if ($RawTags -is [array]) { return @($RawTags) }
+    # PowerShell's ConvertTo-Json/ConvertFrom-Json can hand back a bare
+    # scalar string for what was originally a one-tag array (the same
+    # collapsing behavior self-healed elsewhere for note.tags on load).
+    return @($RawTags)
+}
+
+function Get-NormalizedTagKey {
+    param($Tag)
+    if (-not $Tag) { return "" }
+    $t = ([string]$Tag) -replace '\s+', ' '
+    return $t.Trim().ToLowerInvariant()
+}
+
+function Test-TagArraysEqual {
+    param($TagsA, $TagsB)
+    $keysA = @($TagsA | ForEach-Object { Get-NormalizedTagKey $_ } | Where-Object { $_ } | Sort-Object -Unique)
+    $keysB = @($TagsB | ForEach-Object { Get-NormalizedTagKey $_ } | Where-Object { $_ } | Sort-Object -Unique)
+    if ($keysA.Count -ne $keysB.Count) { return $false }
+    for ($i = 0; $i -lt $keysA.Count; $i++) {
+        if ($keysA[$i] -ne $keysB[$i]) { return $false }
+    }
+    return $true
+}
+
+# Union of two tag arrays, de-duplicated by normalized key. Where the
+# same tag appears in both with different casing, $Preferred's casing
+# wins (mirrors collectKnownTagsMap()'s "first one seen wins" rule).
+function Merge-TagArrays {
+    param($Preferred, $Other)
+    $result   = New-Object System.Collections.Generic.List[string]
+    $seenKeys = @{}
+    foreach ($t in @($Preferred)) {
+        $key = Get-NormalizedTagKey $t
+        if (-not $key -or $seenKeys.ContainsKey($key)) { continue }
+        $seenKeys[$key] = $true
+        $result.Add($t)
+    }
+    foreach ($t in @($Other)) {
+        $key = Get-NormalizedTagKey $t
+        if (-not $key -or $seenKeys.ContainsKey($key)) { continue }
+        $seenKeys[$key] = $true
+        $result.Add($t)
+    }
+    return @($result)
+}
+
 # ── POST /api/import-notes/preview ───────────────────────────────
 # Accepts an uploaded notes export (notes + highlights bundle, or a
 # legacy notes-only file) and compares it against the current state.
@@ -1275,17 +1331,29 @@ function Handle-ImportPreview {
 
     foreach ($ref in $importedNotes.Keys) {
         $importedText = $importedNotes[$ref].text
+        $importedTagsArr = Get-NormalizedTagsArray $importedNotes[$ref].tags
+
         if (-not $currentNotes.ContainsKey($ref)) {
             $newNotes += $ref
         }
-        elseif ($currentNotes[$ref].text -eq $importedText) {
-            $unchangedNotes++
-        }
         else {
-            $conflictNotes += @{
-                ref          = $ref
-                currentText  = $currentNotes[$ref].text
-                importedText = $importedText
+            $currentTagsArr = Get-NormalizedTagsArray $currentNotes[$ref].tags
+            $textEqual = ($currentNotes[$ref].text -eq $importedText)
+            $tagsEqual = Test-TagArraysEqual $currentTagsArr $importedTagsArr
+
+            if ($textEqual -and $tagsEqual) {
+                $unchangedNotes++
+            }
+            else {
+                $conflictNotes += @{
+                    ref          = $ref
+                    currentText  = $currentNotes[$ref].text
+                    importedText = $importedText
+                    currentTags  = $currentTagsArr
+                    importedTags = $importedTagsArr
+                    textDiffers  = (-not $textEqual)
+                    tagsDiffer   = (-not $tagsEqual)
+                }
             }
         }
     }
@@ -1330,9 +1398,14 @@ function Handle-ImportPreview {
 
 # ── POST /api/import-notes/commit ────────────────────────────────
 # Applies the import using the user's conflict resolutions.
-# Body: { bundle: {...uploaded file...}, resolutions: { "Gen.1.1": "imported"|"current", ... } }
-# Any ref NOT in resolutions defaults to "imported" if new, or is
-# skipped if it was already identical (unchanged).
+# Body: { bundle: {...uploaded file...}, resolutions: {
+#     "Gen.1.1": "imported"|"current",       -- note TEXT resolution
+#     "tags:Gen.1.1": "union"|"imported"|"current",  -- TAG resolution
+#     "hl:Gen.1.1": "imported"|"current"     -- highlight resolution
+# } }
+# Any ref NOT in resolutions defaults to "imported" for text (harmless
+# when text was actually identical) and "union" for tags (merges both
+# sets rather than silently dropping either side's tags).
 
 function Handle-ImportCommit {
     param(
@@ -1378,22 +1451,50 @@ function Handle-ImportCommit {
     $bakeRefs      = New-Object System.Collections.Generic.List[string]
 
     foreach ($ref in $importedNotes.Keys) {
-        $useImported = $true
+        $hasCurrent = $currentNotes.ContainsKey($ref)
+
+        $useImportedText = $true
         if ($resolutions.ContainsKey($ref) -and $resolutions[$ref] -eq "current") {
-            $useImported = $false
+            $useImportedText = $false
         }
 
-        if ($useImported) {
-            $existingCreated = if ($currentNotes.ContainsKey($ref) -and $currentNotes[$ref].created) { $currentNotes[$ref].created } else { (Get-UtcTimestamp) }
+        $tagResolution = "union"
+        if ($resolutions.ContainsKey("tags:$ref")) {
+            $tagResolution = $resolutions["tags:$ref"]
+        }
+
+        $importedTagsArr = Get-NormalizedTagsArray $importedNotes[$ref].tags
+        $currentTagsArr  = if ($hasCurrent) { Get-NormalizedTagsArray $currentNotes[$ref].tags } else { @() }
+
+        $finalTags = switch ($tagResolution) {
+            "imported" { $importedTagsArr }
+            "current"  { $currentTagsArr }
+            default    { Merge-TagArrays -Preferred $currentTagsArr -Other $importedTagsArr }
+        }
+
+        $finalText = if ($useImportedText -or -not $hasCurrent) { $importedNotes[$ref].text } else { $currentNotes[$ref].text }
+
+        # Only actually a no-op (skip) if there was already a current
+        # note AND both the resolved text and resolved tags come out
+        # identical to what's already on disk — otherwise something is
+        # genuinely changing (even if only the tags), so it must be
+        # written and re-baked.
+        $isNoOp = $hasCurrent -and
+                  ($finalText -eq $currentNotes[$ref].text) -and
+                  (Test-TagArraysEqual $finalTags $currentTagsArr)
+
+        if ($isNoOp) {
+            $skippedCount++
+        } else {
+            $existingCreated = if ($hasCurrent -and $currentNotes[$ref].created) { $currentNotes[$ref].created } else { (Get-UtcTimestamp) }
             $currentNotes[$ref] = @{
-                text    = $importedNotes[$ref].text
+                text    = $finalText
+                tags    = $finalTags
                 created = $existingCreated
                 updated = (Get-UtcTimestamp)
             }
             $bakeRefs.Add($ref) | Out-Null
             $importedCount++
-        } else {
-            $skippedCount++
         }
     }
     Save-Notes -Notes $currentNotes
@@ -1535,6 +1636,16 @@ function Handle-SyncNotes {
         $phone = if ($phoneNotes.ContainsKey($ref))   { $phoneNotes[$ref] }  else { $null }
         $tomb  = if ($phoneTombstones.ContainsKey($ref)) { $phoneTombstones[$ref] } else { $null }
 
+        # Tags are unioned independently of which side "wins" the note
+        # TEXT. Merging tags never loses data (unlike text, where only
+        # one version can survive), so there's no need to treat a
+        # tag-only difference as a conflict requiring user input --
+        # every branch below that keeps a note also keeps both sides'
+        # tags, regardless of which side's text was chosen.
+        $pcTagsArr    = Get-NormalizedTagsArray ($pc.tags)
+        $phoneTagsArr = Get-NormalizedTagsArray ($phone.tags)
+        $unionedTags  = Merge-TagArrays -Preferred $pcTagsArr -Other $phoneTagsArr
+
         if ($pc -and $phone) {
             $pcUpdated    = if ($pc.updated)    { $pc.updated }    else { "" }
             $phoneUpdated = if ($phone.updated) { $phone.updated } else { "" }
@@ -1542,32 +1653,34 @@ function Handle-SyncNotes {
             $phoneText = if ($phone.text) { $phone.text } else { "" }
 
             if ($pcText -eq $phoneText) {
-                # Identical — keep as-is
-                $mergedNotes[$ref] = $pc
+                # Text identical -- tags may still differ (e.g. a tag
+                # added on the phone without touching the note text).
+                # Union them automatically; no conflict needed.
+                $mergedNotes[$ref] = @{ text = $pcText; tags = $unionedTags; created = $pc.created; updated = $pcUpdated }
                 $noteStats.auto++
             } elseif ($tomb) {
                 # Phone deleted this note (tombstone) — PC still has it; deletion wins if newer
                 if ($tomb.deletedAt -gt $pcUpdated) {
-                    # Tombstone is newer — delete from PC
+                    # Tombstone is newer — delete from PC (note and its tags both go)
                     $noteStats.auto++
                 } else {
                     # PC edit is newer — keep PC version; flag conflict
-                    $noteConflicts += @{ ref = $ref; currentText = $pcText; importedText = "[deleted on phone]"; pcUpdated = $pcUpdated; phoneUpdated = $tomb.deletedAt }
-                    $mergedNotes[$ref] = $pc
+                    $noteConflicts += @{ ref = $ref; currentText = $pcText; importedText = "[deleted on phone]"; pcUpdated = $pcUpdated; phoneUpdated = $tomb.deletedAt; textDiffers = $true }
+                    $mergedNotes[$ref] = @{ text = $pcText; tags = $unionedTags; created = $pc.created; updated = $pcUpdated }
                     $noteStats.conflicts++
                 }
             } elseif ($pcUpdated -gt $phoneUpdated) {
-                # PC is newer — auto-resolve to PC
-                $mergedNotes[$ref] = $pc
+                # PC is newer — auto-resolve TEXT to PC, but still keep both sides' tags
+                $mergedNotes[$ref] = @{ text = $pcText; tags = $unionedTags; created = $pc.created; updated = $pcUpdated }
                 $noteStats.auto++
             } elseif ($phoneUpdated -gt $pcUpdated) {
-                # Phone is newer — auto-resolve to phone
-                $mergedNotes[$ref] = @{ text = $phoneText; tags = $phone.tags; created = $phone.created; updated = $phone.updated }
+                # Phone is newer — auto-resolve TEXT to phone, but still keep both sides' tags
+                $mergedNotes[$ref] = @{ text = $phoneText; tags = $unionedTags; created = $phone.created; updated = $phoneUpdated }
                 $noteStats.auto++
             } else {
-                # Same timestamp, different text — true conflict
-                $noteConflicts += @{ ref = $ref; currentText = $pcText; importedText = $phoneText; pcUpdated = $pcUpdated; phoneUpdated = $phoneUpdated }
-                $mergedNotes[$ref] = $pc
+                # Same timestamp, different text — true conflict (tags still auto-unioned)
+                $noteConflicts += @{ ref = $ref; currentText = $pcText; importedText = $phoneText; pcUpdated = $pcUpdated; phoneUpdated = $phoneUpdated; textDiffers = $true }
+                $mergedNotes[$ref] = @{ text = $pcText; tags = $unionedTags; created = $pc.created; updated = $pcUpdated }
                 $noteStats.conflicts++
             }
         } elseif ($tomb -and -not $pc) {
@@ -1579,18 +1692,18 @@ function Handle-SyncNotes {
                 # Delete from PC
                 $noteStats.auto++
             } else {
-                # PC edit after deletion — conflict
-                $noteConflicts += @{ ref = $ref; currentText = $pc.text; importedText = "[deleted on phone]" }
+                # PC edit after deletion — conflict (no phone note to union tags with)
+                $noteConflicts += @{ ref = $ref; currentText = $pc.text; importedText = "[deleted on phone]"; textDiffers = $true }
                 $mergedNotes[$ref] = $pc
                 $noteStats.conflicts++
             }
         } elseif ($pc -and -not $phone) {
-            # Only on PC — add to phone
+            # Only on PC — add to phone (already has its own tags)
             $mergedNotes[$ref] = $pc
             $noteStats.auto++
         } elseif ($phone -and -not $pc) {
             # Only on phone — add to PC
-            $mergedNotes[$ref] = @{ text = $phone.text; tags = $phone.tags; created = $phone.created; updated = $phone.updated }
+            $mergedNotes[$ref] = @{ text = $phone.text; tags = $phoneTagsArr; created = $phone.created; updated = $phone.updated }
             $noteStats.auto++
         }
     }
@@ -1692,13 +1805,29 @@ function Handle-SyncCommit {
     # Notes
     $pending.mergedNotes.PSObject.Properties | ForEach-Object {
         $ref = $_.Name
-        $val = $_.Value
+        $val = $_.Value   # already carries this sync's unioned tags (see Handle-SyncNotes)
         if ($resolutions.ContainsKey($ref) -and $resolutions[$ref] -eq "current") {
-            # User chose to keep PC version — use existing PC note
+            # User chose to keep the PC's note TEXT -- but still apply
+            # this sync's unioned tags rather than reverting to the
+            # pre-sync PC-only tag set. Otherwise, picking "keep
+            # current" for the text would also silently discard any
+            # tags that were only added on the phone.
             $existing = Get-Notes
-            if ($existing.ContainsKey($ref)) { $mergedNotes[$ref] = $existing[$ref] }
+            if ($existing.ContainsKey($ref)) {
+                $mergedNotes[$ref] = @{
+                    text    = $existing[$ref].text
+                    tags    = Get-NormalizedTagsArray $val.tags
+                    created = $existing[$ref].created
+                    updated = $existing[$ref].updated
+                }
+            }
         } else {
-            $mergedNotes[$ref] = $val
+            $mergedNotes[$ref] = @{
+                text    = $val.text
+                tags    = Get-NormalizedTagsArray $val.tags
+                created = $val.created
+                updated = $val.updated
+            }
         }
         $importedCount++
     }
