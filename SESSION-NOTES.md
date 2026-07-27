@@ -2889,3 +2889,101 @@ pipeline used elsewhere).
   Releases page seems to be missing a v1.2.0 entry despite earlier
   evidence it existed at some point — worth a quick look eventually,
   not urgent.
+
+## Session: Tag-loss bug hunt (Import/Sync), UI polish, and permanence fixes
+
+A long, high-yield session that started with one reported symptom and
+uncovered several layered, unrelated bugs -- each found through direct
+evidence rather than guesswork, and each fixed at its real source
+rather than papered over.
+
+**Tag loss on Import.** Ron reported tags added while testing in the
+dev repo weren't carrying over to the installed app's real notes. Root
+cause, found in stages:
+- `Handle-ImportCommit` never wrote a `tags` field at all -- silently
+  dropped on every import, even brand-new notes.
+- After that fix, the conflict-resolution modal silently failed to
+  render at all, because a new `formatTagList` helper assumed
+  `importedTags` was always an array. It wasn't: PowerShell's
+  `ConvertTo-Json` collapses a single-element array into a bare string
+  at this new API-response boundary, same quirk `notes.json` itself
+  already had to self-heal for on disk. Fixed by routing through the
+  existing `normalizeTagsArray()` client-side helper.
+- The same tag-blindness pattern existed independently in the
+  phone/PC sync path (`Handle-SyncNotes`/`Handle-SyncCommit`): tags
+  were resolved "whoever wins the text also wins the tags" instead of
+  being unioned. Fixed by auto-unioning tags in every branch,
+  independent of which side's text wins, since merging tags never
+  loses data the way overwriting text can.
+- Confirmed end-to-end on real production data (not a same-instance
+  round-trip, which Ron correctly pointed out would prove nothing):
+  copied the installed app's real `notes.json` into the dev repo,
+  ran the fixed code against it, verified all 15 tagged notes merged
+  correctly, then copied the result back to the installed app and
+  confirmed live.
+
+**Notes Manager UI additions.** Collapsible Filter-by-Book/Testament
+and Filter-by-Tags sections, a "Has Any Tags" / "No Tags" filter
+(mutually exclusive with specific tag selection), and matching
+book-category tooltips copied from the Search page. All verified
+against real data (84 notes: 15 tagged, 67 untagged, 9 real tags,
+correct AND-filtering across multiple tags).
+
+**Hebrew/Greek dictionary index search.** Added a search box to both
+index pages: matches Strong's number (any padding/prefix) or
+transliteration (diacritics stripped via a manual ES3-safe lookup
+table, since these pages can still reach the original Kindle target).
+
+**Two "right fix, wrong file" near-misses, both caught before
+shipping wrong:**
+- The Notes Manager UI fix was first delivered only to the *generated
+  output* copy of `notes-manager.html`, not realizing
+  `generate_bible.ps1` treats `scripts\notes-manager.html` as the
+  real template and silently overwrites the output on every
+  regenerate. Found by Ron asking to double check; confirmed via
+  `generate_bible.ps1`'s Phase 5c copy logic. Re-applied to the
+  correct file.
+- Same pattern, one level deeper, for the dictionary index search:
+  `generate_dict.ps1` builds `strongs-hebrew-index.html`/
+  `strongs-greek-index.html` entirely from an inline PowerShell
+  here-string (single shared `Write-IndexPage` function for both
+  languages) -- editing the output files directly would have been
+  wiped on the next regenerate. Fixed in the actual generator this
+  time, with the JS regex end-anchors (`$`) inside the here-string
+  deliberately backtick-escaped to guarantee PowerShell treats them as
+  literal text rather than attempted variable interpolation --
+  verified by manually simulating the here-string's interpolation in
+  Python and confirming the resulting JS parses cleanly.
+
+**Discovered along the way (unrelated to today's main work, now
+fixed): `scripts\notes-manager.html`'s `kjv-sha` meta tag had lost its
+`KJV_SHA_PLACEHOLDER` token at some point (likely a generated copy
+got saved back over the template during the original Notes Management
+build) and was permanently stamping a frozen, stale SHA on every
+build. Confirmed this actually matters -- `notes.js` reads that tag to
+decide whether to show the "update available" cross icon. Checked
+`help.html`/`about.html` too: those never had the tag at all (not a
+regression, just never wired up). `search.html`/`sw.js` still had
+their placeholders intact. Restored the placeholder in
+`scripts\notes-manager.html`.
+
+**`qa-test.ps1` updated** with three new sections (16-18) covering all
+of the above: Notes Manager UI markers, dictionary index search +
+explicit `kjv-sha` placeholder/empty checks (would have caught the SHA
+regression automatically), and `start-study.ps1` tag-merge-function
+presence checks. Full suite: 172/172 passed after the real
+regenerate -> QA -> rebake cycle.
+
+**Verified rebake-notes.ps1 needs no changes** -- tags aren't baked
+into static chapter HTML at all (only `Bake-Note`'s `-NoteText`
+parameter is used there; tags live solely in `notes.json` and are read
+dynamically by Notes Manager). Confirmed concretely rather than just
+by inspection: ran a real `rebake-notes.ps1` pass and checked
+`Rom.10.13` (a single-tag note, the exact edge case that caused
+today's bugs) -- tag survived intact.
+
+**One process note worth remembering**: a `notes.json.dev-bak` backup
+file (created for safety mid-session) got swept into a `git add -A`
+commit and pushed to GitHub before being caught. Removed from tracking
+and added to `.gitignore`; still present in git history unless a
+history rewrite is done later (not done this session).

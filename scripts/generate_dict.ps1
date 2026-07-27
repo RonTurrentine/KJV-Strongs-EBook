@@ -663,6 +663,10 @@ function Write-IndexPage {
   <meta name="theme-color" content="#00bcd4">
   <title>$titleEsc</title>
   <link rel="stylesheet" href="$cssPath">
+  <style>
+    .index-search-row { display: flex; gap: 0.5em; margin-bottom: 0.75em; }
+    .index-search-input { flex: 1; }
+  </style>
 </head>
 <body>
   <nav class="chapter-nav">
@@ -746,6 +750,12 @@ function Write-IndexPage {
   </div>
   <main class="chapter-content">
 
+    <div class="index-search-row">
+      <input type="text" id="index-search-input" class="index-search-input"
+             placeholder="Search transliteration or Strong's #..." onkeyup="applyIndexSearch()">
+      <button class="btn" onclick="clearIndexSearch()">Clear</button>
+    </div>
+
     <div class="index-controls">
       <span class="index-status" id="index-status">Loading...</span>
       <span class="index-perpage-label">Show:</span>
@@ -781,6 +791,94 @@ var TOTAL = $total;
 var perPage = 100;
 var currentPage = 1;
 
+/* Search state: null = no active filter (show everything, original
+   behavior); otherwise an array of indices into INDEX_DATA that match
+   the current search term. */
+var FILTERED_INDICES = null;
+
+/* Maps accented/modifier characters found in either language's
+   transliteration column to a plain ASCII base letter (or to nothing,
+   for glottal-stop/breathing marks), so a search for "abaddon" or
+   "aaron" matches without the user needing to type diacritics. Covers
+   both Hebrew and Greek since this template generates both pages --
+   harmless for a page to carry the other language's unused entries.
+   No String.prototype.normalize() here since this file also has to
+   run on the original Kindle target. */
+var IDX_DIACRITIC_MAP = {
+  "\u00c1": "a", "\u00e1": "a", "\u00c2": "a", "\u00e2": "a", "\u00e0": "a", "\u0102": "a", "\u0103": "a",
+  "\u00c7": "c", "\u00e7": "c",
+  "\u00c9": "e", "\u00e9": "e", "\u00ca": "e", "\u00ea": "e", "\u00e8": "e",
+  "\u0112": "e", "\u0113": "e", "\u0114": "e", "\u0115": "e", "\u1d49": "e",
+  "\u1e15": "e", "\u1e16": "e", "\u1e17": "e",
+  "\u00ce": "i", "\u00ee": "i", "\u00ec": "i", "\u00ed": "i", "\u00ef": "i", "\u1e2f": "i",
+  "\u00d4": "o", "\u00f4": "o", "\u00f3": "o", "\u014c": "o", "\u014d": "o", "\u014f": "o",
+  "\u1e51": "o", "\u1e53": "o",
+  "\u00db": "u", "\u00fb": "u", "\u00fa": "u",
+  "\u00fd": "y", "\u00ff": "y", "\u0177": "y",
+  "\u1e6c": "t", "\u1e6d": "t",
+  "\u02bb": "", "\u02bc": "", "\u2019": "",
+  "\u02e2": "s"
+};
+
+function idxNormalize(s) {
+  var out = "";
+  var i, ch, mapped;
+  for (i = 0; i < s.length; i++) {
+    ch = s.charAt(i);
+    mapped = IDX_DIACRITIC_MAP[ch];
+    out += (mapped !== undefined) ? mapped : ch;
+  }
+  return out.toLowerCase();
+}
+
+function idxTrim(s) {
+  return s.replace(/^\s+/, "").replace(/\s+`$/, "");
+}
+
+/* A bare number (optionally prefixed with H/G, optionally zero-padded)
+   is treated as a Strong's-number search; anything else is matched
+   against the (diacritic-normalized) transliteration as a substring. */
+function idxStripNumPrefix(s) {
+  s = s.replace(/^[HGhg]/, "");
+  s = s.replace(/^0+/, "");
+  if (s === "") { s = "0"; }
+  return s;
+}
+
+function idxMatches(entry, term) {
+  if (term === "") { return true; }
+
+  var numTerm = idxStripNumPrefix(term);
+  if (/^[0-9]+`$/.test(numTerm)) {
+    if (idxStripNumPrefix(entry[0]) === numTerm) { return true; }
+  }
+
+  return idxNormalize(entry[2]).indexOf(idxNormalize(term)) !== -1;
+}
+
+window.applyIndexSearch = function () {
+  var input = document.getElementById("index-search-input");
+  var term = idxTrim(input ? input.value : "");
+  var i;
+
+  if (term === "") {
+    FILTERED_INDICES = null;
+  } else {
+    FILTERED_INDICES = [];
+    for (i = 0; i < INDEX_DATA.length; i++) {
+      if (idxMatches(INDEX_DATA[i], term)) { FILTERED_INDICES.push(i); }
+    }
+  }
+  currentPage = 1;
+  render();
+};
+
+window.clearIndexSearch = function () {
+  var input = document.getElementById("index-search-input");
+  if (input) { input.value = ""; }
+  window.applyIndexSearch();
+};
+
 function setPerPage(n) {
   perPage = n;
   currentPage = 1;
@@ -793,15 +891,15 @@ function goPage(n) {
   window.scrollTo(0, 0);
 }
 
-function totalPages() {
+function totalPages(activeTotal) {
   if (perPage === 0) { return 1; }
-  return Math.ceil(TOTAL / perPage);
+  return Math.ceil(activeTotal / perPage);
 }
 
-function renderNav(id) {
+function renderNav(id, activeTotal) {
   var el = document.getElementById(id);
-  if (perPage === 0 || totalPages() <= 1) { el.innerHTML = ""; return; }
-  var tp = totalPages();
+  if (perPage === 0 || totalPages(activeTotal) <= 1) { el.innerHTML = ""; return; }
+  var tp = totalPages(activeTotal);
   var html = "";
   if (currentPage > 1) {
     html += "<button class=\"btn\" onclick=\"goPage(1)\">[BEG]</button> ";
@@ -843,13 +941,15 @@ function updatePerPageButtons() {
 }
 
 function render() {
+  var activeTotal = FILTERED_INDICES ? FILTERED_INDICES.length : TOTAL;
   var start = (perPage === 0) ? 0 : (currentPage - 1) * perPage;
-  var end   = (perPage === 0) ? TOTAL : Math.min(start + perPage, TOTAL);
+  var end   = (perPage === 0) ? activeTotal : Math.min(start + perPage, activeTotal);
   var tbody = document.getElementById("index-body");
   var rows  = [];
-  var i, entry, href, row;
+  var i, idx, entry, href, row;
   for (i = start; i < end; i++) {
-    entry = INDEX_DATA[i];
+    idx = FILTERED_INDICES ? FILTERED_INDICES[i] : i;
+    entry = INDEX_DATA[idx];
     href  = "../dict/" + LANG + "/" + entry[4] + ".html";
     row   = "<tr>";
     row  += "<td><a href=\"" + href + "\" class=\"dict-index-link\">" + entry[0] + "</a></td>";
@@ -861,13 +961,19 @@ function render() {
   }
   tbody.innerHTML = rows.join("");
 
-  var showing = (perPage === 0)
-    ? "All " + TOTAL + " entries"
-    : "Showing " + (start + 1) + "-" + end + " of " + TOTAL;
+  var filterNote = FILTERED_INDICES ? (" (filtered from " + TOTAL + ")") : "";
+  var showing;
+  if (activeTotal === 0) {
+    showing = "No matches found.";
+  } else if (perPage === 0) {
+    showing = "All " + activeTotal + " entries" + filterNote;
+  } else {
+    showing = "Showing " + (start + 1) + "-" + end + " of " + activeTotal + filterNote;
+  }
   document.getElementById("index-status").innerHTML = showing;
 
-  renderNav("index-nav-top");
-  renderNav("index-nav-bottom");
+  renderNav("index-nav-top", activeTotal);
+  renderNav("index-nav-bottom", activeTotal);
   updatePerPageButtons();
 }
 

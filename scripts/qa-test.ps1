@@ -701,6 +701,106 @@ if (Test-Path $navFile2) {
     }
 }
 
+# ── TEST 16: Notes Manager UI (Collapsible Filters / Tag Presence) ───────────
+Section "TEST 16: Notes Manager UI"
+
+$nmFile16 = Join-Path $OutputRoot 'notes-manager.html'
+if (Test-Path $nmFile16) {
+    $nmContent16 = Get-Content -Raw $nmFile16
+    if ($nmContent16 -match 'nmToggleCollapse')     { Pass "notes-manager.html: collapsible filter sections present" }
+    else                                            { Fail "notes-manager.html: collapsible filter sections MISSING" }
+    if ($nmContent16 -match 'nm-tag-presence-any')  { Pass "notes-manager.html: Has Any Tags button present" }
+    else                                            { Fail "notes-manager.html: Has Any Tags button MISSING" }
+    if ($nmContent16 -match 'nm-tag-presence-none') { Pass "notes-manager.html: No Tags button present" }
+    else                                            { Fail "notes-manager.html: No Tags button MISSING" }
+} else {
+    Fail "notes-manager.html MISSING from output root"
+}
+
+$njFile16 = Join-Path $OutputRoot 'js/notes.js'
+if (Test-Path $njFile16) {
+    $njContent16 = Get-Content -Raw $njFile16
+    if ($njContent16 -match 'nmSetTagPresenceFilter')     { Pass "notes.js: nmSetTagPresenceFilter present" }
+    else                                                  { Fail "notes.js: nmSetTagPresenceFilter MISSING" }
+    if ($njContent16 -match 'function formatTagList')     { Pass "notes.js: formatTagList present" }
+    else                                                  { Fail "notes.js: formatTagList MISSING" }
+    if ($njContent16 -match 'normalizeTagsArray\(tags\)') { Pass "notes.js: formatTagList routes through normalizeTagsArray" }
+    else                                                  { Warn "notes.js: formatTagList may not route through normalizeTagsArray -- verify manually (past regression: import-modal crashed on single-tag notes)" }
+} else {
+    Fail "js/notes.js MISSING"
+}
+
+# ── TEST 17: Dictionary Index Search (Transliteration / Strong's #) ──────────
+Section "TEST 17: Dictionary Index Search"
+
+$hebIdxFile17 = Join-Path $OutputRoot 'indexes/strongs-hebrew-index.html'
+if (Test-Path $hebIdxFile17) {
+    $hebIdxContent17 = Get-Content -Raw $hebIdxFile17
+    if ($hebIdxContent17 -match 'id="index-search-input"') { Pass "strongs-hebrew-index.html: search box present" }
+    else                                                   { Fail "strongs-hebrew-index.html: search box MISSING" }
+    if ($hebIdxContent17 -match 'applyIndexSearch')        { Pass "strongs-hebrew-index.html: applyIndexSearch present" }
+    else                                                   { Fail "strongs-hebrew-index.html: applyIndexSearch MISSING" }
+    if ($hebIdxContent17 -match 'IDX_DIACRITIC_MAP')       { Pass "strongs-hebrew-index.html: diacritic-normalization table present" }
+    else                                                   { Fail "strongs-hebrew-index.html: diacritic-normalization table MISSING" }
+
+    if ($hebIdxContent17 -match 'kjv-sha" content="([^"]*)"') {
+        $hebSha17 = $matches[1]
+        if ($hebSha17 -eq '') {
+            Fail "strongs-hebrew-index.html: kjv-sha meta tag is EMPTY -- GitHub SHA fetch may have failed during generation"
+        } elseif ($hebSha17 -eq 'KJV_SHA_PLACEHOLDER') {
+            Fail "strongs-hebrew-index.html: kjv-sha meta tag still shows KJV_SHA_PLACEHOLDER -- template placeholder was not substituted"
+        } else {
+            Pass "strongs-hebrew-index.html: kjv-sha meta tag has a real value ($hebSha17)"
+        }
+    } else {
+        Fail "strongs-hebrew-index.html: kjv-sha meta tag not found at all"
+    }
+} else {
+    Fail "indexes/strongs-hebrew-index.html MISSING"
+}
+
+$grkIdxFile17 = Join-Path $OutputRoot 'indexes/strongs-greek-index.html'
+if (Test-Path $grkIdxFile17) {
+    $grkIdxContent17 = Get-Content -Raw $grkIdxFile17
+    if ($grkIdxContent17 -match 'id="index-search-input"') { Pass "strongs-greek-index.html: search box present" }
+    else                                                    { Fail "strongs-greek-index.html: search box MISSING" }
+    if ($grkIdxContent17 -match 'applyIndexSearch')         { Pass "strongs-greek-index.html: applyIndexSearch present" }
+    else                                                    { Fail "strongs-greek-index.html: applyIndexSearch MISSING" }
+
+    if ($grkIdxContent17 -match 'kjv-sha" content="([^"]*)"') {
+        $grkSha17 = $matches[1]
+        if ($grkSha17 -eq '') {
+            Fail "strongs-greek-index.html: kjv-sha meta tag is EMPTY -- GitHub SHA fetch may have failed during generation"
+        } elseif ($grkSha17 -eq 'KJV_SHA_PLACEHOLDER') {
+            Fail "strongs-greek-index.html: kjv-sha meta tag still shows KJV_SHA_PLACEHOLDER -- template placeholder was not substituted"
+        } else {
+            Pass "strongs-greek-index.html: kjv-sha meta tag has a real value ($grkSha17)"
+        }
+    } else {
+        Fail "strongs-greek-index.html: kjv-sha meta tag not found at all"
+    }
+} else {
+    Fail "indexes/strongs-greek-index.html MISSING"
+}
+
+# ── TEST 18: Import/Sync Tag Merge Logic ─────────────────────────────────────
+Section "TEST 18: Import/Sync Tag Merge Logic"
+
+$startStudyFile18 = Join-Path $OutputRoot 'start-study.ps1'
+if (Test-Path $startStudyFile18) {
+    $ssContent18 = Get-Content -Raw $startStudyFile18
+    if ($ssContent18 -match 'function Get-NormalizedTagsArray') { Pass "start-study.ps1: Get-NormalizedTagsArray present" }
+    else                                                        { Fail "start-study.ps1: Get-NormalizedTagsArray MISSING -- tag-merge fix may have been reverted" }
+    if ($ssContent18 -match 'function Merge-TagArrays')         { Pass "start-study.ps1: Merge-TagArrays present" }
+    else                                                        { Fail "start-study.ps1: Merge-TagArrays MISSING -- tag-merge fix may have been reverted" }
+    if ($ssContent18 -match 'function Test-TagArraysEqual')     { Pass "start-study.ps1: Test-TagArraysEqual present" }
+    else                                                        { Fail "start-study.ps1: Test-TagArraysEqual MISSING" }
+    if ($ssContent18 -match 'tags:\$ref') { Pass "start-study.ps1: per-note tag resolution key present in commit handlers" }
+    else                                  { Warn "start-study.ps1: could not confirm 'tags:`$ref' resolution key by name -- verify Handle-ImportCommit/Handle-SyncCommit manually" }
+} else {
+    Warn "start-study.ps1 not found at output root -- skipping tag-merge regression check"
+}
+
 # ── FINAL REPORT ──────────────────────────────────────────────────────────────
 Write-Host ""
 Write-Host "============================================" -ForegroundColor White
