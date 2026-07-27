@@ -56,3 +56,5 @@ highlights.json
 installed-sha.txt
 .sync-token.json
 migration-warnings.log
+*.dev-bak
+*.bak
