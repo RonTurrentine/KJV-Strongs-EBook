@@ -35,7 +35,7 @@
      finished, with no chance to ask first.
    ================================================================ */
 
-const SHELL_CACHE = "kjv-shell-65848a5d72fcaf333b3e5bc5395e8b64b2d00521";
+const SHELL_CACHE = "kjv-shell-9cba76779cf3aeb6191e507ece6b0a108f08ae35";
 const CONTENT_CACHE = "kjv-content";
 const APP_SHELL = [
     "/index.html",

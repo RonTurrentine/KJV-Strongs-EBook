@@ -2178,6 +2178,7 @@
         var UPDATE_MENU_ROW_ID = "sw-update-menu-row";
         var waitingWorker = null;
         var reloadedAfterUpdate = false;
+        var updateStartedAt = null;
 
         function isSnoozed() {
             var until = parseInt(localStorage.getItem(SNOOZE_KEY) || "0", 10);
@@ -2230,7 +2231,19 @@
             var row = document.createElement("div");
             row.className = "settings-row settings-row-clickable";
             row.innerHTML = '<span class="settings-row-icon">&#8593;</span>Update Now';
-            row.addEventListener("click", function () { window.swUpdateNow(); });
+            row.addEventListener("click", function () {
+                /* Explicitly close the hamburger dropdown first. A tap
+                   inside the dropdown correctly does NOT trigger its own
+                   "click outside closes it" logic (that would be
+                   backwards), which otherwise leaves it sitting open at
+                   the same time the update modal tries to open -- and
+                   whichever one visually wins that overlap, the modal's
+                   "please wait"/"complete" messages could end up hidden
+                   behind the still-open menu instead of actually
+                   invisible or skipped. */
+                if (dropdown) { dropdown.style.display = "none"; }
+                window.swUpdateNow();
+            });
             section.appendChild(row);
 
             var divider = document.createElement("div");
@@ -2264,6 +2277,26 @@
 
         function onWaitingWorkerFound(worker) {
             waitingWorker = worker;
+
+            if (isLocalhost) {
+                /* The PC already has its own separate, established
+                   "Update Available" system (the gold cross icon,
+                   driven by a full regenerate via the local server) --
+                   this service-worker-level prompt exists specifically
+                   for the phone's offline-caching lifecycle, protecting
+                   a large, slow-to-redownload library from being wiped
+                   by surprise while away from home. None of that risk
+                   or context applies on the PC, which always has
+                   direct, live access to its own server -- so just take
+                   the update immediately and quietly instead of showing
+                   a second, redundant/confusing dialog alongside the
+                   real one. */
+                worker.postMessage({ type: "skip-waiting" });
+                return;
+            }
+
+            if (!isPhoneMode) { return; }
+
             maybeShowUpdateMenuItem();
 
             if (isSnoozed()) { return; }
@@ -2273,8 +2306,29 @@
         }
 
         window.swUpdateNow = function () {
+            /* Always ensure the modal is actually open and showing
+               progress, regardless of whether this was triggered by the
+               modal's own button or by the hamburger menu item (which
+               previously showed nothing at all -- the exact "is this
+               working?" gap this exists to close). The first time this
+               runs on a given phone, the service worker also migrates
+               any existing downloaded content into the new persistent
+               cache before finishing, which can take a real, noticeable
+               moment for a large offline library -- hence the explicit
+               "please wait" rather than leaving the screen looking
+               stuck with no feedback. Subsequent updates (no migration
+               needed) can finish almost instantly, which is why
+               updateStartedAt below exists -- otherwise the message
+               could flash by too fast to actually read. */
+            updateStartedAt = Date.now();
+            ensureSwUpdateModal();
+            var modal = document.getElementById("sw-update-modal");
+            addClass(modal, "is-open");
             var btns = document.getElementById("sw-update-btns");
-            if (btns) { btns.innerHTML = '<span class="update-modal-msg">Updating…</span>'; }
+            if (btns) {
+                btns.innerHTML = '<p class="update-modal-msg" id="sw-update-progress-msg">' +
+                    'Updating — please wait, this may take a moment…</p>';
+            }
             if (!waitingWorker) {
                 /* Shouldn't normally happen, but fail safe rather than
                    leave the person stuck on a modal that does nothing. */
@@ -2293,12 +2347,37 @@
         /* Once the new worker actually takes over control of this page
            (from swUpdateNow() above, or from the natural browser
            lifecycle on a fresh cold start with no old-worker-controlled
-           tabs open), reload once so the new shell files actually get
-           used instead of whatever's still sitting in memory. */
+           tabs open), show a clear completion message -- if a progress
+           message is currently on screen, i.e. this was actually
+           triggered by swUpdateNow() above rather than happening
+           silently in the background -- then reload once so the new
+           shell files actually get used instead of whatever's still
+           sitting in memory. */
         navigator.serviceWorker.addEventListener("controllerchange", function () {
             if (reloadedAfterUpdate) { return; }
             reloadedAfterUpdate = true;
-            window.location.reload();
+
+            var progressMsg = document.getElementById("sw-update-progress-msg");
+            if (!progressMsg) {
+                window.location.reload();
+                return;
+            }
+
+            /* Guarantee the "please wait" message was actually visible
+               for a moment before switching it to "complete" -- without
+               this, an update with nothing to migrate can finish fast
+               enough that the message changes (or the whole thing
+               reloads) before the browser has even painted it. */
+            var MIN_VISIBLE_MS = 600;
+            var elapsed = updateStartedAt ? (Date.now() - updateStartedAt) : MIN_VISIBLE_MS;
+            var remaining = Math.max(0, MIN_VISIBLE_MS - elapsed);
+
+            setTimeout(function () {
+                progressMsg.textContent = "Update complete! Reloading…";
+                setTimeout(function () {
+                    window.location.reload();
+                }, 1200);
+            }, remaining);
         });
 
         function checkRegistration(registration) {
