@@ -82,8 +82,17 @@
         if (btn) { btn.style.display = visible ? "" : "none"; }
     }
 
-    if (isFileUrl) {
-        /* Kindle: never has network access of any kind, hide immediately. */
+    if (isFileUrl || isPhoneMode) {
+        /* Kindle: never has network access of any kind, hide immediately
+           and permanently (nothing later ever re-checks or re-shows it).
+           Phone mode: hide immediately as a safe default too, since the
+           reachability check below is async and can take up to several
+           seconds (worse away from home, where it has to time out
+           rather than succeed quickly) — defaulting to hidden avoids a
+           window where Search is visible and tappable but not actually
+           usable yet. checkPcReachable()'s callback further down calls
+           setSearchVisibility(reachable) once it actually knows, which
+           re-shows it only when truly reachable. */
         setSearchVisibility(false);
     }
 
@@ -1460,6 +1469,11 @@
                 xhr2.onerror  = function () { cb(false); };
                 try { xhr2.send(null); } catch (e) { cb(false); }
             }
+            /* Exposed globally so other independent sections (e.g. the
+               app-update prompt) can reuse this exact check instead of
+               each maintaining their own slightly-different version of
+               "am I actually home right now". */
+            window.checkPcReachable = checkPcReachable;
 
             /* Create the sync banner that floats at the top of the page */
             function createSyncBanner() {
@@ -2070,7 +2084,14 @@
                     navigator.serviceWorker.removeEventListener("message", onMessage);
                     releaseWakeLock();
                     bulkJob = null;
-                    setProgress(total, doneVerb + total + " pages saved for offline use");
+                    var failedCount = data.failed || 0;
+                    if (failedCount > 0) {
+                        setProgress(total, doneVerb + (total - failedCount) + " of " + total +
+                            " pages saved — " + failedCount + " failed. Run this again on WiFi to retry just those.");
+                        showToast(failedCount + " page(s) failed to download — try running this again while on WiFi.", "error");
+                    } else {
+                        setProgress(total, doneVerb + total + " pages saved for offline use");
+                    }
                     showDoneButton();
                     if (typeof onComplete === "function") { onComplete(); }
                 }
@@ -2125,6 +2146,193 @@
             });
         };
 
+    })();
+
+    /* ============================================================
+       App Update Prompt (Service Worker)
+       ============================================================
+       sw.js deliberately does NOT take over automatically when a new
+       version installs -- it sits in the "waiting" state until this
+       code explicitly tells it to via postMessage. That's what makes
+       the choices below real rather than cosmetic: nothing happens to
+       the active service worker (and therefore nothing happens to
+       cached content) until the person picks "Update Now".
+
+       "Remind Me Later"/"Tomorrow" just records a timestamp and closes
+       the prompt -- the waiting worker is left alone, still fully
+       installed, ready to take over the moment it's asked to (either
+       from this same prompt reappearing after the snooze expires, or
+       automatically if the app is ever cold-started with no tabs left
+       open on the old worker, which is normal browser behavior and not
+       something this code can prevent). Either way, thanks to sw.js's
+       shell/content cache split, taking over an update now only
+       replaces small app-shell files -- it never touches downloaded
+       Bible/Lexicon content, so there's no longer a hidden "lose
+       everything" cost to worry about even in that edge case.
+       ============================================================ */
+
+    (function () {
+        if (!("serviceWorker" in navigator)) { return; }
+
+        var SNOOZE_KEY = "kjvSwUpdateSnoozeUntil";
+        var UPDATE_MENU_ROW_ID = "sw-update-menu-row";
+        var waitingWorker = null;
+        var reloadedAfterUpdate = false;
+
+        function isSnoozed() {
+            var until = parseInt(localStorage.getItem(SNOOZE_KEY) || "0", 10);
+            return !isNaN(until) && Date.now() < until;
+        }
+
+        function setSnooze(hours) {
+            try {
+                localStorage.setItem(SNOOZE_KEY, String(Date.now() + hours * 60 * 60 * 1000));
+            } catch (e) { /* private browsing / storage full — snooze just won't persist */ }
+        }
+
+        function ensureSwUpdateModal() {
+            if (document.getElementById("sw-update-modal")) { return; }
+            var modal = document.createElement("div");
+            modal.id = "sw-update-modal";
+            modal.className = "update-modal";
+            modal.innerHTML =
+                '<div class="update-modal-box">' +
+                '  <div class="update-modal-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="18" viewBox="0 0 14 18" fill="currentColor"><rect x="5.5" y="0" width="3" height="18"/><rect x="0" y="4" width="14" height="3"/></svg></div>' +
+                '  <h2 class="update-modal-title">App Update Available</h2>' +
+                '  <p class="update-modal-msg">A newer version of the app is ready. This only refreshes ' +
+                '  the app itself (pages, styling, features) — your downloaded Bible text and Lexicon are ' +
+                '  stored separately and are not affected either way.</p>' +
+                '  <div class="update-modal-btns" id="sw-update-btns">' +
+                '    <button class="update-now-btn" onclick="swUpdateNow()">Update Now</button>' +
+                '    <button class="update-later-btn" onclick="swUpdateSnooze(4)">Remind Me Later</button>' +
+                '    <button class="update-later-btn" onclick="swUpdateSnooze(24)">Remind Tomorrow</button>' +
+                '  </div>' +
+                '</div>';
+            document.body.appendChild(modal);
+        }
+
+        /* Adds a standalone "Update Now" row at the very top of the
+           hamburger menu -- inserted as its own section rather than
+           relying on a fixed sibling from any particular page's menu
+           layout, since the exact set/order of rows already differs
+           slightly between templates (chapter pages vs. Search vs.
+           Notes Manager). Only ever shown in phone mode, and only once
+           checkPcReachable() has actually confirmed home WiFi -- see
+           maybeShowUpdateMenuItem() below for why. */
+        function addUpdateMenuItem() {
+            if (document.getElementById(UPDATE_MENU_ROW_ID)) { return; }
+            var dropdown = document.getElementById("settings-dropdown");
+            if (!dropdown) { return; }
+
+            var section = document.createElement("div");
+            section.className = "settings-section";
+            section.id = UPDATE_MENU_ROW_ID;
+            var row = document.createElement("div");
+            row.className = "settings-row settings-row-clickable";
+            row.innerHTML = '<span class="settings-row-icon">&#8593;</span>Update Now';
+            row.addEventListener("click", function () { window.swUpdateNow(); });
+            section.appendChild(row);
+
+            var divider = document.createElement("div");
+            divider.className = "settings-divider";
+
+            dropdown.insertBefore(divider, dropdown.firstChild);
+            dropdown.insertBefore(section, divider);
+        }
+
+        /* This exists specifically for the "Remind Me Later"/"Tomorrow"
+           case: once snoozed, the modal won't reappear on its own until
+           the snooze expires, but the update is still sitting there
+           fully installed and ready -- this menu item is the manual
+           way to apply it sooner if the person changes their mind.
+           Gated to phone mode + a confirmed-reachable home connection
+           per an explicit request: even though actually applying the
+           update (skip-waiting + reload) doesn't itself require network
+           access once installed, only offering the option while
+           actually home keeps it from showing up as a surprising,
+           possibly-confusing option while away. Re-evaluated on every
+           page load (this file re-runs fresh on each navigation), so
+           it appears/disappears naturally as the phone moves on/off
+           home WiFi across a browsing session. */
+        function maybeShowUpdateMenuItem() {
+            if (!isPhoneMode || !waitingWorker) { return; }
+            if (typeof window.checkPcReachable !== "function") { return; }
+            window.checkPcReachable(function (reachable) {
+                if (reachable) { addUpdateMenuItem(); }
+            });
+        }
+
+        function onWaitingWorkerFound(worker) {
+            waitingWorker = worker;
+            maybeShowUpdateMenuItem();
+
+            if (isSnoozed()) { return; }
+            ensureSwUpdateModal();
+            var modal = document.getElementById("sw-update-modal");
+            addClass(modal, "is-open");
+        }
+
+        window.swUpdateNow = function () {
+            var btns = document.getElementById("sw-update-btns");
+            if (btns) { btns.innerHTML = '<span class="update-modal-msg">Updating…</span>'; }
+            if (!waitingWorker) {
+                /* Shouldn't normally happen, but fail safe rather than
+                   leave the person stuck on a modal that does nothing. */
+                window.location.reload();
+                return;
+            }
+            waitingWorker.postMessage({ type: "skip-waiting" });
+        };
+
+        window.swUpdateSnooze = function (hours) {
+            setSnooze(hours);
+            var modal = document.getElementById("sw-update-modal");
+            if (modal) { removeClass(modal, "is-open"); }
+        };
+
+        /* Once the new worker actually takes over control of this page
+           (from swUpdateNow() above, or from the natural browser
+           lifecycle on a fresh cold start with no old-worker-controlled
+           tabs open), reload once so the new shell files actually get
+           used instead of whatever's still sitting in memory. */
+        navigator.serviceWorker.addEventListener("controllerchange", function () {
+            if (reloadedAfterUpdate) { return; }
+            reloadedAfterUpdate = true;
+            window.location.reload();
+        });
+
+        function checkRegistration(registration) {
+            if (!registration) { return; }
+
+            if (registration.waiting && navigator.serviceWorker.controller) {
+                /* A new worker already finished installing and is
+                   sitting there waiting — e.g. it installed during an
+                   earlier visit and was snoozed, or finished installing
+                   in the background before this page load. */
+                onWaitingWorkerFound(registration.waiting);
+            }
+
+            registration.addEventListener("updatefound", function () {
+                var newWorker = registration.installing;
+                if (!newWorker) { return; }
+                newWorker.addEventListener("statechange", function () {
+                    /* "installed" + an existing controller means this is
+                       a genuine update, not the very first install ever
+                       (which also passes through "installed" but has no
+                       prior controller for it to replace). */
+                    if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                        onWaitingWorkerFound(newWorker);
+                    }
+                });
+            });
+        }
+
+        /* .ready resolves once there's an active worker for this page,
+           regardless of whether the inline registration script (in the
+           HTML, which runs after this file) has finished yet — avoids
+           a race where checking too early would just see "no
+           registration" and never look again. */
+        navigator.serviceWorker.ready.then(checkRegistration);
     })();
 
     /* ============================================================

@@ -13,16 +13,30 @@
    sw.js — Service Worker for offline PWA support
    ================================================================
    Strategy:
-   - App shell (css/js/manifest/icons) — cache-first, cached on install
-   - Bible chapter pages & dictionary pages — cache-on-visit (added to
-     cache the first time they're successfully fetched while online)
+   - App shell (css/js/manifest/icons) — cache-first, small, versioned
+     by build SHA, safe to fully replace on every update
+   - Bible chapter pages & dictionary pages — cache-on-visit, stored in
+     a SEPARATE, unversioned, PERSISTENT cache that survives every app
+     update. This split exists specifically because a person's
+     downloaded-for-offline Bible/Lexicon (which can take a long time
+     over WiFi) must never be silently wiped out just because the app's
+     own code changed -- only the small shell cache is ever deleted on
+     update, never this one.
    - Search page and its API calls — NEVER cached; always network,
      since it requires the live Bible SuperSearch API
    - Bulk "Download for Offline" — triggered via postMessage from the
      page; fetches and caches a whole list of URLs proactively
+   - Updates do NOT take over automatically. A newly installed worker
+     sits in the "waiting" state until the page explicitly says
+     "skip-waiting" (driven by the person choosing "Update Now" in the
+     update-available prompt) -- see the message handler below. Without
+     this, there is no way to offer "Remind Me Later"/"Tomorrow": the
+     old behavior activated (and wiped caches) the instant install
+     finished, with no chance to ask first.
    ================================================================ */
 
-const CACHE_VERSION = "kjv-cache-KJV_SHA_PLACEHOLDER";
+const SHELL_CACHE = "kjv-shell-KJV_SHA_PLACEHOLDER";
+const CONTENT_CACHE = "kjv-content";
 const APP_SHELL = [
     "/index.html",
     "/manifest.json",
@@ -45,23 +59,89 @@ function isNeverCache(url) {
            url.indexOf("api.github.com") !== -1;
 }
 
+function isAppShellUrl(url) {
+    var pathname;
+    try {
+        pathname = new URL(url, self.location.origin).pathname;
+    } catch (e) {
+        return false;
+    }
+    return APP_SHELL.indexOf(pathname) !== -1;
+}
+
+/* Wraps fetch() with a hard timeout via AbortController. Without this,
+   a fetch to an address that's only reachable on the home LAN (e.g.
+   the phone's normal origin when away from home, with no server there
+   to refuse the connection) can hang for 60+ seconds before the OS
+   gives up -- which is exactly the "long pause, then Offline" pattern
+   this exists to fix. `request` may be a URL string or a Request. */
+function fetchWithTimeout(request, ms) {
+    var controller = new AbortController();
+    var timer = setTimeout(function () { controller.abort(); }, ms);
+    var reqWithSignal = new Request(request, { signal: controller.signal });
+    return fetch(reqWithSignal).then(function (resp) {
+        clearTimeout(timer);
+        return resp;
+    }, function (err) {
+        clearTimeout(timer);
+        throw err;
+    });
+}
+
 self.addEventListener("install", function (event) {
     event.waitUntil(
-        caches.open(CACHE_VERSION).then(function (cache) {
+        caches.open(SHELL_CACHE).then(function (cache) {
             return cache.addAll(APP_SHELL);
-        }).then(function () {
-            return self.skipWaiting();
         })
+        /* No self.skipWaiting() here — see file header. */
     );
 });
+
+/* One-time migration: before this shell/content split existed, both
+   lived together in a single "kjv-cache-<sha>" cache, which the OLD
+   activate handler deleted wholesale on every update. The first time a
+   phone updates past this version, rescue that cache's non-shell
+   entries (i.e. someone's actual downloaded Bible/Lexicon pages) into
+   the new persistent CONTENT_CACHE before removing it, so this one
+   transition doesn't force yet another full re-download right when
+   we're trying to fix exactly that problem. */
+function migrateOldCombinedCache(oldCacheName) {
+    return caches.open(oldCacheName).then(function (oldCache) {
+        return caches.open(CONTENT_CACHE).then(function (contentCache) {
+            return oldCache.keys().then(function (requests) {
+                return Promise.all(requests.map(function (req) {
+                    if (isAppShellUrl(req.url)) { return Promise.resolve(); }
+                    return oldCache.match(req).then(function (resp) {
+                        if (resp) { return contentCache.put(req, resp); }
+                    });
+                }));
+            });
+        });
+    }).then(function () {
+        return caches.delete(oldCacheName);
+    });
+}
 
 self.addEventListener("activate", function (event) {
     event.waitUntil(
         caches.keys().then(function (keys) {
-            return Promise.all(
-                keys.filter(function (k) { return k !== CACHE_VERSION; })
-                    .map(function (k) { return caches.delete(k); })
-            );
+            var work = [];
+            keys.forEach(function (k) {
+                if (k.indexOf("kjv-cache-") === 0) {
+                    work.push(migrateOldCombinedCache(k));
+                } else if (k.indexOf("kjv-shell-") === 0 && k !== SHELL_CACHE) {
+                    /* Previous versioned shell cache — small and
+                       disposable, safe to delete immediately. */
+                    work.push(caches.delete(k));
+                }
+                /* CONTENT_CACHE ("kjv-content") is intentionally never
+                   touched here, for any reason. Wiping someone's
+                   downloaded Bible/Lexicon just because the app's own
+                   code changed is the entire bug this file exists to
+                   fix — so nothing in this handler is allowed to
+                   delete it, now or in any future edit of this file. */
+            });
+            return Promise.all(work);
         }).then(function () {
             return self.clients.claim();
         })
@@ -85,10 +165,12 @@ self.addEventListener("fetch", function (event) {
        SHA-injection step that isn't reliably working). This way, content
        self-heals within one extra normal reload after being updated,
        without depending on that mechanism at all. */
+    var targetCache = isAppShellUrl(url) ? SHELL_CACHE : CONTENT_CACHE;
+
     event.respondWith(
-        caches.open(CACHE_VERSION).then(function (cache) {
+        caches.open(targetCache).then(function (cache) {
             return cache.match(event.request).then(function (cached) {
-                var networkFetch = fetch(event.request).then(function (response) {
+                var networkFetch = fetchWithTimeout(event.request, 8000).then(function (response) {
                     if (response && response.status === 200) {
                         cache.put(event.request, response.clone());
                     }
@@ -123,6 +205,15 @@ self.addEventListener("message", function (event) {
     var data = event.data;
     if (!data) { return; }
 
+    if (data.type === "skip-waiting") {
+        /* The page's "Update Now" button (in its update-available
+           prompt) is the only thing that sends this. Until it does,
+           this worker just stays fully installed and idle in the
+           "waiting" state — see file header. */
+        self.skipWaiting();
+        return;
+    }
+
     if (data.type === "cancel-job") {
         var job = activeJobs[data.jobId];
         if (job) { job.cancelled = true; }
@@ -144,18 +235,34 @@ self.addEventListener("message", function (event) {
        "idle". This only works if the promise passed to it doesn't
        resolve until the ENTIRE job is done — so cacheNext() must
        properly return/chain every step below, not just fire-and-forget. */
-    var jobPromise = caches.open(CACHE_VERSION).then(function (cache) {
+    var jobPromise = caches.open(CONTENT_CACHE).then(function (cache) {
         var done = 0;
         var total = urls.length;
+        var failedUrls = [];
 
         function reportProgress(complete, cancelled) {
             if (client && (complete || cancelled || done % reportEvery === 0 || done === total)) {
-                client.postMessage({ type: "cache-progress", jobId: jobId, done: done, total: total, complete: !!complete, cancelled: !!cancelled });
+                client.postMessage({
+                    type: "cache-progress", jobId: jobId, done: done, total: total,
+                    complete: !!complete, cancelled: !!cancelled, failed: failedUrls.length
+                });
             }
         }
 
-        function fetchAndCache(i) {
-            return fetch(urls[i]).then(function (resp) {
+        /* A fetch that throws (dropped connection, DNS failure, our own
+           timeout) or comes back with a non-200/non-404 status (e.g. a
+           transient 500) is worth retrying -- a single WiFi hiccup
+           shouldn't permanently mark a page as un-downloaded. A 404 is
+           NOT retried: for the dictionary range in particular, many
+           Strong's numbers simply have no entry, and that's an expected
+           gap, not a failure. After MAX_ATTEMPTS, give up on this URL
+           and record it as a real failure so the completion message can
+           say so honestly, instead of silently claiming success. */
+        var MAX_ATTEMPTS = 3;
+
+        function fetchAndCache(i, attempt) {
+            attempt = attempt || 1;
+            return fetchWithTimeout(urls[i], 10000).then(function (resp) {
                 if (resp && resp.status === 200) {
                     return cache.put(urls[i], resp).then(function () {
                         done++;
@@ -163,14 +270,25 @@ self.addEventListener("message", function (event) {
                         return cacheNext(i + 1);
                     });
                 }
-                done++;
-                reportProgress(false, false);
-                return cacheNext(i + 1);
+                if (resp && resp.status === 404) {
+                    done++;
+                    reportProgress(false, false);
+                    return cacheNext(i + 1);
+                }
+                return retryOrGiveUp(i, attempt);
             }).catch(function () {
-                done++;
-                reportProgress(false, false);
-                return cacheNext(i + 1);
+                return retryOrGiveUp(i, attempt);
             });
+        }
+
+        function retryOrGiveUp(i, attempt) {
+            if (attempt < MAX_ATTEMPTS) {
+                return fetchAndCache(i, attempt + 1);
+            }
+            failedUrls.push(urls[i]);
+            done++;
+            reportProgress(false, false);
+            return cacheNext(i + 1);
         }
 
         function cacheNext(i) {

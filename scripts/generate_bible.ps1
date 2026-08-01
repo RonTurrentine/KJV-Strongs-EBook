@@ -975,11 +975,10 @@ $($ntLinks.ToString())        </ul>
   <script src="js/bookmarks.js"></script>
   <script>
   (function () {
+      /* Search-button visibility (Kindle + phone-mode reachability) is
+         handled by notes.js, which loads before this script runs --
+         nothing duplicated here anymore. */
       var p = window.location.protocol || "";
-      if (p === "file:") {
-          var btn = document.getElementById("search-nav-btn");
-          if (btn) { btn.style.display = "none"; }
-      }
       if ("serviceWorker" in navigator && (p === "http:" || p === "https:")) {
           navigator.serviceWorker.register("/sw.js").catch(function () {});
       }
