@@ -2,7 +2,7 @@
 
 A complete, offline-capable KJV Bible study tool with Strong's Hebrew/Greek lexicon,
 BDB/Thayer definitions, personal notes, and full concordance — designed for both
-PC (localhost) and Kindle Fire tablet.
+PC (localhost), phone (installable, works fully offline), and Kindle Fire tablet.
 
 ![KJV Strong's Bible](https://img.shields.io/badge/KJV-Strong's%20Concordance-00bcd4)
 ![PowerShell](https://img.shields.io/badge/PowerShell-7%2B-blue)
@@ -17,7 +17,7 @@ PC (localhost) and Kindle Fire tablet.
 - Every word linked to its Strong's Hebrew or Greek number
 - Clean, readable dark theme optimized for extended study
 - Font size controls (a↓ / A↑), reading position bookmarks
-- ☰ hamburger settings menu — font size, Strong's toggle, Sync to Kindle, Rebake Notes
+- ☰ hamburger settings menu — font size, Connect New Phone, My Notes, Sync to Kindle, Rebake Notes
 - 🏠 Home button returns to the main book index from any page
 - Keyboard shortcuts: `Ctrl+]` increase font, `Ctrl+[` decrease font, `H` toggle Strong's
 - `[◀B][◀C][C▶][B▶]` navigation buttons for chapter and book jumping
@@ -31,12 +31,20 @@ PC (localhost) and Kindle Fire tablet.
   - **BDB/Thayer hierarchical definition** with nested sub-definitions
   - Clickable origin cross-references
   - **Complete concordance** — every Bible occurrence with English translation
-- Paginated Hebrew and Greek index pages with [BEG]/[END] navigation
+- Paginated Hebrew and Greek index pages with [BEG]/[END] navigation, searchable
+  by transliteration or Strong's number
 
 ### Personal Study Notes
 - Add notes to any verse via a gold ✏ pencil button
 - Rich modal editor with **book picker** for easy verse linking
 - Link to any verse using `[[Book.Ch.Vs]]` syntax (e.g. `[[John.3.16]]`)
+- **Tags** — organize notes with one or more comma-separated tags
+- **Notes Manager** (My Notes) — browse, filter, and tag every note across the
+  whole Bible in one place; filter by book/testament, by tag (AND logic), or
+  by "has any tags" / "no tags"
+- **Export / Import Notes** — back up to a file, or bring notes in from
+  another device or an earlier backup, with a conflict-resolution screen for
+  anything that overlaps
 - Notes bake instantly into the HTML — visible on Kindle without server
 - Sync to Kindle via ⚡ Sync to Kindle in the ☰ hamburger menu (grayed out when no device connected)
 
@@ -51,7 +59,7 @@ PC (localhost) and Kindle Fire tablet.
 - One click switches between study mode and reading mode
 - Preference remembered as you navigate between chapters
 
-### English Word Search (PC only)
+### English Word Search
 - Search the full KJV text for any English word or phrase
 - Powered by the free Bible SuperSearch API — no setup required
 - **Scope your search**: Whole Bible, a specific book, or any combination of
@@ -60,7 +68,26 @@ PC (localhost) and Kindle Fire tablet.
 - Adjustable results per page (50/100/200/All) with [BEG]/[END] pagination
 - Click any result to jump straight to that verse
 - Results persist when you navigate to a verse and come back
-- Requires an internet connection — not available on Kindle
+- Works on PC whenever there's an internet connection; on phone, requires an
+  active connection to your PC over home WiFi (see Phone Support below) —
+  not available on Kindle
+
+### Phone Support
+- Install as a real app on your phone's home screen — connect once via a
+  QR code shown in the ☰ menu, over your home WiFi
+- **Fully usable offline** — download the Bible text and Hebrew/Greek
+  Lexicon once, then read, take notes, and study anywhere with no connection
+  at all
+- A first-time setup wizard walks new phones through downloading content and
+  syncing existing PC notes over
+- Notes and highlights sync both ways between phone and PC whenever
+  connected, with tag-aware conflict merging (tags from both sides are kept,
+  never one side silently overwriting the other)
+- Considerate app-update prompts — **Update Now** / **Remind Me Later** /
+  **Remind Tomorrow** — updates never touch your downloaded content, and a
+  manual "Update Now" appears in the ☰ menu if you snooze
+- See [WINDOWS-SETUP.md](WINDOWS-SETUP.md#connecting-your-phone) for full
+  setup steps
 
 ### Kindle Fire Support
 - Fully tested on Kindle Fire D01E (Android 2.3 WebKit)
@@ -111,7 +138,7 @@ pwsh -NoProfile -File .\scripts\generate_bible.ps1
 # 3. Generate all 14,298 dictionary pages with BDB definitions
 pwsh -NoProfile -File .\scripts\generate_dict.ps1
 
-# 4. Verify output (151+ tests)
+# 4. Verify output (170+ tests)
 pwsh -NoProfile -File .\scripts\qa-test.ps1
 ```
 
@@ -146,7 +173,8 @@ Then open Silk browser on Kindle and navigate to:
 | `scripts/generate_bible.ps1` | Generate all Bible chapter HTML + concordance.json |
 | `scripts/generate_dict.ps1` | Generate all dictionary HTML with BDB + concordance |
 | `scripts/export-bdb.ps1` | Export BDB/Thayer SQLite database to JSON |
-| `scripts/qa-test.ps1` | Run 155+ quality assurance tests |
+| `scripts/qa-test.ps1` | Run 170+ quality assurance tests |
+| `scripts/setup-phone-access.ps1` | One-time Windows Firewall rule so your phone can reach your PC |
 | `scripts/rebake-notes.ps1` | Restore baked notes after regeneration |
 | `scripts/package_epub.ps1` | Build EPUB archive + push to Kindle |
 | `scripts/adb-push-all.ps1` | Push all files to Kindle via ADB |
@@ -161,22 +189,27 @@ KJV-Strongs-EBook/
 ├── start-study.ps1          Local HTTP server with notes API
 ├── start-study.bat          Windows double-click launcher
 ├── BiblePencil.ico          App icon / browser favicon
+├── icon-192.png              Phone app icon (small)
+├── icon-512.png              Phone app icon (large)
+├── manifest.json             Phone app installability info
+├── sw.js                     Phone offline/caching support (generated)
 ├── index.html               Main book index (generated)
 ├── navigate.html            Go To Passage (generated)
-├── search.html               English word search, PC only (generated)
+├── search.html               English word search (generated)
+├── notes-manager.html        My Notes — browse/filter/tag all notes (generated)
 ├── books/                   1,189 chapter HTML files (generated)
 │   └── {NN}-{Abbr}/
 │       └── {ch}.html
 ├── dict/                    14,298 dictionary pages (generated)
 │   ├── hebrew/              h0001.html – h8674.html
 │   └── greek/               g0001.html – g5624.html
-├── indexes/                 Strong's index pages (generated)
+├── indexes/                 Strong's index pages, searchable (generated)
 ├── css/
 │   ├── style.css            PC stylesheet
 │   └── style-kindle.css     Kindle Fire stylesheet
 ├── js/
-│   ├── notes.js             Notes + highlights system + Kindle sync
-│   ├── search.js            English word search (PC only)
+│   ├── notes.js             Notes, tags, phone offline & update system
+│   ├── search.js            English word search
 │   ├── bible-data.js        Book/chapter metadata
 │   ├── fontsize.js          Font size + reading mode toggle
 │   ├── bookmarks.js         Reading position memory
@@ -193,6 +226,7 @@ KJV-Strongs-EBook/
 | Windows 10/11 (Launcher) | ✅ Fully supported | Download from Releases page |
 | Windows 10/11 (Manual) | ✅ Fully supported | [WINDOWS-SETUP.md](WINDOWS-SETUP.md) |
 | macOS (Manual) | ✅ Supported via PowerShell Core | [MAC-SETUP.md](MAC-SETUP.md) |
+| Phone (Android/iOS, via Chrome/Safari) | ✅ Fully supported, installable, offline-capable | [WINDOWS-SETUP.md](WINDOWS-SETUP.md#connecting-your-phone) |
 | Kindle Fire D01E | ✅ Fully tested | See Quick Start above |
 | Other Kindle models | 🔜 Planned | Future release |
 

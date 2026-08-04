@@ -2987,3 +2987,117 @@ file (created for safety mid-session) got swept into a `git add -A`
 commit and pushed to GitHub before being caught. Removed from tracking
 and added to `.gitignore`; still present in git history unless a
 history rewrite is done later (not done this session).
+
+## Session: Phone offline-reliability overhaul, PWA install saga, and a full documentation rewrite
+
+Another long session, starting from a single vague complaint ("the app goes
+'Offline' and becomes unusable while I'm away from home") and ending with a
+materially more resilient offline system, a real app-update UX, and
+documentation that finally covers the phone properly.
+
+**Offline reliability root-causing.** Diagnosed in layers, each confirmed
+before moving to the next rather than assumed:
+- No timeout on `fetch()` calls in `sw.js` meant a request to the phone's
+  normal (home-LAN-only) origin, attempted while genuinely away from home,
+  could hang 60+ seconds before failing -- the "long pause" symptom. Added a
+  shared `fetchWithTimeout()` helper (AbortController-based) used both for
+  regular page fetches and the bulk downloader.
+- The bulk "Download for Offline" feature silently counted real network
+  failures the same as harmless expected gaps (e.g. missing Strong's
+  numbers), so a download could report "100% complete" while actually
+  missing pages -- with no way to know until hitting that exact page later,
+  away from home. Fixed with real retry-with-backoff and honest
+  success/failure counts reported back to the UI.
+- The much bigger discovery: `sw.js`'s `activate` handler deleted *every*
+  cache not matching the current SHA-versioned name, and `self.skipWaiting()`
+  ran automatically on install -- meaning **every single app update silently
+  wiped Ron's entire downloaded Bible + Lexicon library**, often without him
+  noticing until he was away from home and everything failed at once. Fixed
+  by splitting into a small, disposable, versioned `SHELL_CACHE` (safe to
+  replace every update) and a separate, persistent, never-touched
+  `CONTENT_CACHE` for downloaded Bible/Lexicon pages. A one-time migration
+  step salvages any existing combined-cache content into the new structure
+  on the first update past this version, avoiding one more forced
+  redownload right when fixing exactly that problem.
+
+**A real "App Update Available" UX**, replacing the old silent
+auto-takeover: Update Now / Remind Me Later / Remind Tomorrow, driven by an
+explicit `skip-waiting` postMessage handshake (the worker no longer takes
+over on its own). A manual "Update Now" row appears at the top of the
+hamburger menu after snoozing, shown only when phone-mode + confirmed
+reachable at home (reusing the existing `checkPcReachable` sync-visibility
+check, now exposed globally for reuse). Two real bugs found through Ron's
+own testing and fixed in follow-up rounds:
+- The prompt was also firing on the **PC**, redundant with its own existing
+  cross-icon update system -- PC now silently self-applies updates instead.
+- Triggering "Update Now" from the hamburger menu showed *no visible
+  feedback at all* ("something flashed and it was done") -- root cause was
+  the menu staying open and visually covering the modal underneath it (a
+  tap inside the menu correctly doesn't trigger its own "click outside
+  closes it" logic). Fixed by explicitly closing the menu first, plus a
+  600ms minimum-visible-time guard so a now-fast update (post-migration)
+  can't outrun the browser's ability to paint the message at all.
+
+**Smaller phone-side fixes found along the way:**
+- The Search button on the phone defaulted to *visible* and only hid itself
+  after an async reachability check finished (up to several seconds away
+  from home) -- flipped to default-hidden, matching the "fail closed"
+  pattern used everywhere else this session.
+- Removed a dead, redundant duplicate of the Kindle-only search-hiding
+  check from `index.html`'s own inline script (notes.js, loaded earlier on
+  the same page, already covers it -- and now covers phone mode too).
+- Traced and confirmed, rather than assumed: `index.html` is built entirely
+  inline inside `generate_bible.ps1` (like chapter pages and
+  `navigate.html`), not from a separate `scripts/` template the way
+  `notes-manager.html`/`search.html`/`sw.js`/`help.html`/`about.html` are --
+  so there both is and isn't a "right file" trap here depending which file
+  is being touched, worth remembering going forward.
+- Suppressed Chrome's native `beforeinstallprompt` banner outright (via
+  `event.preventDefault()`), after it appeared unprompted on Ron's phone
+  while away from home, fully covering the hamburger menu with no way to
+  dismiss it early.
+
+**A real PWA-install troubleshooting saga**, including a correction worth
+remembering: Claude initially diagnosed Ron's home-screen icon as a broken
+"bookmark pretending to be an app" (based on "Add to Home" showing in its
+long-press menu) and walked through a full uninstall/reinstall. Ron later
+pointed out the icon had *already* shown the same "genuine installed WebAPK"
+signals in Android Settings *before* any of that -- meaning the original
+diagnosis was likely wrong, and the true cause of the original spontaneous
+install-banner incident remains genuinely unresolved. What *did* get
+concretely found and fixed: a reinstall attempted while the PC server
+wasn't running caused Chrome to silently create a plain bookmark shortcut
+instead of a real WebAPK, with no error to indicate that had happened --
+confirmed via Android Settings → Apps (a real WebAPK entry vs. nothing at
+all for a bare shortcut). Redone with the server confirmed running and
+reachable, and verified as a genuine install this time.
+
+**Researched (with sources) why the installed app still shows the browser
+address bar**: Chrome caps any HTTP (non-HTTPS, non-localhost) origin to
+"Minimal UI" display mode regardless of what the manifest declares --
+confirmed directly from Google's own PWA documentation. Ties directly to
+the long-standing "real HTTPS setup" backlog item. Walked through the three
+realistic options (Tailscale, mkcert, a real domain + Let's Encrypt via
+split-horizon DNS) and their tradeoffs; Ron is interested in Tailscale now
+and a real domain later, deferred actually setting it up to a future
+session. Discussed what moving to a domain later would actually involve
+(split-horizon DNS via a local resolver, a reverse proxy like Caddy for
+auto-renewing certs, and -- learned firsthand this session -- one more
+origin change meaning one more phone reinstall + full offline-content
+redownload).
+
+**Documentation overhaul**: reviewed and substantially rewrote `README.md`,
+`WINDOWS-SETUP.md`, `MAC-SETUP.md`, and `help.html`, which collectively had
+almost no phone documentation at all before this (one troubleshooting note
+about the firewall script, nothing else). Added full "Connecting Your
+Phone"/"Using Your Phone" walkthroughs (firewall → QR → setup wizard →
+installing as an app, with the "only install while connected" lesson baked
+in), a new "Notes Manager & Tags" section, and fixed a handful of stale
+facts along the way: two *different* wrong QA test counts in the same
+README (151 and 155, actual is 170+), a hardcoded installer version number
+that would go stale immediately, and Search's README heading flatly saying
+"PC only" when it also works on phone given home WiFi. While cross-checking
+the actual hamburger menu against the docs, found a genuinely dead button
+in `scripts/search.html` -- "Connect Phone via USB" called `connectViaUsb()`,
+a function that doesn't exist anywhere in `notes.js` -- and fixed it to
+match the working QR-based `syncViaQr()` used everywhere else.

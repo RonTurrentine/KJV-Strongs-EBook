@@ -2149,6 +2149,33 @@
     })();
 
     /* ============================================================
+       Suppress the browser's native "Install App" banner
+       ============================================================
+       Chrome (and some other browsers) can automatically show its own
+       "Add to Home Screen" / "Install" prompt on any page that meets
+       PWA installability criteria, independent of whether the person
+       already has this app installed some other way. This is never
+       wanted here: the phone has its own dedicated QR/setup-wizard
+       onboarding flow, and the PC uses the Electron installer -- there
+       is no scenario in this project where Chrome's generic install
+       banner is the right thing to show.
+
+       Chrome's install-eligibility (and its tracking of "is this
+       already installed") is tied to the page's exact origin
+       (protocol + host + port). Visiting the same content through a
+       different origin than whatever was originally installed from
+       (e.g. an old bookmark/tab pointing at a different port than the
+       one currently in use, such as the LAN proxy port) can make
+       Chrome think it's looking at a completely different, not-yet-
+       installed web app -- which is the most likely explanation for
+       this banner appearing unexpectedly on an already-installed
+       phone. Suppressing it outright sidesteps that regardless of the
+       exact cause. */
+    window.addEventListener("beforeinstallprompt", function (event) {
+        event.preventDefault();
+    });
+
+    /* ============================================================
        App Update Prompt (Service Worker)
        ============================================================
        sw.js deliberately does NOT take over automatically when a new

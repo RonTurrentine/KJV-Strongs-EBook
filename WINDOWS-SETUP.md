@@ -7,7 +7,7 @@
 The easiest way to get started is the one-click installer:
 
 1. Go to the [GitHub Releases page](https://github.com/RonTurrentine/KJV-Strongs-EBook/releases/latest)
-2. Download **`KJV Strong's Bible Setup 1.1.0.exe`**
+2. Download **`KJV Strong's Bible Setup [version].exe`** (the "latest" page always has the newest one)
 3. Run the installer
 
 The launcher will automatically:
@@ -234,13 +234,78 @@ Once running, your browser opens to `http://localhost:8080`.
   - Strong's definition and KJV usage
   - BDB/Thayer hierarchical definition
   - Every occurrence in the Bible with English translation
-- Add personal study notes to any verse (pencil ✏ button)
+- Hebrew and Greek index pages support searching by transliteration or Strong's number
+- Add personal study notes to any verse (pencil ✏ button), with optional tags
 - Use `[[Book.Ch.Vs]]` syntax in notes to create verse links (e.g. `[[John.3.16]]`)
+- **My Notes** — browse, filter, and tag every note across the whole Bible in one place
 - Click **Go To Passage** to jump to any verse
 - Click **Hebrew** or **Greek** to browse the full Strong's index
-- ☰ hamburger menu — font size, Strong's toggle, Sync to Kindle, Rebake Notes
+- ☰ hamburger menu — font size, Connect New Phone, My Notes, Sync to Kindle, Export/Import Notes, Rebake Notes
 - 🏠 Home button returns to the main book index from any page
 - Keyboard shortcuts: `Ctrl+]` increase font, `Ctrl+[` decrease font, `H` toggle Strong's
+
+---
+
+## Connecting Your Phone
+
+Your phone reads the same Bible study tool over your home WiFi network, and can
+download everything it needs to keep working fully offline — away from home,
+on a plane, wherever.
+
+### Step 1 — Allow phone access through Windows Firewall (one time only)
+
+Windows blocks incoming connections by default, so your phone can't reach your
+PC until you allow it. Open PowerShell **as Administrator** and run:
+
+```powershell
+cd 'C:\Users\YourName\KJV-Strongs-EBook'
+pwsh -NoProfile -File .\scripts\setup-phone-access.ps1
+```
+
+You only need to do this once per PC. If you ever move to a new computer, or
+your firewall settings get reset, just run it again.
+
+### Step 2 — Connect via QR code
+
+1. Make sure the study server is running (`start-study.bat` or `start-study.ps1`)
+2. On the PC, open the ☰ menu and click **Connect New Phone**
+3. A QR code appears on screen
+4. On your phone, open your camera app and scan it — this opens the app in
+   your phone's browser automatically
+5. The first time you connect a given phone, a setup wizard walks you through
+   downloading the Bible text, downloading the Hebrew/Greek Lexicon (this one's
+   larger, 100+ MB — do it on WiFi), and syncing your existing notes over
+
+### Step 3 — Install it as a real app (recommended)
+
+In Chrome on your phone, tap **⋮** (three-dot menu) → **"Install app"** (some
+phones word this "Add to Home screen" or "Install and create shortcut" — same
+thing). This gives you a proper full-screen app icon with no browser address
+bar showing, instead of a regular browser tab.
+
+> **Important:** only install while your phone shows it's actually connected
+> to your PC (no red "Offline mode" banner). Installing while disconnected can
+> silently create a plain bookmark shortcut instead of a real app, with no
+> error to warn you — it'll still work, but it'll keep the address bar
+> visible. If that happens: long-press the icon → Uninstall, reconnect to your
+> PC, then reinstall.
+
+### Using it day to day
+
+- ☰ menu → **Download Bible Text for Offline** / **Download Lexicon for
+  Offline** / **Refresh Offline Content** — re-run any of these anytime; a
+  failed or interrupted download automatically picks up where it left off
+- A red **"Offline mode"** banner just means your phone can't currently reach
+  your PC (away from home, or the PC app isn't running) — everything you've
+  already downloaded keeps working normally regardless
+- **Search** (the English word search) specifically needs a live connection to
+  your PC even though the rest of the app works offline — see
+  [Troubleshooting](#troubleshooting) if it's not showing up
+- When an app update is ready, you'll see an **"App Update Available"** prompt
+  with **Update Now** / **Remind Me Later** / **Remind Tomorrow** — updating
+  only refreshes the app itself and never touches your downloaded content. If
+  you snooze it, a manual **Update Now** item appears at the top of the ☰ menu
+  whenever you're back on home WiFi.
 
 ---
 
@@ -298,6 +363,28 @@ pwsh -NoProfile -File .\scripts\rebake-notes.ps1
 PowerShell 7 wasn't installed or PATH wasn't updated.
 Restart your terminal after installing, or add PowerShell to PATH manually.
 
+**Phone won't connect / QR code doesn't work**
+Almost always Windows Firewall blocking the connection. Run this once, as
+Administrator:
+```powershell
+pwsh -NoProfile -File .\scripts\setup-phone-access.ps1
+```
+See [Connecting Your Phone](#connecting-your-phone) above for the full setup flow.
+
+**Installed phone app still shows the browser address bar**
+Either it was installed while disconnected from the PC (uninstall, reconnect,
+reinstall — see [Connecting Your Phone](#connecting-your-phone)), or your setup
+is using a plain local address rather than HTTPS, which Android restricts to
+showing the address bar regardless of the app's settings. This is a known,
+current limitation of running over a home network without a proper
+certificate, not a bug you can fix through the app itself.
+
+**"Search" isn't showing up on my phone**
+By design — Search needs a live connection to your PC even though everything
+else works offline. It only appears while your phone is actually connected to
+your PC over home WiFi with the PC app running; it's hidden automatically the
+rest of the time so you're not left tapping a button that can't work.
+
 **"adb is not recognized"**
 Add the ADB folder to your PATH, or always use the full path:
 ```powershell
@@ -328,34 +415,40 @@ KJV-Strongs-EBook\
 ├── start-study.ps1          Local HTTP server
 ├── start-study.bat          Double-click launcher
 ├── BiblePencil.ico          Browser tab icon
+├── icon-192.png             Phone app icon (small)
+├── icon-512.png             Phone app icon (large)
+├── manifest.json            Phone app installability info
+├── sw.js                    Phone offline/caching support (generated)
 ├── index.html               Main book index (generated)
 ├── navigate.html            Go To Passage page (generated)
 ├── search.html              English word search (generated)
+├── notes-manager.html       My Notes — browse/filter/tag all notes (generated)
 ├── notes.json               Your personal notes (NOT in GitHub)
 ├── concordance.json         Strong's concordance index (NOT in GitHub)
 ├── books\                   1,189 chapter HTML files (generated)
 ├── dict\                    14,298 dictionary pages (generated)
 │   ├── hebrew\              H0001 - H8674
 │   └── greek\               G0001 - G5624
-├── indexes\                 Strong's index pages (generated)
+├── indexes\                 Strong's index pages, searchable (generated)
 ├── css\
 │   ├── style.css            PC stylesheet
 │   └── style-kindle.css     Kindle stylesheet
 ├── js\
 │   ├── bible-data.js        Book/chapter data
-│   ├── notes.js             Notes system
+│   ├── notes.js             Notes, tags, phone offline & update system
 │   ├── fontsize.js          Font size controls
 │   ├── bookmarks.js         Reading position
 │   └── sticky-header.js     Header behavior
 └── scripts\
-    ├── generate_bible.ps1   Bible generator
-    ├── generate_dict.ps1    Dictionary generator
-    ├── export-bdb.ps1       BDB/Thayer exporter (advanced, optional)
-    ├── qa-test.ps1          Quality assurance (155+ tests)
-    ├── rebake-notes.ps1     Restore baked notes
-    ├── adb-push-all.ps1     Push to Kindle
-    ├── package_epub.ps1     EPUB packager
-    └── git-push.ps1         GitHub push helper
+    ├── generate_bible.ps1      Bible generator
+    ├── generate_dict.ps1       Dictionary generator
+    ├── export-bdb.ps1          BDB/Thayer exporter (advanced, optional)
+    ├── qa-test.ps1             Quality assurance (170+ tests)
+    ├── rebake-notes.ps1        Restore baked notes
+    ├── setup-phone-access.ps1  One-time Windows Firewall rule for phone access
+    ├── adb-push-all.ps1        Push to Kindle
+    ├── package_epub.ps1        EPUB packager
+    └── git-push.ps1            GitHub push helper
 ```
 
 ---

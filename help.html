@@ -109,7 +109,7 @@
   <div class="help-wrap">
 
     <h1 class="help-title">KJV Strong's Bible</h1>
-    <p class="help-subtitle">Help &amp; Documentation — v1.1.0</p>
+    <p class="help-subtitle">Help &amp; Documentation — v1.3.0</p>
 
     <!-- ── Navigation ─────────────────────────────────────────── -->
     <div class="help-section">
@@ -123,6 +123,44 @@
         <li><strong>Hebrew / Greek</strong> — browse the full Strong's lexicon index</li>
         <li><strong>Search</strong> — search the full KJV text (requires a live connection to your PC — see "English Word Search" below)</li>
       </ul>
+    </div>
+
+    <!-- ── Phone Setup ────────────────────────────────────────── -->
+    <div class="help-section" id="phone-help">
+      <h2>&#128241; Using Your Phone</h2>
+      <p>Your phone connects to the same KJV Strong's Bible app running on your PC, over your home WiFi network. Once set up, you can read, take notes, and study fully offline — away from home, on a plane, anywhere — using content you've downloaded ahead of time.</p>
+
+      <p><strong>One-time setup, on your PC:</strong></p>
+      <ul>
+        <li>The first time you connect a phone, Windows Firewall usually blocks the connection by default. Run this once, <strong>as Administrator</strong>: <span class="help-key">scripts\setup-phone-access.ps1</span> — see <a href="#firewall-help" style="color:#00bcd4;">Troubleshooting</a> below for details.</li>
+      </ul>
+
+      <p><strong>Connecting your phone (first time):</strong></p>
+      <ul>
+        <li>With the study server running on your PC, open the ☰ menu and tap <strong>Connect New Phone</strong></li>
+        <li>A QR code appears on your PC screen</li>
+        <li>On your phone, scan it with your camera app — it'll open the app in your phone's browser automatically</li>
+        <li>A setup wizard appears the first time, offering to download the Bible text, download the Hebrew/Greek Lexicon, and sync your existing PC notes to the phone — go ahead and step through it</li>
+      </ul>
+      <p>The Lexicon download is the big one (100+ MB) — worth doing on WiFi rather than cellular data, and it only needs to happen once per phone.</p>
+
+      <p><strong>Installing it as a real app (recommended):</strong></p>
+      <ul>
+        <li>In Chrome, tap <strong>⋮</strong> (the three-dot menu) → <strong>"Install app"</strong> (wording varies by phone/Chrome version — "Add to Home screen" and "Install and create shortcut" are the same thing)</li>
+        <li><strong>Important:</strong> do this while your phone shows it's connected to your PC (not the red "Offline mode" banner). Installing while disconnected can silently create a plain bookmark shortcut instead of a real app — it'll still work, but it'll keep showing the browser's address bar instead of opening full-screen like a proper app. If that happens, just uninstall it (long-press the icon → Uninstall), reconnect to your PC, and install again.</li>
+        <li>Once properly installed, you'll get a real app icon with no browser address bar — the same clean look as the PC version.</li>
+      </ul>
+
+      <p><strong>Downloading content for offline use:</strong></p>
+      <ul>
+        <li>☰ menu → <strong>Download Bible Text for Offline</strong> / <strong>Download Lexicon for Offline</strong> — these are also what the first-time setup wizard runs for you automatically</li>
+        <li><strong>Refresh Offline Content</strong> re-downloads everything fresh — useful if you've made a lot of changes on the PC and want your phone's copy fully up to date</li>
+        <li>If a download reports that some pages failed partway through (this can happen on a shaky WiFi connection), just run it again — it automatically skips everything that already succeeded and only retries what's missing</li>
+      </ul>
+
+      <p><strong>What "Offline mode" means:</strong> if your phone shows a banner saying you're offline, it just means it can't currently reach your PC — either you're away from home, or the PC app isn't running. Everything you've already downloaded (chapters, Lexicon entries, your notes) keeps working normally either way; only <em>Search</em> and syncing new notes back to your PC need that live connection. See <a href="#search-help" style="color:#00bcd4;">English Word Search</a> below.</p>
+
+      <p><strong>App updates:</strong> when a new version is ready, your phone shows an "App Update Available" prompt with three choices — <strong>Update Now</strong>, <strong>Remind Me Later</strong>, or <strong>Remind Tomorrow</strong>. Updating only refreshes the app itself; your downloaded Bible text and Lexicon are stored separately and are never affected. If you snooze it, look for a manual <strong>Update Now</strong> item at the top of the ☰ menu whenever you're back on home WiFi — that's your reminder that an update is still waiting whenever you're ready for it.</p>
     </div>
 
     <!-- ── Strong's Numbers ───────────────────────────────────── -->
@@ -142,15 +180,31 @@
     <!-- ── Settings Menu ──────────────────────────────────────── -->
     <div class="help-section">
       <h2>☰ Settings Menu</h2>
-      <p>The hamburger menu (☰) in the top-right corner of every chapter page contains the following options:</p>
+      <p>The hamburger menu (☰) in the top-right corner of every page contains the following options (some vary slightly by page):</p>
       <ul>
         <li><strong>Font size</strong> — increase or decrease the text size with the a↓ / A↑ buttons</li>
-        <li><strong>Strong's links</strong> — show or hide Strong's number badges</li>
         <li><strong>⚡ Sync to Kindle</strong> — push your notes and highlights to a connected Kindle Fire device (grayed out when no device is connected)</li>
+        <li><strong>📷 Connect New Phone</strong> — shows a QR code to connect a new phone over your home WiFi (see <a href="#phone-help" style="color:#00bcd4;">Using Your Phone</a> above)</li>
+        <li><strong>📋 My Notes</strong> — opens the Notes Manager, where you can browse, filter, and tag every note and highlight across the whole Bible in one place (see below)</li>
         <li><strong>🔄 Rebake Notes</strong> — re-embed your personal notes into the HTML after regenerating the Bible files</li>
+        <li><strong>💾 Export Notes</strong> / <strong>📥 Import Notes</strong> — back up your notes to a file, or bring notes in from a backup or another device (with a conflict-resolution screen if anything overlaps)</li>
+        <li><strong>Offline Access</strong> (phone only) — Download Bible Text / Download Lexicon / Refresh Offline Content</li>
         <li><strong>❓ Help / Documentation</strong> — opens this page</li>
         <li><strong>ℹ️ About</strong> — shows version and project information</li>
         <li><strong>✕ Exit</strong> — closes the application</li>
+      </ul>
+    </div>
+
+    <!-- ── Notes Manager & Tags ───────────────────────────────── -->
+    <div class="help-section">
+      <h2>&#128209; Notes Manager &amp; Tags</h2>
+      <p>Open <strong>My Notes</strong> from the ☰ menu to see every note and highlight you've ever made, sorted Old Testament → New Testament, in one scrollable list — no more hunting through chapters to find where you wrote something.</p>
+      <ul>
+        <li><strong>Tags</strong> — add one or more tags to any note (comma-separated) directly in the note editor, e.g. <span class="help-key">Justification, Second Coming</span></li>
+        <li><strong>Filter by Book / Testament</strong> — narrow the list to a specific book or category; this panel can be collapsed to save space</li>
+        <li><strong>Filter by Tags</strong> — tap any tag to narrow the list to notes with that tag; selecting more than one narrows further (a note must have <em>all</em> selected tags to match)</li>
+        <li><strong>Has Any Tags</strong> / <strong>No Tags</strong> — two extra buttons to quickly find everything you've tagged, or everything you haven't gotten around to tagging yet</li>
+        <li>Tap <strong>Edit</strong> on any note in the list to update its text or tags without leaving the page</li>
       </ul>
     </div>
 
@@ -194,7 +248,7 @@
     </div>
 
     <!-- ── Search ─────────────────────────────────────────────── -->
-    <div class="help-section">
+    <div class="help-section" id="search-help">
       <h2>&#128269; English Word Search</h2>
       <p>The Search page lets you search the full KJV text for any English word or phrase. It is powered by the free Bible SuperSearch API.</p>
       <ul>
@@ -218,12 +272,20 @@
     </div>
 
     <!-- ── Troubleshooting ────────────────────────────────────── -->
-    <div class="help-section">
+    <div class="help-section" id="firewall-help">
       <h2>&#128295; Troubleshooting</h2>
       <p><strong>Phone won't connect over WiFi / QR code doesn't work?</strong> This is almost always a Windows Firewall issue &mdash; by default, Windows blocks the port your PC uses to talk to your phone (port 8081).</p>
       <p>To fix it, run this once on your PC, <strong>as Administrator</strong>:</p>
       <p><span class="help-key">scripts\setup-phone-access.ps1</span></p>
       <p>This adds a one-time Windows Firewall rule allowing your phone to reach your PC over your home WiFi. You only need to run this once per PC &mdash; it isn't something the app can do on its own, since creating firewall rules requires administrator privileges that the app intentionally doesn't run with for everyday use. You may need to run it again if you set up on a new PC, or if your firewall settings ever get reset.</p>
+
+      <p><strong>Installed app still shows the browser address bar?</strong> Two possible causes:</p>
+      <ul>
+        <li>It was installed while your phone couldn't fully reach the PC — Chrome silently creates a plain shortcut instead of a real app in that situation, with no error to warn you. Fix: uninstall it (long-press the icon → Uninstall), reconnect to your PC first, then reinstall via ⋮ → "Install app" while connected.</li>
+        <li>The app is served over a plain local network address rather than HTTPS, which Android limits to showing the address bar no matter what — this is a Chrome security rule, not a bug, and affects every self-hosted app on a home network this way unless it's set up with a proper certificate. This is a known limitation and may be addressed in a future update.</li>
+      </ul>
+
+      <p><strong>Seeing a red "Offline mode" banner on your phone?</strong> This just means your phone can't currently reach your PC — either you're away from home, or the PC app isn't running. It's not an error to fix; everything you've downloaded keeps working normally. It'll clear on its own once you're back on home WiFi with the PC app running.</p>
     </div>
 
   </div>

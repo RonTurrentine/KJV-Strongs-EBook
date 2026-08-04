@@ -143,6 +143,22 @@ To stop the server: press **Ctrl+C** in the Terminal window.
 
 ---
 
+## Connecting Your Phone
+
+The phone-connection flow itself (QR code, offline downloads, installing as
+an app) works the same way regardless of what your PC is — see the full
+walkthrough in [WINDOWS-SETUP.md](WINDOWS-SETUP.md#connecting-your-phone).
+
+**One thing that differs on Mac:** the one-time firewall step
+(`scripts/setup-phone-access.ps1`) is written specifically for Windows
+Firewall and won't work as-is on macOS. To let your phone reach your Mac over
+WiFi, you'll likely need to allow incoming connections for the relevant port
+under **System Settings → Network → Firewall → Options**, but this hasn't
+been tested or documented in detail for Mac yet — if you run into this,
+it's worth flagging so proper Mac-specific steps can be written up.
+
+---
+
 ## Pushing to Kindle Fire
 
 Connect your Kindle Fire via USB, enable ADB debugging, then:
